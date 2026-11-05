@@ -1,7 +1,7 @@
 // Phase 4 and 6 proof: real relay, real engines in separate processes, real sockets, lag in both directions.
 import { spawn } from 'node:child_process'; import path from 'node:path'; import fs from 'node:fs';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
-const relayBin = root + '/relay/target/release/sb64-relay';
+const relayBin = root + '/relay/target/release/ssb64-relay';
 let fails = 0, port = 18600 + Math.floor(Math.random() * 500);
 const startRelay = (env = {}) => new Promise(res => {
   const own = ++port; // races may run in parallel, each with its own relay

@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "sb64-port-tools"
+name = "ssb64-port-tools"
 version = "0.1.0"

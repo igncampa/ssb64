@@ -585,7 +585,7 @@ Proof: wrong predictions with per-slot scripted pads (pattern A and human-like),
 
 ### Phase 7. Deploy and people
 
-**Status: waiting on the owner: a server and players. Stage script ready.** Details in `proof/changes/`.
+**Status: live at https://ssb64.guanavibes.com; waiting on real players and the owner's decisions.** Details in `proof/changes/`.
 
 To do:
 - [ ] Relay placed between the players; TLS; one binary serving everything; host page with one NEW LOBBY button.

@@ -3,7 +3,7 @@ import { launch } from './lib.mjs'; import { spawn } from 'node:child_process'; 
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
 const out = process.argv[2] || '/tmp'; const port = 18900 + Math.floor(Math.random() * 90);
 const build = /BUILD_ID = "(\w+)"/.exec(fs.readFileSync(root + '/web/build.js', 'utf8'))[1];
-const relay = spawn(root + '/relay/target/release/sb64-relay', [], { env: { ...process.env, PORT: String(port), SITE: root + '/web', RELAY_SECRET: 'testsecret', BUILD_ID: build }, stdio: ['ignore', 'pipe', 'inherit'] });
+const relay = spawn(root + '/relay/target/release/ssb64-relay', [], { env: { ...process.env, PORT: String(port), SITE: root + '/web', RELAY_SECRET: 'testsecret', BUILD_ID: build }, stdio: ['ignore', 'pipe', 'inherit'] });
 await new Promise(r => relay.stdout.once('data', r));
 const base = `http://127.0.0.1:${port}/`;
 let fails = 0; const check = (name, ok, extra = '') => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${name} ${extra}`); if (!ok) fails++; };

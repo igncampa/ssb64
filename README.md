@@ -1,3 +1,17 @@
+# ssb64
+
+Super Smash Bros. 64 in the browser: online rollback matches for up to 8 human players, built from the decompilation below. Live at https://ssb64.guanavibes.com. You build the game data from your own ROM; the ROM is not in this repository.
+
+- What it is and how it was built: `PLAN.md`, `CHANGES.md`.
+- What is still open: `PENDING.md`.
+- Build: `source scripts/env.sh`, then `tools/port/target/release/packdata .`, then `make -f Makefile.port -j16 all`.
+- Run: `PORT=8080 SITE=web BUILD_ID=<id from web/build.js> relay/target/release/ssb64-relay`.
+- Prove: `scripts/proof_all.sh`. Package for a server: `scripts/stage.sh <empty-folder>`.
+
+The original N64 build is untouched: all port changes sit behind `#ifdef PORT`.
+
+---
+
 [![Code](https://decomp.dev/VetriTheRetri/ssb-decomp-re/us.svg?mode=shield&measure=code&label=Code)](https://decomp.dev/VetriTheRetri/ssb-decomp-re)
 [![Data](https://decomp.dev/VetriTheRetri/ssb-decomp-re/us.svg?mode=shield&measure=data&label=Data)](https://decomp.dev/VetriTheRetri/ssb-decomp-re)
 

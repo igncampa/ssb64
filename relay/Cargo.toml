@@ -1,5 +1,5 @@
 [package]
-name = "sb64-relay"
+name = "ssb64-relay"
 version = "0.1.0"
 edition = "2021"
 description = "Game-blind relay: rooms, a race clock, frame bundles"

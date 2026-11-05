@@ -9,16 +9,16 @@ const FIGHTERS = ['Mario', 'Fox', 'Donkey Kong', 'Samus', 'Luigi', 'Link', 'Yosh
 const STAGES = ["Peach's Castle", 'Sector Z', 'Kongo Jungle', 'Planet Zebes', 'Hyrule Castle', "Yoshi's Island", 'Dream Land', 'Saffron City', 'Mushroom Kingdom'];
 const q = new URLSearchParams(location.search);
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
-let token = store.get('sb64.token');
-if (!token) { token = crypto.randomUUID(); store.set('sb64.token', token); }
+let token = store.get('ssb64.token');
+if (!token) { token = crypto.randomUUID(); store.set('ssb64.token', token); }
 
 const err = m => { $('err').textContent = m || ''; };
 const show = id => { for (const s of ['sJoin', 'sHost', 'sRoom']) $(s).hidden = s !== id; };
 const fill = (el, names) => { el.innerHTML = names.map((n, i) => `<option value="${i}">${n}</option>`).join(''); };
 fill($('fighter'), FIGHTERS); fill($('stage_'), STAGES);
-$('name').value = $('hostName').value = store.get('sb64.name') || '';
+$('name').value = $('hostName').value = store.get('ssb64.name') || '';
 $('code').value = (q.get('room') || '').toUpperCase();
-$('secret').value = store.get('sb64.secret') || '';
+$('secret').value = store.get('ssb64.secret') || '';
 
 let eng = null, net = null, hostId = null, engineReady = false, roster = [];
 const pings = new Map();
@@ -40,7 +40,7 @@ const wsBase = () => `${location.protocol === 'https:' ? 'wss' : 'ws'}://${locat
 async function join(code) {
   err('');
   const name = ($('sHost').hidden ? $('name') : $('hostName')).value.trim() || 'player';
-  store.set('sb64.name', name);
+  store.set('ssb64.name', name);
   if (!engineReady) { err('Still loading the game. Your place is saved once it finishes.'); }
   while (!eng) await new Promise(r => setTimeout(r, 100));
   net = new NetClient({
@@ -126,7 +126,7 @@ function endRace() { loopOn = false; if (net) net.state = 'lobby'; $('lobby').hi
 
 $('join').onclick = () => { const c = $('code').value.trim().toUpperCase(); if (c.length !== 5) { err('A lobby code has 5 characters.'); return; } join(c); };
 $('newLobby').onclick = async () => {
-  err(''); store.set('sb64.secret', $('secret').value);
+  err(''); store.set('ssb64.secret', $('secret').value);
   try {
     const r = await fetch('/api/lobby', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret: $('secret').value }) });
     const j = await r.json();

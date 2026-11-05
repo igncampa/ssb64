@@ -14,11 +14,11 @@ D=$(sha256sum web/ssb64.data | cut -c1-16)
 [ "$ID" = "$W" ] || { echo "FAIL build id $ID does not match wasm $W"; exit 1; }
 [ "$DH" = "$D" ] || { echo "FAIL data hash $DH does not match web/ssb64.data $D (copy the new data file)"; exit 1; }
 cmp -s web/ssb64.data build/us/port/ssb64.data || { echo "FAIL web/ssb64.data is not the built data file"; exit 1; }
-[ -x relay/target/release/sb64-relay ] || { echo "FAIL relay is not built"; exit 1; }
-[ relay/target/release/sb64-relay -nt relay/src/main.rs ] || { echo "FAIL relay is older than its source"; exit 1; }
+[ -x relay/target/release/ssb64-relay ] || { echo "FAIL relay is not built"; exit 1; }
+[ relay/target/release/ssb64-relay -nt relay/src/main.rs ] || { echo "FAIL relay is older than its source"; exit 1; }
 mkdir -p "$OUT/web"
 cp web/index.html web/*.js web/ssb64.wasm web/ssb64.data "$OUT/web/"
-cp relay/target/release/sb64-relay "$OUT/"
+cp relay/target/release/ssb64-relay "$OUT/"
 cat > "$OUT/run.env" <<ENV
 # Fill in RELAY_SECRET before starting. TLS belongs in front of this port.
 PORT=8080
@@ -27,4 +27,4 @@ BUILD_ID=$ID
 RELAY_SECRET=
 ENV
 echo "staged build $ID data $DH in $OUT"
-echo "next, by a person: copy the folder to the server, set RELAY_SECRET in run.env, start sb64-relay with those variables behind TLS"
+echo "next, by a person: copy the folder to the server, set RELAY_SECRET in run.env, start ssb64-relay with those variables behind TLS"

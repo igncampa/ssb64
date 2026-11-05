@@ -463,17 +463,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
-name = "sb64-relay"
-version = "0.1.0"
-dependencies = [
- "axum",
- "futures-util",
- "rand 0.8.8",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "serde"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,6 +568,17 @@ checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
  "windows-sys",
+]
+
+[[package]]
+name = "ssb64-relay"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "futures-util",
+ "rand 0.8.8",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
