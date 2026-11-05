@@ -586,10 +586,17 @@ u8* lbParticleReadFloatBigEnd(u8 *csr, f32 *f)
 {
 	u8 bytes[4];
 
+#ifdef PORT // the script bytes are big-endian
+	bytes[3] = *csr++;
+	bytes[2] = *csr++;
+	bytes[1] = *csr++;
+	bytes[0] = *csr++;
+#else
 	bytes[0] = *csr++;
 	bytes[1] = *csr++;
 	bytes[2] = *csr++;
 	bytes[3] = *csr++;
+#endif
 
 	*f = *(f32*)bytes;
 

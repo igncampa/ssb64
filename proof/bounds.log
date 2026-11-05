@@ -1,0 +1,11 @@
+BOUNDS src/ft/ftmain.c:1015
+BOUNDS src/ft/ftmain.c:1016
+BOUNDS src/ft/ftmain.c:1021
+BOUNDS src/ft/ftmain.c:1023
+BOUNDS src/ft/ftmain.c:1030
+BOUNDS src/ft/ftmain.c:1035
+BOUNDS src/ft/ftmain.c:500
+BOUNDS src/ft/ftmanager.c:724
+BOUNDS src/ft/ftmanager.c:725
+BOUNDS src/ft/ftmanager.c:726
+matches=15 unexpected=0

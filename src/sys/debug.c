@@ -991,6 +991,16 @@ void syDebugStartRmonThread5Hang(void)
  */
 void syDebugPrintf(const char *fmt, ...)
 {
+#ifdef PORT
+    extern void port_vlog(const char *fmt, va_list ap);
+    {
+        va_list port_ap;
+        va_start(port_ap, fmt);
+        port_vlog(fmt, port_ap);
+        va_end(port_ap);
+        return;
+    }
+#endif
     void *fb;
     OSPri origPri;
 
@@ -1037,6 +1047,12 @@ void syDebugPrintf(const char *fmt, ...)
  */
 void syDebugRunFuncPrint(void (*func_print)(void))
 {
+#ifdef PORT
+    {
+        extern void port_fatal(const char *why);
+        port_fatal("game reached its crash screen");
+    }
+#endif
     OSPri pri_bak;
     void *framebuf;
 

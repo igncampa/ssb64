@@ -58,6 +58,7 @@ extern s32 dFTNNessSubMotionDescsCount;
 extern FTMotionDesc dFTBossSubMotionDescs[];
 extern s32 dFTBossSubMotionDescsCount;
 
+#ifndef PORT
 extern s32 particles_unk0_scb_ROM_START;
 extern s32 particles_unk0_scb_ROM_END;
 extern s32 particles_unk0_txb_ROM_START;
@@ -70,6 +71,7 @@ extern s32 particles_unk2_scb_ROM_START;
 extern s32 particles_unk2_scb_ROM_END;
 extern s32 particles_unk2_txb_ROM_START;
 extern s32 particles_unk2_txb_ROM_END;
+#endif
 
 // 80116DD0
 FTDesc dFTManagerDefaultFighterDesc =

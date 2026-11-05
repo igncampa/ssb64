@@ -6,10 +6,12 @@
 #include <PR/gbi.h>
 #include <mn/mndef.h>
 
+#ifndef PORT
 extern uintptr_t lMNTitleParticleScriptBankLo;  // 0x00B22C30
 extern uintptr_t lMNTitleParticleScriptBankHi;  // 0x00B22D40
 extern uintptr_t lMNTitleParticleTextureBankLo; // 0x00B22D40
 extern uintptr_t lMNTitleParticleTextureBankHi; // 0x00B277B0
+#endif
 
 extern void *sMNTitleFiles[/* */];
 

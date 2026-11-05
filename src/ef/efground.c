@@ -1577,6 +1577,10 @@ void efGroundMakeAppearActor(void)
 {
     GObj *effect_gobj;
 
+    #ifdef PORT
+    // The table stops short of the last stage; the cartridge read whatever followed it.
+    if (gSCManagerBattleState->gkind >= ARRAY_COUNT(dEFGroundDatas)) return;
+#endif
     if ((gSCManagerBattleState->gkind <= nGRKindBattleEnd) && (gSCManagerSceneData.scene_curr != nSCKind1PTrainingMode) && (dEFGroundDatas[gSCManagerBattleState->gkind].effect_params != NULL))
     {
         effect_gobj = gcMakeGObjSPAfter(nGCCommonKindEffect, NULL, 7, GOBJ_PRIORITY_DEFAULT);

@@ -8,7 +8,11 @@
 // // // // // // // // // // // //
 
 // 0x80188490
+#ifdef PORT
+f32 dFTCommonRebirthOffsetsX[/* */] = { 0.0F, -1000.0F, 1000.0F, -2000.0F, 2000.0F, -500.0F, 500.0F, -1500.0F };
+#else
 f32 dFTCommonRebirthOffsetsX[/* */] = { 0.0F, -1000.0F, 1000.0F, -2000.0F };
+#endif
 
 // // // // // // // // // // // //
 //                               //

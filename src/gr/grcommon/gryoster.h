@@ -6,10 +6,12 @@
 #include <gr/grdef.h>
 #include <ef/efdef.h>
 
+#ifndef PORT
 extern intptr_t lGRYosterParticleScriptBankLo;  // 0x00B22980
 extern intptr_t lGRYosterParticleScriptBankHi;  // 0x00B22A00
 extern intptr_t lGRYosterParticleTextureBankLo; // 0x00B22A00
 extern intptr_t lGRYosterParticleTextureBankHi; // 0x00B22C30
+#endif
 
 extern LBGenerator* grYosterCloudVaporMakeEffect(Vec3f *pos);
 extern sb32 grYosterCheckFighterCloudStand(s32 cloud_id);

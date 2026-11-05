@@ -1347,6 +1347,36 @@ void gcPlayMObjMatAnim(MObj *mobj)
                 } 
                 else 
                 {
+#ifdef PORT
+                    {
+                        // The event word is RRGGBBAA. Work on values: the N64 code relied on big-endian byte positions.
+                        union { f32 f; u32 u; } cv0, cv1;
+                        u32 w;
+
+                        cv0.f = aobj->value_base;
+                        cv1.f = aobj->value_target;
+
+                        if (aobj->kind == nGCAnimKindLinear)
+                        {
+                            s32 k;
+                            interp = (aobj->length * aobj->length_invert * 256.0F);
+                            if (interp < 0) interp = 0;
+                            if (interp > 256) interp = 256;
+                            w = 0;
+                            for (k = 24; k >= 0; k -= 8)
+                            {
+                                u32 c = (((256 - interp) * ((cv0.u >> k) & 0xFF)) + (interp * ((cv1.u >> k) & 0xFF))) >> 8;
+                                w |= (c > 255 ? 255 : c) << k;
+                            }
+                        }
+                        else w = (aobj->length_invert <= aobj->length) ? cv1.u : cv0.u;
+
+                        color.s.r = w >> 24;
+                        color.s.g = w >> 16;
+                        color.s.b = w >> 8;
+                        color.s.a = w;
+                    }
+#else
                     switch(aobj->kind)
                     {
                     case nGCAnimKindLinear: 
@@ -1392,6 +1422,7 @@ void gcPlayMObjMatAnim(MObj *mobj)
                         color = (aobj->length_invert <= aobj->length) ? *(SYColorPack*)&aobj->value_target : *(SYColorPack*)&aobj->value_base;
                         break;
                     }
+#endif
                     switch (aobj->track)
                     {
                     case nGCAnimTrackPrimColor:

@@ -1,3 +1,7 @@
+#ifdef PORT
+extern int gPortResim;
+extern int port_audio_queued_samples(void);
+#endif
 #include <sys/audio.h>
 #include <sys/scheduler.h>
 #include <sys/dma.h>
@@ -5,7 +9,9 @@
 #include <PR/rcp.h>
 #include <PR/gu.h>
 
+#ifndef PORT
 extern SYAudioSettings dSYAudioPublicSettings2, dSYAudioPublicSettings3;
+#endif
 
 // only temporarily here...
 typedef struct alSoundEffect
@@ -33,6 +39,7 @@ typedef struct alSoundEffect
 
 } alSoundEffect;
 
+#ifndef PORT
 extern uintptr_t S1_music_sbk_ROM_START;
 extern uintptr_t S1_music_sbk_ROM_END;
 extern uintptr_t B1_sounds1_ctl_ROM_START;
@@ -45,6 +52,7 @@ extern uintptr_t fgm_tbl_ROM_START;
 extern uintptr_t fgm_tbl_ROM_END;
 extern uintptr_t fgm_ucd_ROM_START;
 extern uintptr_t fgm_ucd_ROM_END;
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -347,6 +355,14 @@ void syAudioBnkfPatchBank(ALBank *bank, uintptr_t offset, uintptr_t table)
     }
     for (i = 0; i < bank->instCount; i++)
     {
+#ifdef PORT
+        // An empty slot points at the file header. On the N64 a header byte happened to read as "already patched".
+        if (bank->instArray[i] == NULL)
+        {
+            bank->instArray[i] = (ALInstrument*) offset;
+            continue;
+        }
+#endif
         bank->instArray[i] = (ALInstrument*) ((uintptr_t)bank->instArray[i] + offset);
 
         if (bank->instArray[i] != NULL)
@@ -758,7 +774,9 @@ void syAudioInit(void)
     sySchedulerAddClient(&sSYAudioClient, &sSYAudioTicMesgQueue, sSYAudioTicMesgs, ARRAY_COUNT(sSYAudioTicMesgs));
     osCreateMesgQueue(&sSYAudioDmaMesgQueue, sSYAudioDmaMesgs, ARRAY_COUNT(sSYAudioDmaMesgs));
     osCreateMesgQueue(&sSYAudioSPTaskMesgQueue, sSYAudioSPTaskMesgs, ARRAY_COUNT(sSYAudioSPTaskMesgs));
+#ifndef PORT
     osSendMesg(&sSYAudioSPTaskMesgQueue, (OSMesg)NULL, OS_MESG_BLOCK);
+#endif
 }
 
 void syAudioLoadAssets(void)
@@ -987,6 +1005,36 @@ void syAudioMakeBGMPlayers(void)
     }
 }
 
+#ifdef PORT
+// The audio thread as two calls: init, then one frame per sim tick after the last step.
+extern void port_audio_run_task(SYTaskAudio *task);
+static s32 sp80;
+static s32 id_mod3;
+static s32 ai_len;
+static u8 sp73;
+void syAudioPortInit(void)
+{
+    ai_len = 0;
+    sp73 = 2;
+
+    syAudioInit();
+
+    sSYAudioCurrentSettings = dSYAudioPublicSettings;
+
+    syAudioLoadAssets();
+    syAudioMakeBGMPlayers();
+
+    dSYAudioPublicSettings = sSYAudioCurrentSettings;
+}
+
+void syAudioPortFrame(void)
+{
+    u32 count_start;
+    s32 i;
+
+    do
+    {
+#else
 void syAudioThreadMain(void *arg)
 {
     s32 unused;
@@ -1013,6 +1061,7 @@ void syAudioThreadMain(void *arg)
 
     while (TRUE)
     {
+#endif
         count_start = osGetCount();
         i = dSYAudioCurrentTic & 1;
         sSYAudioCurrentTask = sSYAudioSchedulerTasks[i];
@@ -1061,9 +1110,13 @@ void syAudioThreadMain(void *arg)
         sSYAudioCurrentTask->task.t.output_buffer_size = 0;
         
         gSYAudioThreadTimeDelta = (osGetCount() - count_start) / 2971;
+#ifdef PORT
+        ai_len = port_audio_queued_samples();
+#else
         osRecvMesg(&sSYAudioTicMesgQueue, NULL, OS_MESG_BLOCK);
         ai_len = IO_READ(AI_LEN_REG) >> 2;
         osRecvMesg(&sSYAudioSPTaskMesgQueue, NULL, OS_MESG_BLOCK);
+#endif
 
         id_mod3 = (dSYAudioCurrentTic - 1) % 3;
         
@@ -1084,7 +1137,11 @@ void syAudioThreadMain(void *arg)
             osRecvMesg(&sSYAudioDmaMesgQueue, NULL, OS_MESG_NOBLOCK);
         }
         osWritebackDCacheAll();
+#ifdef PORT
+        port_audio_run_task(sSYAudioCurrentTask);
+#else
         osSendMesg(&gSYSchedulerTaskMesgQueue, (OSMesg)sSYAudioCurrentTask, OS_MESG_NOBLOCK);
+#endif
         
         dSYAudioCurrentTic++;
         dSYAudioNextDma = 0;
@@ -1179,8 +1236,10 @@ void syAudioThreadMain(void *arg)
             }
             if (sp80 == 0)
             {
+#ifndef PORT
                 osRecvMesg(&sSYAudioSPTaskMesgQueue, NULL, OS_MESG_BLOCK);
                 osSendMesg(&sSYAudioSPTaskMesgQueue, NULL, OS_MESG_BLOCK);
+#endif
                 n_alClose(&sSYAudioGlobals);
             
                 sSYAudioCurrentSettings = dSYAudioPublicSettings;
@@ -1220,15 +1279,21 @@ void syAudioThreadMain(void *arg)
             }
             if (sp80 == 0)
             {
+#ifndef PORT
                 osRecvMesg(&sSYAudioSPTaskMesgQueue, NULL, OS_MESG_BLOCK);
                 osSendMesg(&sSYAudioSPTaskMesgQueue, NULL, OS_MESG_BLOCK);
+#endif
                 n_alClose(&sSYAudioGlobals);
                 sSYAudioHeap.cur = sSYAudioHeapBase;
                 sSYAudioHeap.count = sSYAudioHeapSize;
                 syAudioMakeBGMPlayers();
                 dSYAudioPublicSettings = sSYAudioCurrentSettings;
                 dSYAudioIsRestarting = FALSE;
+#ifdef PORT
+                ai_len = port_audio_queued_samples();
+#else
                 ai_len = IO_READ(AI_LEN_REG) >> 2;
+#endif
             }
             else
             {
@@ -1236,7 +1301,12 @@ void syAudioThreadMain(void *arg)
                 func_80020E28();
             }
         }
+#ifdef PORT
     }
+    while (FALSE);
+#else
+    }
+#endif
 }
 
 // 0x80020A18
@@ -1271,6 +1341,9 @@ void syAudioSetFXType(s32 fx_type)
 // 0x80020A74
 void syAudioStopBGMAll(void)
 {
+#ifdef PORT
+    if (gPortResim) return;
+#endif
     s32 i;
 
     for (i = 0; i < SYAUDIO_BGMPLAYERS_NUM; i++)
@@ -1282,6 +1355,9 @@ void syAudioStopBGMAll(void)
 // 0x80020AB4
 s32 syAudioPlayBGM(s32 sngplayer, u32 bgm)
 {
+#ifdef PORT
+    if (gPortResim) return 0;
+#endif
     if (bgm < sSYAudioSeqFile->seqCount)
     {
         sSYAudioCSPlayerStatuses[sngplayer] = AL_PLAYING;
@@ -1295,6 +1371,9 @@ s32 syAudioPlayBGM(s32 sngplayer, u32 bgm)
 // 0x80020B08
 void syAudioStopBGM(s32 sngplayer)
 {
+#ifdef PORT
+    if (gPortResim) return;
+#endif
     sSYAudioCSPlayerStatuses[sngplayer] = AL_PLAYING;
     sSYAudioBGMPlayingIDs[sngplayer] = -1;
 }
@@ -1302,6 +1381,9 @@ void syAudioStopBGM(s32 sngplayer)
 // 0x80020B38
 void syAudioSetBGMVolume(s32 sngplayer, u32 vol)
 {
+#ifdef PORT
+    if (gPortResim) return;
+#endif
     if (vol > 30720)
     {
         vol = 30720;
@@ -1314,6 +1396,9 @@ void syAudioSetBGMVolume(s32 sngplayer, u32 vol)
 // 0x80020BC0
 void syAudioSetBGMVolumeFade(s32 sngplayer, u32 vol, u32 time)
 {
+#ifdef PORT
+    if (gPortResim) return;
+#endif
     if (vol > 30720)
     {
         vol = 30720;
@@ -1504,3 +1589,12 @@ void syAudioUpdateMesgQueue(void)
     dSYAudioIsSettingsUpdated = TRUE;
     osRecvMesg(&gSYMainThreadingMesgQueue, NULL, OS_MESG_BLOCK);
 }
+
+#ifdef PORT
+// After a rollback the sim may want different music than the mailbox holds.
+extern u32 gMPCollisionBGMCurrent;
+void port_bgm_reconcile(void)
+{
+    if (sSYAudioBGMPlayingIDs[0] != (s32)gMPCollisionBGMCurrent) syAudioPlayBGM(0, gMPCollisionBGMCurrent);
+}
+#endif

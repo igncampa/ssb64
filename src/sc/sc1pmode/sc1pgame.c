@@ -14,8 +14,10 @@
 
 extern alSoundEffect D_8009EDD0_406D0;
 
+#ifndef PORT
 extern intptr_t D_NF_00006010;
 extern intptr_t D_NF_00006450;
+#endif
 
 // // // // // // // // // // // //
 //                               //

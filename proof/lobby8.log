@@ -1,0 +1,7 @@
+ok   eight players on the roster 
+ok   a ninth player is told the lobby is full That lobby is full.
+ok   eight distinct slots 0,1,2,3,4,5,6,7
+ok   a real key press moved every fighter 0>582 -1397>-1990 1>523 1421>741 -698>-265 711>-33 0>210 -698>-1588
+ok   all eight pages agree on every hash 60 hashes, frames 907 908 906 907 908 903 907 906
+     rollbacks 8 4 4 8 4 3 3 2 stalls 24 23 22 0 25 24 21 0
+fails=0

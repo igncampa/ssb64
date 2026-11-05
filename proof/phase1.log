@@ -1,0 +1,90 @@
+ok   stage0 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2083872
+ok   stage0 human 4p lines=753 end frame 11287 status 7 static 163488 arena 2091836
+ok   stage0 2p+2cpu lines=782 end frame 11725 status 7 static 163488 arena 1651536
+ok   stage0 scriptA 8p lines=779 end frame 11677 status 7 static 163488 arena 1655464
+ok   stage0 human 8p lines=753 end frame 11287 status 7 static 163488 arena 2975756
+ok   stage0 4p+4cpu lines=753 end frame 11287 status 7 static 163488 arena 3011316
+ok   stage1 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2158360
+ok   stage1 human 4p lines=801 end frame 12000 status 6 static 163488 arena 2236480
+ok   stage1 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2109300
+ok   stage1 scriptA 8p lines=801 end frame 12000 status 1 static 163488 arena 1965016
+ok   stage1 human 8p lines=801 end frame 12000 status 1 static 163488 arena 2012212
+ok   stage1 4p+4cpu lines=784 end frame 11758 status 7 static 163488 arena 1686280
+ok   stage2 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2151044
+ok   stage2 human 4p lines=753 end frame 11287 status 7 static 163488 arena 2009748
+ok   stage2 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2031660
+ok   stage2 scriptA 8p lines=753 end frame 11287 status 7 static 163488 arena 2964908
+ok   stage2 human 8p lines=753 end frame 11287 status 7 static 163488 arena 2810388
+ok   stage2 4p+4cpu lines=753 end frame 11287 status 7 static 163488 arena 2906436
+ok   stage3 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2112104
+ok   stage3 human 4p lines=753 end frame 11287 status 7 static 163488 arena 2128932
+ok   stage3 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2232952
+ok   stage3 scriptA 8p lines=753 end frame 11287 status 7 static 163488 arena 2914832
+ok   stage3 human 8p lines=753 end frame 11287 status 7 static 163488 arena 3007036
+ok   stage3 4p+4cpu lines=753 end frame 11287 status 7 static 163488 arena 3066168
+ok   stage4 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2101808
+ok   stage4 human 4p lines=753 end frame 11287 status 7 static 163488 arena 2202212
+ok   stage4 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2099072
+ok   stage4 scriptA 8p lines=753 end frame 11287 status 7 static 163488 arena 2974224
+ok   stage4 human 8p lines=753 end frame 11287 status 7 static 163488 arena 3032516
+ok   stage4 4p+4cpu lines=774 end frame 11596 status 7 static 163488 arena 1724356
+ok   stage5 scriptA 4p lines=801 end frame 12000 status 6 static 163488 arena 1697420
+ok   stage5 human 4p lines=753 end frame 11287 status 7 static 163488 arena 2046432
+ok   stage5 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2060876
+ok   stage5 scriptA 8p lines=753 end frame 11287 status 7 static 163488 arena 2986088
+ok   stage5 human 8p lines=753 end frame 11287 status 7 static 163488 arena 2860552
+ok   stage5 4p+4cpu lines=753 end frame 11287 status 7 static 163488 arena 2946412
+ok   stage6 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2119856
+ok   stage6 human 4p lines=797 end frame 11954 status 7 static 163488 arena 1695460
+ok   stage6 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2235904
+ok   stage6 scriptA 8p lines=753 end frame 11287 status 7 static 163488 arena 2943112
+ok   stage6 human 8p lines=753 end frame 11287 status 7 static 163488 arena 3016456
+ok   stage6 4p+4cpu lines=801 end frame 12000 status 1 static 163488 arena 1703288
+ok   stage7 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2159784
+ok   stage7 human 4p lines=753 end frame 11287 status 7 static 163488 arena 2259992
+ok   stage7 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2124416
+ok   stage7 scriptA 8p lines=753 end frame 11287 status 7 static 163488 arena 3048104
+ok   stage7 human 8p lines=753 end frame 11287 status 7 static 163488 arena 3077008
+ok   stage7 4p+4cpu lines=773 end frame 11589 status 7 static 163488 arena 1755176
+ok   stage8 scriptA 4p lines=753 end frame 11287 status 7 static 163488 arena 2117476
+ok   stage8 human 4p lines=753 end frame 11287 status 7 static 163488 arena 1977976
+ok   stage8 2p+2cpu lines=753 end frame 11287 status 7 static 163488 arena 2005752
+ok   stage8 scriptA 8p lines=774 end frame 11596 status 7 static 163488 arena 1546140
+ok   stage8 human 8p lines=753 end frame 11287 status 7 static 163488 arena 2780104
+ok   stage8 4p+4cpu lines=753 end frame 11287 status 7 static 163488 arena 2875164
+ok   seed changes first hash: 15 07ac7bfc / 15 8dc020af
+ok   match 0 in one process equals standalone
+ok   match 1 in one process equals standalone
+ok   match 2 in one process equals standalone
+ok   draw on and off identical stage 0
+ok   draw on and off identical stage 1
+ok   draw on and off identical stage 2
+ok   draw on and off identical stage 3
+ok   draw on and off identical stage 4
+ok   draw on and off identical stage 5
+ok   draw on and off identical stage 6
+ok   draw on and off identical stage 7
+ok   draw on and off identical stage 8
+ok   audio on and off identical stage 0
+ok   audio on and off identical stage 1
+ok   audio on and off identical stage 2
+ok   audio on and off identical stage 3
+ok   audio on and off identical stage 4
+ok   audio on and off identical stage 5
+ok   audio on and off identical stage 6
+ok   audio on and off identical stage 7
+ok   audio on and off identical stage 8
+ok   poison patterns identical stage 0
+ok   poison patterns identical stage 3
+ok   poison patterns identical stage 6
+ok   flipped button at 900 first seen in hash at 900
+ok   8p draw on and off identical stage 0
+ok   8p audio on and off identical stage 0
+ok   8p poison patterns identical stage 0
+ok   8p draw on and off identical stage 4
+ok   8p audio on and off identical stage 4
+ok   8p poison patterns identical stage 4
+ok   8p draw on and off identical stage 8
+ok   8p audio on and off identical stage 8
+ok   8p poison patterns identical stage 8
+runs=54 fails=0

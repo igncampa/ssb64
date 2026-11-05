@@ -125,10 +125,10 @@ s32 sFTMainGroundObstaclesNum;
 s32 sFTMainGroundHazardsNum;
 
 // 0x801311A0
-sb32 gFTMainIsDamageDetect[GMCOMMON_PLAYERS_MAX];
+sb32 gFTMainIsDamageDetect[4]; // one per attack_colls entry, not per player
 
 // 0x801311B0
-sb32 gFTMainIsAttackDetect[GMCOMMON_PLAYERS_MAX];
+sb32 gFTMainIsAttackDetect[4];
 
 // 0x801311C0
 s32 sFTMainHitLogID;

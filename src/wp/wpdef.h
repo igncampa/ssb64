@@ -2,7 +2,11 @@
 #define _WPDEF_H_
 
 // Macros
+#ifdef PORT
+#define WEAPON_ALLOC_MAX 64
+#else
 #define WEAPON_ALLOC_MAX 32 						// Allocate this many weapon user_data structs at once
+#endif
 #define WEAPON_ALLOC_ALIGN 0x8
 
 #define WEAPON_STALE_DEFAULT 1.0F

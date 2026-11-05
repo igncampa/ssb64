@@ -1,0 +1,91 @@
+ok   8 pages, full match, stage 0, run 1
+     c0 slot 0 ended frame 4086 conf 4086 rtt 61 rb 549 resim 3840 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 61 rb 557 resim 3903 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 60 rb 515 resim 3595 depth 12 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 61 rb 549 resim 3834 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 60 rb 553 resim 3876 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 61 rb 549 resim 3847 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 60 rb 494 resim 3396 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 61 rb 531 resim 3676 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"6":159,"7":4130,"12":1,"13":7}
+ok   8 pages, full match, stage 0, run 2
+     c0 slot 0 ended frame 4086 conf 4086 rtt 61 rb 547 resim 3834 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 60 rb 551 resim 3862 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 60 rb 481 resim 3285 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 60 rb 549 resim 3848 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 60 rb 505 resim 3488 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 61 rb 530 resim 3707 depth 14 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 60 rb 549 resim 3848 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 61 rb 550 resim 3855 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"5":1,"6":154,"7":4099,"13":7,"14":1}
+ok   8 pages, full match, stage 0, run 3
+     c0 slot 0 ended frame 4086 conf 4086 rtt 60 rb 495 resim 3462 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 60 rb 520 resim 3645 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 61 rb 516 resim 3616 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 61 rb 516 resim 3612 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 61 rb 457 resim 3145 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 60 rb 499 resim 3494 depth 12 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 60 rb 517 resim 3623 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 60 rb 516 resim 3616 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"5":1,"6":84,"7":3943,"12":1,"13":7}
+ok   8 pages, full match, stage 4, run 1
+     c0 slot 0 ended frame 4086 conf 4086 rtt 60 rb 539 resim 3778 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 61 rb 529 resim 3687 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 61 rb 489 resim 3341 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 61 rb 540 resim 3783 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 61 rb 538 resim 3771 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 61 rb 536 resim 3757 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 61 rb 500 resim 3426 depth 14 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 61 rb 518 resim 3602 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"5":1,"6":225,"7":3955,"13":7,"14":1}
+ok   8 pages, full match, stage 4, run 3
+     c0 slot 0 ended frame 4086 conf 4086 rtt 60 rb 499 resim 3443 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 60 rb 491 resim 3408 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 61 rb 532 resim 3728 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 60 rb 534 resim 3743 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 60 rb 517 resim 3599 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 61 rb 513 resim 3557 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 61 rb 520 resim 3638 depth 12 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 60 rb 535 resim 3749 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"5":1,"6":167,"7":3965,"12":1,"13":7}
+ok   8 pages, full match, stage 4, run 2
+     c0 slot 0 frames frame 5007 conf 5000 rtt 61 rb 602 resim 4186 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c1 slot 1 frames frame 5007 conf 5000 rtt 61 rb 653 resim 4576 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c2 slot 2 frames frame 5007 conf 5000 rtt 60 rb 649 resim 4547 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c3 slot 3 frames frame 5007 conf 5000 rtt 60 rb 646 resim 4526 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c4 slot 4 frames frame 5007 conf 5000 rtt 60 rb 617 resim 4285 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c5 slot 5 frames frame 5007 conf 5000 rtt 60 rb 605 resim 4197 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c6 slot 6 frames frame 5007 conf 5000 rtt 60 rb 649 resim 4547 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     c7 slot 7 frames frame 5007 conf 5000 rtt 61 rb 652 resim 4569 depth 13 repl 0 stalls 0 hashes 334 desync null ev  
+     corrections by frames rewound {"6":126,"7":4939,"13":8}
+ok   8 pages, full match, stage 6, run 2
+     c0 slot 0 ended frame 4086 conf 4086 rtt 61 rb 550 resim 3809 depth 12 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 61 rb 606 resim 4244 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 61 rb 611 resim 4280 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 60 rb 619 resim 4337 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 60 rb 578 resim 4024 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 60 rb 530 resim 3643 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 61 rb 612 resim 4286 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 60 rb 614 resim 4302 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"6":162,"7":4550,"12":1,"13":7}
+ok   8 pages, full match, stage 6, run 1
+     c0 slot 0 ended frame 4086 conf 4086 rtt 60 rb 560 resim 3910 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 60 rb 591 resim 4141 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c2 slot 2 ended frame 4086 conf 4086 rtt 61 rb 585 resim 4099 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c3 slot 3 ended frame 4086 conf 4086 rtt 61 rb 584 resim 4092 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c4 slot 4 ended frame 4086 conf 4086 rtt 60 rb 524 resim 3617 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c5 slot 5 ended frame 4086 conf 4086 rtt 61 rb 546 resim 3808 depth 12 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c6 slot 6 ended frame 4086 conf 4086 rtt 60 rb 590 resim 4134 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     c7 slot 7 ended frame 4086 conf 4086 rtt 61 rb 587 resim 4113 depth 13 repl 0 stalls 0 hashes 273 desync null ev ended 
+     corrections by frames rewound {"5":1,"6":100,"7":4458,"12":1,"13":7}
+ok   8 pages, full match, stage 6, run 3
+     c0 slot 0 ended frame 4443 conf 4443 rtt 61 rb 526 resim 3681 depth 12 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c1 slot 1 ended frame 4443 conf 4443 rtt 61 rb 527 resim 3680 depth 13 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c2 slot 2 ended frame 4443 conf 4443 rtt 61 rb 523 resim 3654 depth 13 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c3 slot 3 ended frame 4443 conf 4443 rtt 61 rb 529 resim 3703 depth 13 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c4 slot 4 ended frame 4443 conf 4443 rtt 61 rb 480 resim 3298 depth 13 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c5 slot 5 ended frame 4443 conf 4443 rtt 60 rb 523 resim 3662 depth 12 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c6 slot 6 ended frame 4443 conf 4443 rtt 61 rb 530 resim 3712 depth 13 repl 0 stalls 0 hashes 297 desync null ev ended 
+     c7 slot 7 ended frame 4443 conf 4443 rtt 61 rb 514 resim 3576 depth 13 repl 0 stalls 0 hashes 297 desync null ev ended 
+     corrections by frames rewound {"4":8,"5":3,"6":114,"7":4019,"12":2,"13":6}
+fails=0

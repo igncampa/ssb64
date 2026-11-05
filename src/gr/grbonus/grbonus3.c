@@ -1,3 +1,8 @@
+#ifdef PORT
+#include <ssb_types.h>
+extern void ifCommonBattleEndAddSoundQueueID(u16 sfx_id);
+extern void ifCommonAnnounceCompleteInitInterface(u16 sfx_id);
+#endif
 #include <gr/ground.h>
 #include <it/item.h>
 #include <ft/fighter.h>

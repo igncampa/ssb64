@@ -16,8 +16,13 @@ union LBRelocDesc
 {
     struct lbRelocInfo
     {
+#ifdef PORT // little-endian: the chain word is (reloc << 16) | words_num
+        u16 words_num;
+        u16 reloc;
+#else
         u16 reloc;
         u16 words_num;
+#endif
 
     } info;
 
@@ -38,8 +43,13 @@ struct LBRelocSetup
 
 struct LBTableEntry
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+    u32 data_offset : 31;
+    ub32 is_compressed : 1;
+#else
     ub32 is_compressed : 1;
     u32 data_offset : 31;
+#endif
     u16 reloc_intern_offset;    // in words
     u16 compressed_size;        // in words
     u16 reloc_extern_offset;    // in words

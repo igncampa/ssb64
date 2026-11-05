@@ -93,6 +93,9 @@ void syDmaCopy(OSPiHandle *handle, uintptr_t phys, uintptr_t virtual, size_t siz
 // 0x80002BE4
 void syDmaLoadOverlay(SYOverlay *ovl)
 {
+#ifdef PORT
+    return; // statically linked; fresh-match state comes from the boot image
+#endif
     if ((ovl->ram_text_end - ovl->ram_text_start) != 0)
     {
         osInvalICache((void*) ovl->ram_text_start, ovl->ram_text_end - ovl->ram_text_start);

@@ -37,3 +37,12 @@ symbols/reloc_data_symbols.*
 # .manifest / .spritelist files ARE committed (they describe asset structure).
 src/relocData/**/*.inc.c
 src/relocData/**/*.bin
+# port build
+.venv/
+tools/port/target/
+tools/vpk0cmd
+baserom.us.z64
+web/ssb64.*
+relay/target/
+web/tests/node_modules/
+web/build.js

@@ -1,0 +1,15 @@
+[package]
+name = "sb64-relay"
+version = "0.1.0"
+edition = "2021"
+description = "Game-blind relay: rooms, a race clock, frame bundles"
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "time", "sync", "signal", "fs"] }
+futures-util = "0.3"
+serde_json = "1"
+rand = "0.8"
+
+[profile.release]
+opt-level = 3

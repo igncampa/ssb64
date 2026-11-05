@@ -5,10 +5,12 @@
 #include <wp/wptypes.h>
 #include <ft/fttypes.h>
 
+#ifndef PORT
 extern intptr_t lITManagerParticleScriptBankLo;  // 0x00B1BCA0
 extern intptr_t lITManagerParticleScriptBankHi;  // 0x00B1BDE0
 extern intptr_t lITManagerParticleTextureBankLo; // 0x00B1BDE0
 extern intptr_t lITManagerParticleTextureBankHi; // 0x00B1E640
+#endif
 
 // Allocate memory for item structs and initialize global item-related data
 void itManagerInitItems();

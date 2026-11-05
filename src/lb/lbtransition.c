@@ -3,7 +3,11 @@
 #include <reloc_data.h>
 
 extern void *gSYSchedulerCurrentFramebuffer;
+#ifdef PORT
+extern void syRdpSetViewport(void*, f32, f32, f32, f32);
+#else
 extern syRdpSetViewport(void*, f32, f32, f32, f32);
+#endif
 
 // // // // // // // // // // // //
 //                               //

@@ -11,7 +11,9 @@
  * REGION_US / REGION_JP are defined by the Makefile based on $(VERSION).
  */
 
-#if defined(REGION_US)
+#if defined(PORT)
+#include "port_syms.h"
+#elif defined(REGION_US)
 #include "reloc_data.us.h"
 #elif defined(REGION_JP)
 #include "reloc_data.jp.h"

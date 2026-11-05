@@ -172,7 +172,11 @@ void ftKirbyCopySamusSpecialNLoopProcInterrupt(GObj *fighter_gobj)
         /* WARNING: Undefined behavior. This function expects a third argument
          * for item throw buffer frames, but never receives it.
          */ 
+#ifdef PORT // the N64 passed whatever was in a register; every page must agree
+        ftCommonEscapeSetStatus(fighter_gobj, status_id, 0);
+#else
         ftCommonEscapeSetStatus(fighter_gobj, status_id);
+#endif
     }
 
     else if (fp->input.pl.button_tap & fp->input.button_mask_z)

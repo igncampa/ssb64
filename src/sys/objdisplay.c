@@ -1,3 +1,8 @@
+#ifdef PORT // the display list word is RRGGBBAA; on little-endian .pack holds the bytes the other way round
+#define PORT_RGBA_WORD(c) (((u32)(c).s.r << 24) | ((u32)(c).s.g << 16) | ((u32)(c).s.b << 8) | (u32)(c).s.a)
+#else
+#define PORT_RGBA_WORD(c) ((c).pack)
+#endif
 #include <sys/obj.h>
 
 #include <sys/taskman.h>
@@ -1209,11 +1214,11 @@ void gcDrawMObjForDObj(DObj *dobj, Gfx **dl_head)
         }
         if (flags & MOBJ_FLAG_LIGHT1)
         {
-            gSPLightColor(branch_dl++, LIGHT_1, mobj->sub.light1color.pack);
+            gSPLightColor(branch_dl++, LIGHT_1, PORT_RGBA_WORD(mobj->sub.light1color));
         }
         if (flags & MOBJ_FLAG_LIGHT2)
         {
-            gSPLightColor(branch_dl++, LIGHT_2, mobj->sub.light2color.pack);
+            gSPLightColor(branch_dl++, LIGHT_2, PORT_RGBA_WORD(mobj->sub.light2color));
         }
         if (flags & (MOBJ_FLAG_PRIMCOLOR | MOBJ_FLAG_FRAC | 0x8))
         {

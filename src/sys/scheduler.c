@@ -117,6 +117,14 @@ u32 sySchedulerGetTicCount(void)
     return sSYSchedulerTicCount;
 }
 
+#ifdef PORT
+// One tic per sim frame. On the N64 this counted VI retraces and the match timer lost real time under lag.
+void sySchedulerPortTic(void)
+{
+    sSYSchedulerTicCount++;
+}
+#endif
+
 void unref_80000938(void)
 {
     do

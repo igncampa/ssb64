@@ -1,7 +1,11 @@
 #ifndef _EFDEF_H_
 #define _EFDEF_H_
 
+#ifdef PORT
+#define EFFECT_ALLOC_NUM 76
+#else
 #define EFFECT_ALLOC_NUM 38
+#endif
 #define EFFECT_ALLOC_ALIGN 0x8
 
 #define EFFECT_FLAG_USERDATA 0x2            // Effect GObj has an EFStruct user_data and update process

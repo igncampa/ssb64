@@ -1,0 +1,16 @@
+ok   wrong host secret gives a plain message 
+ok   unknown lobby gives a plain message 
+ok   host made a lobby YJFKV
+ok   both players on the roster 
+ok   friend cannot start 
+ok   friend sees the host settings 
+ok   a real key press moved the host fighter x 0 to 3509
+ok   a real key press moved the friend fighter x -1397 to -3756
+ok   both pages agree on every hash 54 hashes, frame 809/809 rollbacks 3/2 rtt 0/2
+ok   frames advance in real time frame 809
+      frame 2010 status 1 ended 0 state racing finished false
+      frame 3209 status 1 ended 0 state racing finished false
+ok   both pages return to the lobby after the match 
+ok   match ended on the same frame 4086 4086
+ok   a rematch starts and stays in sync [330,3820647273]
+fails=0

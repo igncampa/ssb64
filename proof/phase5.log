@@ -1,0 +1,44 @@
+ok   stage 0 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2238216
+ok   stage 0 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2240560
+ok   stage 0 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3051752
+ok   stage 0 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3058424
+ok   stage 1 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2313108
+ok   stage 1 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2303460
+ok   stage 1 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3195336
+ok   stage 1 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3182704
+ok   stage 2 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2311936
+ok   stage 2 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2304080
+ok   stage 2 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3121776
+ok   stage 2 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3119020
+ok   stage 3 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2263768
+ok   stage 3 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2263264
+ok   stage 3 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3067584
+ok   stage 3 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3066640
+ok   stage 4 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2263656
+ok   stage 4 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2254136
+ok   stage 4 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3129240
+ok   stage 4 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3127860
+ok   stage 5 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2309152
+ok   stage 5 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2307824
+ok   stage 5 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3140848
+ok   stage 5 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3134800
+ok   stage 6 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2281576
+ok   stage 6 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2277684
+ok   stage 6 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3097188
+ok   stage 6 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3097688
+ok   stage 7 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2321308
+ok   stage 7 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2315908
+ok   stage 7 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3202732
+ok   stage 7 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3198956
+ok   stage 8 aaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 2276564
+ok   stage 8 hhcc rb frames 2400 checks 2604 mismatches 0 snapshot_max 2269960
+ok   stage 8 aaaaaaaa rb frames 2400 checks 2604 mismatches 0 snapshot_max 3089612
+ok   stage 8 hhhhcccc rb frames 2400 checks 2604 mismatches 0 snapshot_max 3081572
+ok   negative control fails as it must: rb frames 2400 checks 2604 mismatches 13 snapshot_max 2238216
+ok   stage 0 sounds 781 with and without rollbacks
+ok   stage 4 sounds 784 with and without rollbacks
+budget save 0.040 ms restore 0.035 ms rollback12 0.110 ms
+rb frames 3000 checks 3252 mismatches 0 snapshot_max 2317992
+budget save 0.055 ms restore 0.049 ms rollback12 0.201 ms
+rb frames 3000 checks 3252 mismatches 0 snapshot_max 3204936
+fails=0

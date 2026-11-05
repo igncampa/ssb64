@@ -132,6 +132,10 @@ void gcDefaultFuncRun(GObj *gobj)
 // 0x8000B1E8
 void gcSleepCurrentGObjThread(s32 tics)
 {
+#ifdef PORT
+    extern void port_fatal(const char *why);
+    port_fatal("gcSleepCurrentGObjThread: no GObj threads in the port");
+#endif
     if (gGCCurrentProcess->exec.gobjthread->stack[7] != 0xFEDCBA98)
     {
         syDebugPrintf("gobjthread stack over  gobjid = %d\n", gGCCurrentProcess->parent_gobj->id);

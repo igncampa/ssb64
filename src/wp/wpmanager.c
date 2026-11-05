@@ -10,6 +10,9 @@
 
 // 0x8018CFF0 - Points to next available weapon struct
 WPStruct *sWPManagerStructsAllocFree;
+#ifdef PORT
+WPStruct *sWPManagerStructsAllocBuf;
+#endif
 
 // 0x8018CFF4
 s32 sWPManagerDisplayMode;
@@ -33,6 +36,9 @@ void wpManagerAllocWeapons(void)
     s32 i;
 
     sWPManagerStructsAllocFree = wp = syTaskmanMalloc(sizeof(WPStruct) * WEAPON_ALLOC_MAX, 0x8);
+#ifdef PORT
+    sWPManagerStructsAllocBuf = wp;
+#endif
 
     for (i = 0; i < (WEAPON_ALLOC_MAX - 1); i++)
     {

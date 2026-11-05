@@ -1,0 +1,11 @@
+[package]
+name = "sb64-port-tools"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "packdata"
+path = "src/bin/packdata.rs"
+
+[profile.release]
+opt-level = 2

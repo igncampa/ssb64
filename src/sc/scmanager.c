@@ -813,6 +813,37 @@ char dSCManagerBuildDate[/* */] = { "Dec 23 1998 18:06:24" };
 // // // // // // // // // // // //
 
 // 0x800A1980
+#ifdef PORT
+// The boot half of scManagerRunLoop. port/loop/scene_driver.c replaces the scene switch.
+extern void syAudioPortFrame(void);
+void scManagerPortBoot(void)
+{
+	gSCManagerBackupData = dSCManagerDefaultBackupData;
+	gSCManagerSceneData = dSCManagerDefaultSceneData;
+
+	gSCManager1PGameBattleState   = 
+	gSCManagerTransferBattleState =
+	gSCManagerVSBattleState       = dSCManagerDefaultBattleState;
+
+	ftManagerSetupFileSize();
+	dSYAudioPublicSettings.unk31 = 72;
+
+	syAudioSetSettingsUpdated();
+
+	while (syAudioGetSettingsUpdated() != FALSE)
+	{
+		syAudioPortFrame();
+	}
+	syAudioSetFXType(AL_FX_CUSTOM);
+
+	while (syAudioGetRestarting() != FALSE)
+	{
+		syAudioPortFrame();
+	}
+	lbBackupIsSramValid();
+	lbBackupApplyOptions();
+}
+#else
 void scManagerRunLoop(sb32 arg)
 {
 	u16 *framebuffer;
@@ -1281,6 +1312,8 @@ void scManagerRunLoop(sb32 arg)
 		}
 	}
 }
+
+#endif // PORT
 
 // 0x800A2698
 void scManagerFuncUpdate(SYTaskmanSetup *arg)

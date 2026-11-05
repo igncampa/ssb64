@@ -1,0 +1,73 @@
+# Port build. The IDO ROM build in Makefile is untouched.
+#   make -f Makefile.port            wasm build (needs emcc on PATH)
+#   make -f Makefile.port native     Linux build with the null backends
+BUILD  := build/us/port
+GEN    := $(BUILD)/gen
+DEFS   := -D_LANGUAGE_C -DPORT -DAVOID_UB -DNON_MATCHING -DREGION_US -DF3DEX_GBI_2 -D_MIPS_SZLONG=32 -DNDEBUG -DN_MICRO -D_FINALROM
+INCS   := -Iinclude -Isrc -Iport/include -I$(GEN)
+LENIENT:= -std=gnu89 -w -Wno-error=int-conversion -Wno-error=incompatible-pointer-types \
+          -Wno-error=incompatible-function-pointer-types -Wno-error=implicit-function-declaration \
+          -Wno-error=implicit-int -Wno-error=return-mismatch
+DETERM := -ffp-contract=off -fno-fast-math -fno-strict-aliasing -fwrapv -fno-builtin
+OPT    ?= -O2
+EMCC   ?= emcc
+GAME_C := $(shell find src -name '*.c' -not -path 'src/relocData/*' -not -path 'src/particles/*' \
+            -not -path 'src/ovl8/*' -not -path 'src/db/*' -not -path 'src/libultra/os/*' \
+            -not -path 'src/libultra/io/*' -not -path 'src/libultra/libc/*' -not -path 'src/libultra/vimodes/*')
+# Inside the sentinels: everything that is simulation. Outside: audio, debug, platform.
+OUTSIDE := $(filter src/libultra/%,$(GAME_C)) src/sys/audio.c src/sys/debug.c src/sys/framebuffer.c src/sys/zbuffer.c src/sys/taskman.c
+SIM_C   := $(filter-out $(OUTSIDE),$(GAME_C))
+PORT_C  := $(filter-out port/net/game_begin.c port/net/game_end.c port/tools/% port/gfx/rb_%,$(shell find port -name '*.c'))
+RB_NULL := $(BUILD)/w/port/gfx/rb_null.o
+RB_GL   := $(BUILD)/w/port/gfx/rb_webgl2.o
+SIM_O   := $(SIM_C:%.c=$(BUILD)/w/%.o)
+OUT_O   := $(OUTSIDE:%.c=$(BUILD)/w/%.o)
+PORT_O  := $(PORT_C:%.c=$(BUILD)/w/%.o)
+BEGIN_O := $(BUILD)/w/port/net/game_begin.o
+END_O   := $(BUILD)/w/port/net/game_end.o
+LINK_O  := $(BEGIN_O) $(SIM_O) $(END_O) $(OUT_O) $(PORT_O)
+EMFLAGS := --profiling-funcs -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=536870912 -sSTACK_SIZE=2097152 -sASSERTIONS=0 -Wl,--Map=$(BUILD)/ssb64.map -Wl,--stack-first
+
+EXPORTS := _malloc,_free,_PortBoot,_StartMatch,_Park,_StepFrame,_SimFrame,_Hash,_GameStatus,_SetScriptedSlot,_PadRing,_Confirmed,_PadRingLen,_EventRing,_RngTrace,_RngTraceCount,_port_gfx_tris,_AudioRing,_AudioRingFrames,_AudioHead,_AudioConsumed,_NetInit,_NetOff,_NetSetLocal,_NetLocalPacked,_NetBundle,_NetCpu,_NetTick,_NetPollHash,_NetNow,_NetConfirmed,_NetTop,_NetTruthTop,_NetEnded,_NetStat,_NetSnapshotSize,_ScriptPadPacked,_port_fighter_x,_NetDepthHist,_RbInit,_RbStep,_RbBudget,_RbMismatches,_NetOff
+.PHONY: all objs run web netnode
+all: run web netnode
+objs: $(LINK_O)
+run: $(BUILD)/ssb64_run.js
+
+$(BUILD)/ssb64_run.js: $(LINK_O) $(RB_NULL) $(BUILD)/w/port/tools/run_match.o
+	@$(EMCC) $(OPT) $(EMFLAGS) -sNODERAWFS=1 -sENVIRONMENT=node -sEXIT_RUNTIME=1 $^ -o $@ > $(BUILD)/link.log 2>&1 || (cat $(BUILD)/link.log; exit 1)
+
+HDRS := port/include/port_prefix.h $(GEN)/port_syms.h
+netnode: $(BUILD)/ssb64_net.mjs
+# The page's engine without a window, so proofs can run many clients on one machine.
+$(BUILD)/ssb64_net.mjs: $(LINK_O) $(RB_NULL)
+	@$(EMCC) $(OPT) $(EMFLAGS) -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=SSB64 -sENVIRONMENT=node --no-entry \
+	  -sEXPORTED_FUNCTIONS=$(EXPORTS) -sEXPORTED_RUNTIME_METHODS=HEAP8,HEAP16,HEAP32,HEAPU8,HEAPU32 $^ -o $@ > $(BUILD)/linknet.log 2>&1 || (cat $(BUILD)/linknet.log; exit 1)
+
+web: web/ssb64.js
+web/ssb64.js: $(LINK_O) $(RB_GL)
+	@$(EMCC) $(OPT) $(EMFLAGS) -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=SSB64 -sENVIRONMENT=web -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 --no-entry \
+	  -sEXPORTED_FUNCTIONS=$(EXPORTS) -sEXPORTED_RUNTIME_METHODS=HEAP8,HEAP16,HEAP32,HEAPU8,HEAPU32 $^ -o $@ > $(BUILD)/linkweb.log 2>&1 || (cat $(BUILD)/linkweb.log; exit 1)
+	@node tools/port/stamp_build.js
+
+$(BUILD)/w/port/gfx/rb_webgl2.o: port/gfx/rb_webgl2.c
+	@mkdir -p $(@D)
+	@$(EMCC) -c -std=gnu11 -w $(OPT) -Iport/include -o $@ $<
+
+$(BUILD)/w/src/%.o: src/%.c $(HDRS)
+	@mkdir -p $(@D)
+	@$(EMCC) -c -MMD -MP $(LENIENT) $(DETERM) $(OPT) $(DEFS) $(INCS) -include port_prefix.h -o $@ $<
+
+$(BUILD)/w/port/shim/%.o: port/shim/%.c
+	@mkdir -p $(@D)
+	@$(EMCC) -c -std=gnu11 -w $(DETERM) $(OPT) -Iport/include -o $@ $<
+
+$(BUILD)/w/port/tools/%.o: port/tools/%.c
+	@mkdir -p $(@D)
+	@$(EMCC) -c -std=gnu11 -w $(OPT) -o $@ $<
+
+$(BUILD)/w/port/%.o: port/%.c
+	@mkdir -p $(@D)
+	@$(EMCC) -c -MMD -MP -std=gnu11 -w -Wno-error=int-conversion -Wno-error=incompatible-pointer-types -Wno-error=incompatible-function-pointer-types -Wno-error=implicit-function-declaration -Wno-error=implicit-int $(DETERM) $(OPT) $(DEFS) $(INCS) -include port_prefix.h -o $@ $<
+
+-include $(LINK_O:.o=.d)

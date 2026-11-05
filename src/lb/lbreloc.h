@@ -53,7 +53,9 @@ lbRelocLoadFilesExtern                              \
     )                                               \
 )
 
+#ifndef PORT
 extern uintptr_t lLBRelocTableAddr;         // 0x001AC870
+#endif
 
 extern void* lbRelocFindStatusBufferFile(u32 id);
 extern void* lbRelocGetStatusBufferFile(u32 id);

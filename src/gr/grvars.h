@@ -3,6 +3,7 @@
 
 #include <ssb_types.h>
 #include <sys/obj.h>
+#include <gm/gmdef.h>
 #include <gr/grdef.h>
 #include <ef/efdef.h>
 
@@ -168,8 +169,8 @@ typedef struct GRCommonGroundVarsInishie
 	f32 splat_accelerate; 		// Scale platform fall acceleration
 	u16 splat_wait;		  		// Wait this many frames before retracting if the platforms have fallen
 	u8 splat_status;   			// Current state of the platforms
-	u8 players_tt[4]; 	 		// Players timer, something to do with being GRounded/airborne
-	ub8 players_ga[4]; 			// Players GRound or air
+	u8 players_tt[GMCOMMON_PLAYERS_MAX]; 	 		// Players timer, something to do with being GRounded/airborne
+	ub8 players_ga[GMCOMMON_PLAYERS_MAX]; 			// Players GRound or air
 	GObj *pblock_gobj;
 	GRAttackColl *attack_coll;
 	u16 pblock_appear_wait;

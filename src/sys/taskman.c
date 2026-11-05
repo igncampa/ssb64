@@ -19,6 +19,12 @@
 #include <PR/ultratypes.h>
 
 // externs
+#ifdef PORT
+extern void port_sched_drain(void);
+extern sb32 port_net_can_end(void);
+extern void ftManagerPortDrawBegin(void), ftManagerPortDrawEnd(void);
+extern void *port_gfx_malloc(size_t size, u32 align);
+#endif
 extern void syTaskmanCheckBufferLengths();
 
 // structures
@@ -969,6 +975,9 @@ void syTaskmanRunTask(SYTaskFunction *tfunc)
 	{
 		D_80046638[i] = 0;
 	}
+#ifdef PORT
+	return; // port_main.c steps the loop through syTaskmanPortStep and ends it with syTaskmanPortEnd
+#endif
 	if (tfunc->flags & 1)
 	{
 		while (TRUE)
@@ -1089,12 +1098,90 @@ void func_800062EC(SYTaskFunction *tfunc)
 	func_80004EFC();
 }
 
+#ifdef PORT
+// One iteration of syTaskmanRunTask without the frame wait. Returns TRUE when the scene asks to end.
+sb32 syTaskmanPortStep(sb32 draw)
+{
+	SYTaskFunction *tfunc = &sSYTaskmanDefaultFunction;
+
+	tfunc->task_update(tfunc);
+	dSYTaskmanUpdateCount++;
+
+	if (syTaskmanCheckBreakLoop() != FALSE)
+	{
+		return TRUE;
+	}
+	if (draw && (syTaskmanSwitchContext(1) != FALSE))
+	{
+		ftManagerPortDrawBegin();
+		tfunc->task_draw(tfunc);
+		ftManagerPortDrawEnd();
+		dSYTaskmanFrameCount++;
+		port_sched_drain();
+
+		if (syTaskmanCheckBreakLoop() != FALSE)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+void syTaskmanPortForceEnd(void)
+{
+	sSYTaskmanStatus = nSYTaskmanStatusLoadScene;
+}
+
+// Draw the current state without simulating, after a rollback that ran no new frame.
+void port_draw_only(void)
+{
+	SYTaskFunction *tfunc = &sSYTaskmanDefaultFunction;
+
+	if (syTaskmanSwitchContext(1) != FALSE)
+	{
+		ftManagerPortDrawBegin();
+		tfunc->task_draw(tfunc);
+		ftManagerPortDrawEnd();
+		dSYTaskmanFrameCount++;
+		port_sched_drain();
+	}
+}
+
+// The tail of syTaskmanRunTask.
+void syTaskmanPortEnd(void)
+{
+	port_sched_drain();
+
+	while (osRecvMesg(&sSYTaskmanContextMesgQueue, NULL, OS_MESG_NOBLOCK) != -1)
+	{
+		continue;
+	}
+	while (osRecvMesg(&sSYTaskmanResetMesgQueue, NULL, OS_MESG_NOBLOCK) != -1)
+	{
+		continue;
+	}
+	while (osRecvMesg(&sSYTaskmanGameTicMesgQueue, NULL, OS_MESG_NOBLOCK) != -1)
+	{
+		continue;
+	}
+	syRdpSetFuncLights(NULL);
+	D_800454BC = 2;
+}
+#endif
+
 // 0x80006350
 void syTaskmanCommonTaskUpdate(SYTaskFunction *tfunc)
 {
 	sSYTaskmanFuncController();
 	tfunc->scene_update();
 
+#ifdef PORT
+	// A finish cannot be taken back. Rollback holds it until its frame is final.
+	if ((syTaskmanCheckBreakLoop() != FALSE) && (port_net_can_end() == FALSE))
+	{
+		sSYTaskmanStatus = nSYTaskmanStatusDefault;
+	}
+#endif
 	if (syTaskmanCheckBreakLoop() != FALSE)
 	{
 		gcEjectAll();
@@ -1156,6 +1243,11 @@ void unref_8000641C(GObj *gobj)
 }
 
 // 0x80006548
+#ifdef PORT
+#define PORT_GFX_MALLOC port_gfx_malloc
+#else
+#define PORT_GFX_MALLOC syTaskmanMalloc
+#endif
 void syTaskmanLoadScene(SYTaskmanSceneSetup *tscene, void (*func_start)(void))
 {
 	s32 i;
@@ -1168,27 +1260,27 @@ void syTaskmanLoadScene(SYTaskmanSceneSetup *tscene, void (*func_start)(void))
 
 	func_80004DB4
 	(
-		syTaskmanMalloc(tscene->taskgfx_num * sizeof(SYTaskGfx) * gSYTaskmanTaskCount, 0x8),
+		PORT_GFX_MALLOC(tscene->taskgfx_num * sizeof(SYTaskGfx) * gSYTaskmanTaskCount, 0x8),
 		tscene->taskgfx_num,
-		syTaskmanMalloc(sizeof(SYTaskGfxEnd) * gSYTaskmanTaskCount, 0x8),
-		syTaskmanMalloc(sizeof(SYTaskVi) * gSYTaskmanTaskCount, 0x8)
+		PORT_GFX_MALLOC(sizeof(SYTaskGfxEnd) * gSYTaskmanTaskCount, 0x8),
+		PORT_GFX_MALLOC(sizeof(SYTaskVi) * gSYTaskmanTaskCount, 0x8)
 	);
 	for (i = 0; i < gSYTaskmanTaskCount; i++)
 	{
-		dl_buffers[i][0].start = syTaskmanMalloc(tscene->dl_buffer0_size, 0x8);
+		dl_buffers[i][0].start = PORT_GFX_MALLOC(tscene->dl_buffer0_size, 0x8);
 		dl_buffers[i][0].length = tscene->dl_buffer0_size;
-		dl_buffers[i][1].start = syTaskmanMalloc(tscene->dl_buffer1_size, 0x8);
+		dl_buffers[i][1].start = PORT_GFX_MALLOC(tscene->dl_buffer1_size, 0x8);
 		dl_buffers[i][1].length = tscene->dl_buffer1_size;
-		dl_buffers[i][2].start = syTaskmanMalloc(tscene->dl_buffer2_size, 0x8);
+		dl_buffers[i][2].start = PORT_GFX_MALLOC(tscene->dl_buffer2_size, 0x8);
 		dl_buffers[i][2].length = tscene->dl_buffer2_size;
-		dl_buffers[i][3].start = syTaskmanMalloc(tscene->dl_buffer3_size, 0x8);
+		dl_buffers[i][3].start = PORT_GFX_MALLOC(tscene->dl_buffer3_size, 0x8);
 		dl_buffers[i][3].length = tscene->dl_buffer3_size;
 	}
 	syTaskmanSetDLBuffer(dl_buffers);
 
 	for (i = 0; i < gSYTaskmanTaskCount; i++)
 	{
-		syMallocInit(&gSYTaskmanGraphicsHeap, 0x10002, syTaskmanMalloc(tscene->graphics_arena_size, 0x8), tscene->graphics_arena_size);
+		syMallocInit(&gSYTaskmanGraphicsHeap, 0x10002, PORT_GFX_MALLOC(tscene->graphics_arena_size, 0x8), tscene->graphics_arena_size);
 		sSYTaskmanDefaultGraphicsHeap[i].id    = gSYTaskmanGraphicsHeap.id;
 		sSYTaskmanDefaultGraphicsHeap[i].start = gSYTaskmanGraphicsHeap.start;
 		sSYTaskmanDefaultGraphicsHeap[i].end   = gSYTaskmanGraphicsHeap.end;
@@ -1200,7 +1292,7 @@ void syTaskmanLoadScene(SYTaskmanSceneSetup *tscene, void (*func_start)(void))
 	{
 		tscene->rdp_output_buffer_size = 0x1000;
 	}
-	syTaskmanSetRdpOutputBuffer(tscene->rdp_output_buffer_kind, syTaskmanMalloc(tscene->rdp_output_buffer_size, 0x10), tscene->rdp_output_buffer_size);
+	syTaskmanSetRdpOutputBuffer(tscene->rdp_output_buffer_kind, PORT_GFX_MALLOC(tscene->rdp_output_buffer_size, 0x10), tscene->rdp_output_buffer_size);
 	syRdpSetFuncLights(tscene->func_lights);
 	sSYTaskmanFuncController = tscene->func_controller;
 	syControllerSetAutoRead((syControllerScheduleRead != sSYTaskmanFuncController) ? TRUE : FALSE);

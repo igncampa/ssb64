@@ -49,6 +49,7 @@ void __osSetWatchLo(u32); // Only define this for US region as it breaks the JP 
 //                               //
 // // // // // // // // // // // //
 
+#ifndef PORT
 extern uintptr_t scmanager_ROM_START;
 extern uintptr_t scmanager_ROM_END;
 extern uintptr_t scmanager_VRAM;
@@ -58,6 +59,7 @@ extern uintptr_t scmanager_DATA_START;
 extern uintptr_t scmanager_RODATA_END;
 extern uintptr_t scmanager_BSS_START;
 extern uintptr_t scmanager_BSS_END;
+#endif
 
 // // // // // // // // // // // //
 //                               //

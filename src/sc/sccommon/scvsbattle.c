@@ -32,11 +32,23 @@ SYTaskmanSetup dSCVSBattleTaskmanSetup =
         0,                              // Allocatable memory pool size
         1,                              // ???
         2,                              // Number of contexts?
+        
+#ifdef PORT
+        sizeof(Gfx) * 7680 * 3,             // Display List Buffer 0 Size
+        sizeof(Gfx) * 2560 * 3,
+#else
         sizeof(Gfx) * 7680,             // Display List Buffer 0 Size
         sizeof(Gfx) * 2560,             // Display List Buffer 1 Size
+#endif
         0,                              // Display List Buffer 2 Size
         0,                              // Display List Buffer 3 Size
+        
+#ifdef PORT
+        0xD000 * 3,                         // Graphics Heap Size
+#else
         0xD000,                         // Graphics Heap Size
+#endif
+
         2,                              // ???
         0xC000,                         // RDP Output Buffer Size
         scVSBattleFuncLights,       	// Pre-render function
@@ -136,6 +148,7 @@ void scVSBattleStartBattle(void)
 
 	scVSBattleSetupFiles();
 
+#ifndef PORT
 	if (!(gSCManagerBackupData.error_flags & LBBACKUP_ERROR_1PGAMEMARIO) && (gSCManagerBackupData.boot > 68))
 	{
 		file = lbRelocGetExternHeapFile((u32)&llSYKseg1ValidateFileID, syTaskmanMalloc(lbRelocGetFileSize((u32)&llSYKseg1ValidateFileID), 0x10));
@@ -149,6 +162,7 @@ void scVSBattleStartBattle(void)
 			gSCManagerBackupData.error_flags |= LBBACKUP_ERROR_1PGAMEMARIO;
 		}
 	}
+#endif
 	gcMakeDefaultCameraGObj(nGCCommonLinkIDCamera, GOBJ_PRIORITY_DEFAULT, 100, COBJ_FLAG_ZBUFFER, GPACK_RGBA8888(0x00, 0x00, 0x00, 0xFF));
 	efParticleInitAll();
 	ftParamInitGame();
@@ -523,6 +537,39 @@ void scVSBattleStartScene(void)
 	dSCVSBattleVideoSetup.zbuffer = SYVIDEO_ZBUFFER_START(320, 240, 0, 10, u16);
 	syVideoInit(&dSCVSBattleVideoSetup);
 
+#ifdef PORT
+	dSCVSBattleTaskmanSetup.scene_setup.arena_size = gPortArenaSize;
+	dSCVSBattleTaskmanSetup.func_start = scVSBattleStartBattle;
+	scManagerFuncUpdate(&dSCVSBattleTaskmanSetup);
+}
+
+// The tail of scVSBattleStartScene. Returns TRUE and starts sudden death if the match tied.
+sb32 scVSBattlePortCheckSuddenDeath(void)
+{
+	if (!(gSCManagerSceneData.is_reset) && scVSBattleSetScoreCheckSuddenDeath() != FALSE)
+	{
+		gSCManagerBattleState = &gSCManagerVSBattleState;
+		gSCManagerBattleState->game_type = nSCBattleGameTypeRoyal;
+		dSCVSBattleTaskmanSetup.func_start = scVSBattleStartSuddenDeath;
+		scManagerFuncUpdate(&dSCVSBattleTaskmanSetup);
+
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void scVSBattlePortStopAudio(void)
+{
+	syAudioStopBGMAll();
+}
+
+void scVSBattlePortAudioStopped(void)
+{
+	syAudioSetBGMVolume(0, 0x7800);
+	func_800266A0_272A0();
+	gmRumbleInitPlayers();
+}
+#else
 	dSCVSBattleTaskmanSetup.scene_setup.arena_size = (size_t) ((uintptr_t)&gSYFramebufferSets - (uintptr_t)&ovl4_BSS_END);
 	dSCVSBattleTaskmanSetup.func_start = scVSBattleStartBattle;
 	scManagerFuncUpdate(&dSCVSBattleTaskmanSetup);
@@ -559,3 +606,4 @@ void scVSBattleStartScene(void)
 	gSCManagerSceneData.scene_prev = gSCManagerSceneData.scene_curr;
 	gSCManagerSceneData.scene_curr = nSCKindVSResults;
 }
+#endif

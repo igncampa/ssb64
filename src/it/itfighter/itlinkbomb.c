@@ -9,7 +9,11 @@
 // // // // // // // // // // // //
 
 // WARNING: Intentionally erroneous declaration. Missing two u16 arguments after f32. HAL's mistake, not mine.
+#ifndef PORT
 extern void itMainSetFighterRelease(GObj*, Vec3f*, f32);
+#else
+extern void itMainSetFighterRelease(GObj*, Vec3f*, f32, u16, u16);
+#endif
 
 // // // // // // // // // // // //
 //                               //
@@ -399,7 +403,11 @@ sb32 itLinkBombHoldProcUpdate(GObj *item_gobj)
 			// Update 3/23/2023: itMainSetFighterRelease matches as variadic. No comment.
 			// Update  7/2/2023: variadic match confirmed fake, so does this file really use an erroneous decleration?
 
+#ifdef PORT // the N64 stored register garbage in the stale-move fields
+			itMainSetFighterRelease(item_gobj, &ip->physics.vel_air, 1.0F, 0, 0);
+#else
 			itMainSetFighterRelease(item_gobj, &ip->physics.vel_air, 1.0F);
+#endif
 			itMainClearOwnerStats(item_gobj);
 			itLinkBombExplodeInitVars(item_gobj);
 		}

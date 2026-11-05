@@ -1,11 +1,12 @@
 #ifndef _FIGHTER_H_
 #define _FIGHTER_H_
 
+#include <gm/gmdef.h>
 #include "fttypes.h"
 #include "ftfunctions.h"
 #include "ftcommondata.h"
 
-extern sb32 gFTMainIsDamageDetect[4];
+extern sb32 gFTMainIsDamageDetect[4]; // one per attack_colls entry, not per player
 extern sb32 gFTMainIsAttackDetect[4];
 
 extern Gfx dFTDisplayMainHurtCollisionCuboidDL[/* */];

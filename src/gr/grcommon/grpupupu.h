@@ -5,10 +5,12 @@
 #include <sys/objdef.h>
 #include <gr/grdef.h>
 
+#ifndef PORT
 extern intptr_t lGRPupupuParticleScriptBankLo;                  // 0x00B1E640       
 extern intptr_t lGRPupupuParticleScriptBankHi;                  // 0x00B1E7E0
 extern intptr_t lGRPupupuParticleTextureBankLo;                 // 0x00B1E7E0
 extern intptr_t lGRPupupuParticleTextureBankHi;                 // 0x00B1F960
+#endif
 
 extern s32 grPupupuWhispyGetLR(GObj *ground_gobj);
 extern void grPupupuWhispySetWindPush(void);

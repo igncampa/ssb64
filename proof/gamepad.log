@@ -1,0 +1,8 @@
+ok   stick right moves the fighter right x 0 to 2429
+ok   stick left moves the fighter left x 2429 to 1467
+ok   button A maps to the N64 bit 8000
+ok   button B maps to the N64 bit 4000
+ok   button Z maps to the N64 bit 2000
+ok   button R maps to the N64 bit 10
+ok   button START maps to the N64 bit 1000
+fails=0

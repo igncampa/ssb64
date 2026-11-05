@@ -2,7 +2,12 @@
 #define _GMDEF_H_
 
 #define GMCOMMON_FIGHTERS_PLAYABLE_NUM 12
-#define GMCOMMON_PLAYERS_MAX 4              				// Global limit for simultaneous players in a match
+#define GMCOMMON_PLAYERS_NATIVE 4           // Slots the game data (stage files, voices, particle scripts) was authored for
+#ifdef PORT
+#define GMCOMMON_PLAYERS_MAX 8              // Port: 8 simultaneous players
+#else
+#define GMCOMMON_PLAYERS_MAX 4              // Global limit for simultaneous players in a match
+#endif
 
 #define GMRUMBLE_ARRAY_COLS 3
 
@@ -13,7 +18,11 @@
 #define GMHITCOLLISION_FLAG_ITEM (1 << 2)	 // Can interact with items
 
 #define GMHITCOLLISION_FLAG_ALL (GMHITCOLLISION_FLAG_FIGHTER | GMHITCOLLISION_FLAG_WEAPON | GMHITCOLLISION_FLAG_ITEM)
+#ifdef PORT
+#define GMATTACKREC_NUM_MAX 12 // Port: 7 opponents plus items and weapons, or a wide hit would strike someone twice
+#else
 #define GMATTACKREC_NUM_MAX 4
+#endif
 
 #define GMSTAFFROLL_COLON_PARA_FONT_INDEX              0x34
 #define GMSTAFFROLL_PERIOD_PARA_FONT_INDEX             0x3F

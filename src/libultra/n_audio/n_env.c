@@ -4984,8 +4984,23 @@ ALWhatever8009EE0C* func_80026A6C_2766C(void *arg0)
     return temp_v1;
 }
 
+#ifdef PORT
+// A frame simulated again never starts a sound again. It gets back the handle its first run got.
+extern int gPortResim;
+extern void *port_sfx_replay(u16 id);
+extern void port_sfx_record(u16 id, void *handle);
+#endif
 ALWhatever8009EDD0_siz34* func_80026A10_27610(u16 id)
 {
+#ifdef PORT
+	if (gPortResim) return port_sfx_replay(id);
+	if (id < D_8009EDD0_406D0.fgm_ucode_count)
+	{
+		ALWhatever8009EDD0_siz34 *h = func_80026844_27444(D_8009EDD0_406D0.fgm_ucode_data[id]);
+		port_sfx_record(id, h);
+		return h;
+	}
+#endif
 	if (id >= D_8009EDD0_406D0.fgm_ucode_count)
 	{
 		return NULL;
@@ -4995,6 +5010,15 @@ ALWhatever8009EDD0_siz34* func_80026A10_27610(u16 id)
 
 ALWhatever8009EDD0_siz34* func_800269C0_275C0(u16 id)
 {
+#ifdef PORT
+	if (gPortResim) return port_sfx_replay(id);
+	if (id < D_8009EDD0_406D0.fgm_ucode_count)
+	{
+		ALWhatever8009EDD0_siz34 *h = func_80026958_27558(D_8009EDD0_406D0.fgm_ucode_data[id]);
+		port_sfx_record(id, h);
+		return h;
+	}
+#endif
 	if (id >= D_8009EDD0_406D0.fgm_ucode_count)
 	{
 		return NULL;
@@ -5020,7 +5044,10 @@ ALWhatever8009EDD0_siz34* func_80026958_27558(void *id)
     return temp_v0;
 }
 
-static ALWhatever8009EDD0_siz34* func_80026844_27444(void *id)
+#ifndef PORT
+static
+#endif
+ALWhatever8009EDD0_siz34* func_80026844_27444(void *id)
 {
     ALWhatever8009EDD0_siz34* temp_s0;
     OSIntMask temp_a3;
@@ -5069,6 +5096,9 @@ static ALWhatever8009EDD0_siz34* func_80026844_27444(void *id)
 
 void func_800267F4_273F4(ALWhatever8009EDD0_siz34 *arg0)
 {
+#ifdef PORT
+	if (gPortResim) return;
+#endif
     OSIntMask temp_a0 = osSetIntMask(1);
 
     if (arg0 != NULL)
@@ -5081,6 +5111,9 @@ void func_800267F4_273F4(ALWhatever8009EDD0_siz34 *arg0)
 
 void func_80026738_27338(ALWhatever8009EDD0_siz34 *arg0)
 {
+#ifdef PORT
+	if (gPortResim) return;
+#endif
     ALWhatever8009EDD0_siz34 *var_v1;
     ALWhatever8009EDD0_siz34 *temp_v0;
     ALWhatever8009EDD0_siz34 *temp_a2;

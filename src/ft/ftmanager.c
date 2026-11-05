@@ -30,6 +30,18 @@ FTParts *sFTManagerPartsAllocFree;
 // 0x80130D8C
 FTParts *sFTManagerPartsAllocBuf;
 
+#ifdef PORT
+/*
+ * Drawing fills the FTParts matrix caches, and on rare frames another fighter read those caches before
+ * their owner reset them, so the sim depended on whether a frame was drawn. A rollback re-simulation never
+ * draws. These calls wrap every draw so that FTParts leaves it exactly as it came in.
+ */
+static size_t sFTManagerPortPartsBytes;
+extern u8 *port_parts_save_buffer(size_t bytes); // outside the sim's memory
+void ftManagerPortDrawBegin(void) { if (sFTManagerPortPartsBytes != 0) memcpy(port_parts_save_buffer(sFTManagerPortPartsBytes), sFTManagerPartsAllocBuf, sFTManagerPortPartsBytes); }
+void ftManagerPortDrawEnd(void) { if (sFTManagerPortPartsBytes != 0) memcpy(sFTManagerPartsAllocBuf, port_parts_save_buffer(sFTManagerPortPartsBytes), sFTManagerPortPartsBytes); }
+#endif
+
 // 0x80130D90
 u32 gFTManagerPlayersNum;
 
@@ -152,6 +164,9 @@ void ftManagerAllocFighter(u32 data_flags, s32 allocs_num)
     sFTManagerStructsAllocBuf[i].next = NULL;
 
     sFTManagerPartsAllocFree = sFTManagerPartsAllocBuf = syTaskmanMalloc(sizeof(FTParts) * allocs_num * FTPARTS_JOINT_NUM_MAX, 0x8);
+#ifdef PORT
+    sFTManagerPortPartsBytes = sizeof(FTParts) * allocs_num * FTPARTS_JOINT_NUM_MAX;
+#endif
 
     for (i = 0; i < ((allocs_num * FTPARTS_JOINT_NUM_MAX) - 1); i++)
     {

@@ -1,3 +1,6 @@
+#ifdef PORT
+#define SYUTILS_IMPL
+#endif
 #include "common.h"
 #include "utils.h"
 #include "libc/math.h"
@@ -162,7 +165,11 @@ void syUtilsSetRandomSeedPtr(s32 *seedptr)
 
 u16 syUtilsRandUShort(void)
 {
+    #ifdef PORT // signed overflow is undefined in C; the N64 wrapped
+    s32 step = (s32)(((u32)*sSYUtilsRandomSeedPtr * 214013U) + 2531011U);
+#else
     s32 step = (*sSYUtilsRandomSeedPtr * 214013) + 2531011;
+#endif
     *sSYUtilsRandomSeedPtr = step;
 
     return step >> 16;
@@ -171,7 +178,11 @@ u16 syUtilsRandUShort(void)
 // between 0..1
 f32 syUtilsRandFloat(void)
 {
+    #ifdef PORT // signed overflow is undefined in C; the N64 wrapped
+    s32 step = (s32)(((u32)*sSYUtilsRandomSeedPtr * 214013U) + 2531011U);
+#else
     s32 step = (*sSYUtilsRandomSeedPtr * 214013) + 2531011;
+#endif
     *sSYUtilsRandomSeedPtr = step;
 
     return ((step >> 16) & 0xFFFF) / 65536.0F;

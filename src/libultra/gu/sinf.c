@@ -36,6 +36,16 @@
 
 /* coefficients for polynomial approximation of sin on +/- pi/2 */
 
+#ifdef PORT // little-endian doubles: low word first
+static const du	P[] =
+{
+	{0x00000000, 0x3ff00000},
+	{0xbc83656d, 0xbfc55554},
+	{0x3804c2a0, 0x3f8110ed},
+	{0xeea56814, 0xbf29f6ff},
+	{0x0e314bfe, 0x3ec5dbdf},
+};
+#else
 static const du	P[] =
 {
 	{0x3ff00000,	0x00000000},
@@ -44,15 +54,31 @@ static const du	P[] =
 	{0xbf29f6ff,	0xeea56814},
 	{0x3ec5dbdf,	0x0e314bfe},
 };
+#endif
 
+#ifdef PORT // little-endian doubles: low word first
+static const du	rpi =
+{0x6dc9c883, 0x3fd45f30};
+#else
 static const du	rpi =
 {0x3fd45f30,	0x6dc9c883};
+#endif
 
+#ifdef PORT // little-endian doubles: low word first
+static const du	pihi =
+{0x50000000, 0x400921fb};
+#else
 static const du	pihi =
 {0x400921fb,	0x50000000};
+#endif
 
+#ifdef PORT // little-endian doubles: low word first
+static const du	pilo =
+{0x611a6263, 0x3e6110b4};
+#else
 static const du	pilo =
 {0x3e6110b4,	0x611a6263};
+#endif
 
 static const fu	zero = {0x00000000};
 

@@ -8,7 +8,9 @@
 //                               //
 // // // // // // // // // // // //
 
+#ifndef PORT
 extern f32 syUtilsRandFloat();
+#endif
 extern f32 syUtilsArcTan2(f32, f32);
 
 extern alSoundEffect *func_800269C0_275C0(u16);

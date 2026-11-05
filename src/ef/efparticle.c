@@ -27,10 +27,19 @@ uintptr_t sEFParticleScriptBanks[7];
 // 0x80115890
 void efParticleInitAll(void)
 {
+    #ifdef PORT
+    gEFParticleStructsGObj = lbParticleAllocStructs(224);
+    gEFParticleGeneratorsGObj = lbParticleAllocGenerators(48);
+#else
     gEFParticleStructsGObj = lbParticleAllocStructs(112);
     gEFParticleGeneratorsGObj = lbParticleAllocGenerators(24);
+#endif
     
+    #ifdef PORT
+    lbParticleAllocTransforms(160, sizeof(LBTransform));
+#else
     lbParticleAllocTransforms(80, sizeof(LBTransform));
+#endif
     sEFParticleBanksNum = 0;
 }
 

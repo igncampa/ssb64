@@ -5,6 +5,13 @@
 #include <sc/scene.h>
 #include <reloc_data.h>
 
+#ifdef PORT
+// Particle scripts and animations were authored for 4 players. Slots 5 to 8 reuse them.
+#define EFMANAGER_NATIVE_PLAYER(p) ((p) % GMCOMMON_PLAYERS_NATIVE)
+#else
+#define EFMANAGER_NATIVE_PLAYER(p) (p)
+#endif
+
 // // // // // // // // // // // //
 //                               //
 //       INITIALIZED DATA        //
@@ -18,22 +25,46 @@ f32 dEFManagerDamageSpawnSparksAngles[/* */] = { 18.0F, 0.0F, -18.0F };
 f32 dEFManagerDamageSpawnMDustAngles[/* */] = { 18.0F, 0.0F, -18.0F };
 
 // 0x8012DE98
-u8 dEFManagerDamageNormalHeavyPrimColorR[/* */] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+u8 dEFManagerDamageNormalHeavyPrimColorR[/* */] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+#ifdef PORT
+    , 0xFF, 0xFF, 0xFF, 0xFF
+#endif
+};
 
 // 0x8012DEA0
-u8 dEFManagerDamageNormalHeavyPrimColorG[/* */] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+u8 dEFManagerDamageNormalHeavyPrimColorG[/* */] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+#ifdef PORT
+    , 0xFF, 0xFF, 0xFF, 0xFF
+#endif
+};
 
 // 0x8012DEA8
-u8 dEFManagerDamageNormalHeavyPrimColorB[/* */] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+u8 dEFManagerDamageNormalHeavyPrimColorB[/* */] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+#ifdef PORT
+    , 0xFF, 0xFF, 0xFF, 0xFF
+#endif
+};
 
 // 0x8012DEB0
+#ifdef PORT
+u8 dEFManagerDamageNormalHeavyEnvColorR[/* */] = { 0xFF, 0x00, 0x00, 0x78, 0xFF, 0x00, 0xFF, 0xF0, 0xFF };
+#else
 u8 dEFManagerDamageNormalHeavyEnvColorR[/* */] = { 0xFF, 0x00, 0x00, 0x78, 0xFF };
+#endif
 
 // 0x8012DEB8
+#ifdef PORT
+u8 dEFManagerDamageNormalHeavyEnvColorG[/* */] = { 0x00, 0xFF, 0x00, 0x78, 0x80, 0xD0, 0x60, 0xF0, 0xFF };
+#else
 u8 dEFManagerDamageNormalHeavyEnvColorG[/* */] = { 0x00, 0xFF, 0x00, 0x78, 0xFF };
+#endif
 
 // 0x8012DEC0
+#ifdef PORT
+u8 dEFManagerDamageNormalHeavyEnvColorB[/* */] = { 0x00, 0x00, 0xFF, 0x78, 0x00, 0xE0, 0xC0, 0xF0, 0xFF };
+#else
 u8 dEFManagerDamageNormalHeavyEnvColorB[/* */] = { 0x00, 0x00, 0xFF, 0x78, 0xFF };
+#endif
 
 // 0x8012DEC8
 u8 dEFManagerImpactWavePrimColorR[/* */] = { 0xFF, 0x00, 0x00, 0xFF, 0xFF };
@@ -453,6 +484,12 @@ SYColorRGBPair dEFManagerShieldColors[/* */] =
     { { 0xFF, 0xFF, 0xFF }, { 0x00, 0xFF, 0x00 } }, // Player 2
     { { 0xFF, 0xFF, 0xFF }, { 0x00, 0x00, 0xFF } }, // Player 3
     { { 0xFF, 0xFF, 0xFF }, { 0x00, 0x00, 0x00 } }, // Player 4 / CPU
+#ifdef PORT
+    { { 0xFF, 0xFF, 0xFF }, { 0xFF, 0x80, 0x00 } }, // Player 5
+    { { 0xFF, 0xFF, 0xFF }, { 0x00, 0xD0, 0xE0 } }, // Player 6
+    { { 0xFF, 0xFF, 0xFF }, { 0xFF, 0x60, 0xC0 } }, // Player 7
+    { { 0xFF, 0xFF, 0xFF }, { 0xF0, 0xF0, 0xF0 } }, // Player 8
+#endif
     { { 0xFF, 0xFF, 0xFF }, { 0xC0, 0xC0, 0xC0 } }  // Shield Damage
 };
 
@@ -2141,7 +2178,7 @@ LBParticle* efManagerDamageNormalLightMakeEffect(Vec3f *pos, s32 player, s32 siz
     }
     effect_gobj->user_data.p = ep;
 
-    pc = lbParticleMakeScriptID(gEFManagerParticleBankID, dEFManagerDamageNormalLightIDs[player]);
+    pc = lbParticleMakeScriptID(gEFManagerParticleBankID, dEFManagerDamageNormalLightIDs[EFMANAGER_NATIVE_PLAYER(player)]);
 
     if (pc != NULL)
     {
@@ -4106,7 +4143,7 @@ void efManagerShieldProcUpdate(GObj *effect_gobj)
 void efManagerShieldProcDisplay(GObj *effect_gobj)
 {
     EFStruct *ep = efGetStruct(effect_gobj);
-    s32 id = (ep->effect_vars.shield.is_damage_shield != FALSE) ? 4 : ep->effect_vars.shield.player;
+    s32 id = (ep->effect_vars.shield.is_damage_shield != FALSE) ? GMCOMMON_PLAYERS_MAX : ep->effect_vars.shield.player;
 
     gDPPipeSync(gSYTaskmanDLHeads[1]++);
     gDPSetPrimColor(gSYTaskmanDLHeads[1]++, 0, 0, dEFManagerShieldColors[id].prim.r, dEFManagerShieldColors[id].prim.g, dEFManagerShieldColors[id].prim.b, 0xC0);
@@ -4783,7 +4820,7 @@ GObj* efManagerDeadExplodeMakeEffect(Vec3f *pos, s32 player, u32 type)
     DObj *dobj;
     DObj *child_dobj;
     DObj *sibling_dobj;
-    u8 index = ((type % 2) * GMCOMMON_PLAYERS_MAX) + player; // WARNING: dEFManagerDeadExplodeGenID should be u8[2][GMCOMMON_PLAYERS_MAX], but it will not match this way; UB-risk
+    u8 index = ((type % 2) * GMCOMMON_PLAYERS_NATIVE) + EFMANAGER_NATIVE_PLAYER(player); // WARNING: dEFManagerDeadExplodeGenID should be u8[2][GMCOMMON_PLAYERS_MAX], but it will not match this way; UB-risk
 
     pc = lbParticleMakeScriptID(gEFManagerParticleBankID | LBPARTICLE_MASK_GENLINK(1), dEFManagerDeadExplodeGenID[index]);
 
@@ -4805,7 +4842,7 @@ GObj* efManagerDeadExplodeMakeEffect(Vec3f *pos, s32 player, u32 type)
         }
         else lbParticleEjectStruct(pc);
     }
-    dEFManagerDeadExplodeEffectDesc.o_matanim_joint = dEFManagerDeadExplodeMatAnimJoints[player];
+    dEFManagerDeadExplodeEffectDesc.o_matanim_joint = dEFManagerDeadExplodeMatAnimJoints[EFMANAGER_NATIVE_PLAYER(player)];
 
     effect_gobj = efManagerMakeEffectForce(&dEFManagerDeadExplodeEffectDesc);
 
@@ -4822,15 +4859,15 @@ GObj* efManagerDeadExplodeMakeEffect(Vec3f *pos, s32 player, u32 type)
 
     sibling_dobj = dobj->child->sib_next->sib_next;
 
-    sibling_dobj->mobj->sub.envcolor.s.r = dEFManagerDeadExplodeEnvColorSiblingR[player];
-    sibling_dobj->mobj->sub.envcolor.s.g = dEFManagerDeadExplodeEnvColorSiblingG[player];
-    sibling_dobj->mobj->sub.envcolor.s.b = dEFManagerDeadExplodeEnvColorSiblingB[player];
+    sibling_dobj->mobj->sub.envcolor.s.r = dEFManagerDeadExplodeEnvColorSiblingR[EFMANAGER_NATIVE_PLAYER(player)];
+    sibling_dobj->mobj->sub.envcolor.s.g = dEFManagerDeadExplodeEnvColorSiblingG[EFMANAGER_NATIVE_PLAYER(player)];
+    sibling_dobj->mobj->sub.envcolor.s.b = dEFManagerDeadExplodeEnvColorSiblingB[EFMANAGER_NATIVE_PLAYER(player)];
 
     sibling_dobj->mobj->sub.flags |= MOBJ_FLAG_ENVCOLOR;
 
-    child_dobj->mobj->sub.envcolor.s.r = dEFManagerDeadExplodeEnvColorChildR[player];
-    child_dobj->mobj->sub.envcolor.s.g = dEFManagerDeadExplodeEnvColorChildG[player];
-    child_dobj->mobj->sub.envcolor.s.b = dEFManagerDeadExplodeEnvColorChildB[player];
+    child_dobj->mobj->sub.envcolor.s.r = dEFManagerDeadExplodeEnvColorChildR[EFMANAGER_NATIVE_PLAYER(player)];
+    child_dobj->mobj->sub.envcolor.s.g = dEFManagerDeadExplodeEnvColorChildG[EFMANAGER_NATIVE_PLAYER(player)];
+    child_dobj->mobj->sub.envcolor.s.b = dEFManagerDeadExplodeEnvColorChildB[EFMANAGER_NATIVE_PLAYER(player)];
 
     child_dobj->mobj->sub.flags |= MOBJ_FLAG_ENVCOLOR;
 

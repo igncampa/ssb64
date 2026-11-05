@@ -4,7 +4,11 @@
 // Macros
 
 // Allocate this many item user_data structs at once
+#ifdef PORT
+#define ITEM_ALLOC_MAX 32
+#else
 #define ITEM_ALLOC_MAX 16
+#endif
 
 // Perform initial collision check when spawning item?
 #define ITEM_FLAG_COLLPROJECT (1 << 31)

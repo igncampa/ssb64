@@ -20,6 +20,12 @@ typedef enum IFPlayerTagKind
 	nIFPlayerTagKind2P,
 	nIFPlayerTagKind3P,
 	nIFPlayerTagKind4P,
+#ifdef PORT
+	nIFPlayerTagKind5P,
+	nIFPlayerTagKind6P,
+	nIFPlayerTagKind7P,
+	nIFPlayerTagKind8P,
+#endif
 	nIFPlayerTagKindCP,
 	nIFPlayerTagKindHeart
 

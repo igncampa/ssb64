@@ -182,7 +182,7 @@ struct MPGroundData
 	Sprite *wallpaper; 								// Background image?
 	SYColorRGB fog_color;
 	u8 fog_alpha;								 	// Unused padding?
-	SYColorRGB emblem_colors[GMCOMMON_PLAYERS_MAX]; // What's this doing here?
+	SYColorRGB emblem_colors[GMCOMMON_PLAYERS_NATIVE]; // What's this doing here?
 	s32 unused;
 	Vec3f light_angle;
 	s16 camera_bound_top;				// Normal bounds

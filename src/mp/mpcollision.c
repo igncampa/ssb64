@@ -3401,9 +3401,52 @@ s32 mpCollisionGetEdgeLeftDLineID(s32 line_id)
     return vertex_info->edge_prev_line_id;
 }
 
+void mpCollisionGetPlayerMapObjPosition(s32 player, Vec3f *pos);
+#ifdef PORT
+// Stages were authored with 4 spawn points. Slots 5 to 8 stand on floor between them.
+static void mpCollisionPortGetExtraSpawn(s32 player, Vec3f *pos)
+{
+    static const u8 pairs[GMCOMMON_PLAYERS_MAX - GMCOMMON_PLAYERS_NATIVE][2] = { { 0, 1 }, { 2, 3 }, { 1, 2 }, { 0, 2 } };
+    Vec3f spots[GMCOMMON_PLAYERS_NATIVE], tmp, angle;
+    const u8 *pair = pairs[player - GMCOMMON_PLAYERS_NATIVE];
+    s32 i, j, line_id;
+    u32 flags;
+    f32 dist;
+
+    for (i = 0; i < GMCOMMON_PLAYERS_NATIVE; i++)
+    {
+        mpCollisionGetPlayerMapObjPosition(i, &spots[i]);
+    }
+    for (i = 1; i < GMCOMMON_PLAYERS_NATIVE; i++)
+    {
+        for (j = i; (j > 0) && (spots[j - 1].x > spots[j].x); j--)
+        {
+            tmp = spots[j]; spots[j] = spots[j - 1]; spots[j - 1] = tmp;
+        }
+    }
+    pos->x = (spots[pair[0]].x + spots[pair[1]].x) * 0.5F;
+    pos->y = (spots[pair[0]].y > spots[pair[1]].y) ? spots[pair[0]].y : spots[pair[1]].y;
+    pos->z = 0.0F;
+
+    // No floor to land on between these two: stand beside an authored spawn instead.
+    if (mpCollisionCheckProjectFloor(pos, &line_id, &dist, &flags, &angle) == FALSE)
+    {
+        mpCollisionGetPlayerMapObjPosition(player - GMCOMMON_PLAYERS_NATIVE, pos);
+        pos->x += (player & 1) ? 250.0F : -250.0F;
+    }
+}
+#endif
+
 // 0x800FAF64
 void mpCollisionGetPlayerMapObjPosition(s32 player, Vec3f *pos)
 {
+#ifdef PORT
+    if (player >= GMCOMMON_PLAYERS_NATIVE)
+    {
+        mpCollisionPortGetExtraSpawn(player, pos);
+        return;
+    }
+#endif
     if (!(gMPCollisionGeometry->mapobj_count))
     {
         pos->x = pos->y = pos->z = 0.0F;

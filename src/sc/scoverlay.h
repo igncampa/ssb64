@@ -3,6 +3,8 @@
 
 #include <ssb_types.h>
 
+#ifndef PORT // the port links statically; port_prefix.h supplies these names
+
 extern uintptr_t ovl0_ROM_START;
 extern uintptr_t ovl0_ROM_END;
 extern uintptr_t ovl0_VRAM;
@@ -662,5 +664,7 @@ extern uintptr_t ovl65_DATA_START;
 extern uintptr_t ovl65_RODATA_END;
 extern uintptr_t ovl65_BSS_START;
 extern uintptr_t ovl65_BSS_END;
+
+#endif // PORT
 
 #endif

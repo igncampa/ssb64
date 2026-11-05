@@ -251,6 +251,9 @@ void syControllerInitDevices(void)
 // 0x80004284
 void syControllerDispatchEvent(ControllerEvent *evt)
 {
+#ifdef PORT
+    return; // no controller thread. Motor requests are dropped; rumble is presentation.
+#endif
     OSMesg mesg[1];
     OSMesgQueue queue;
 
@@ -270,6 +273,47 @@ void syControllerScheduleRead(void)
     syControllerDispatchEvent(&evt);
 }
 
+#ifdef PORT
+// Mark every port connected. Port index is player index.
+void syControllerPortInit(void)
+{
+    s32 i;
+
+    for (i = 0; i < MAXCONTROLLERS; i++)
+    {
+        gSYControllerDeviceStatuses[i] = i;
+        gSYControllerDevices[i].button_hold = gSYControllerDevices[i].button_tap = 0;
+        gSYControllerDevices[i].button_update = gSYControllerDevices[i].button_release = 0;
+        gSYControllerDevices[i].stick_range.x = gSYControllerDevices[i].stick_range.y = 0;
+    }
+    gSYControllerConnectedNum = MAXCONTROLLERS;
+}
+
+extern void port_pad_for_frame(s32 slot, u16 *buttons, s8 *x, s8 *y);
+
+// Latch this frame's pads. Tap and release are per sim frame, never per VI poll.
+void syControllerFuncRead(void)
+{
+    s32 i;
+
+    for (i = 0; i < MAXCONTROLLERS; i++)
+    {
+        u16 hold;
+        s8 x, y;
+        u16 prev = gSYControllerDevices[i].button_hold;
+
+        port_pad_for_frame(i, &hold, &x, &y);
+
+        gSYControllerDevices[i].button_hold = hold;
+        gSYControllerDevices[i].button_tap = (prev ^ hold) & hold;
+        gSYControllerDevices[i].button_release = (prev ^ hold) & prev;
+        gSYControllerDevices[i].button_update = 0;
+        gSYControllerDevices[i].stick_range.x = x;
+        gSYControllerDevices[i].stick_range.y = y;
+    }
+    gSYControllerMain = gSYControllerDevices[gSYControllerDeviceStatuses[0]];
+}
+#else
 void syControllerFuncRead(void)
 {
     ControllerEvent evt;
@@ -277,6 +321,7 @@ void syControllerFuncRead(void)
     evt.type = CONT_EVENT_UPDATE_GLOBAL_DATA;
     syControllerDispatchEvent(&evt);
 }
+#endif
 
 void unref_80004338(s32 arg0, s32 arg1)
 {
@@ -311,6 +356,9 @@ void syControllerSetStatusDelay(s32 delay)
 // 0x800043C0
 void syControllerUpdateRumbleEvent(s32 port, s32 ev_kind)
 {
+#ifdef PORT
+    return; // no controller thread; rumble is presentation
+#endif
     s32 i;
 
     for (i = 0; i < MAXCONTROLLERS; i++)

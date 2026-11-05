@@ -1,0 +1,5 @@
+fighters slowdown   sim_ms  draw_ms  save_ms  restore_ms  rollback12_ms  snapshot_MB
+4        1x          0.14     1.59    0.037       0.035           0.17         2.13
+4        4x          0.47     6.29    0.149       0.144           0.68         2.13
+8        1x          0.17     2.86    0.051       0.046           0.21         2.91
+8        4x          0.64     8.74    0.266       0.238           1.61         2.91

@@ -43,7 +43,15 @@ f32 dGMCameraPlayerZoomRanges[/* */] =
     1.50F,  // 1 Player
     1.32F,  // 2 Players
     1.16F,  // 3 Players
+#ifdef PORT
+    1.00F,  // 4 Players
+    0.96F,  // 5 Players
+    0.92F,  // 6 Players
+    0.88F,  // 7 Players
+    0.85F   // 8 Players
+#else
     1.00F   // 4 Players
+#endif
 };
 
 // // // // // // // // // // // //
@@ -1192,6 +1200,46 @@ GObj* gmCameraMakeDefaultCamera(u8 tk1, u8 tk2, void (*proc)(GObj*))
 
     return camera_gobj;
 }
+
+#ifdef PORT
+/*
+ * Link's boomerang read gGMCameraMatrix, which the N64 wrote while drawing. Sim code must not
+ * depend on drawing, so this computes the same matrix from the same camera state once per tick.
+ * Nothing the draw writes is touched.
+ */
+Mtx44f gPortCameraSimMatrix;
+
+void gmCameraPortUpdateSimMatrix(GObj *camera_gobj)
+{
+    CObj *cobj = CObjGetStruct(camera_gobj);
+    Mtx44f persp;
+    Mtx44f lookat;
+    LookAt look_at;
+    u16 norm;
+    f32 max = 0.0F;
+    s32 i, j;
+
+    syMatrixPerspFastF(persp, &norm, cobj->projection.persp.fovy, cobj->projection.persp.aspect, cobj->projection.persp.near, cobj->projection.persp.far, cobj->projection.persp.scale);
+    syMatrixLookAtReflectF(&lookat, &look_at, cobj->vec.eye.x, cobj->vec.eye.y, cobj->vec.eye.z, cobj->vec.at.x, cobj->vec.at.y, cobj->vec.at.z, cobj->vec.up.x, cobj->vec.up.y, cobj->vec.up.z);
+    guMtxCatF(lookat, persp, gPortCameraSimMatrix);
+
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            f32 v = gPortCameraSimMatrix[i][j];
+
+            if (v < 0.0F) v = -v;
+            if (v > max) max = v;
+        }
+    }
+    if (max > 32000.0F)
+    {
+        syMatrixPerspFastF(persp, &norm, cobj->projection.persp.fovy, cobj->projection.persp.aspect, cobj->projection.persp.near, cobj->projection.persp.far, 32000.0F / max);
+        guMtxCatF(lookat, persp, gPortCameraSimMatrix);
+    }
+}
+#endif
 
 // 0x8010DB00
 void gmCameraMakeBattleCamera(void)

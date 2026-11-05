@@ -14,8 +14,10 @@
 
 #include <ft/ftdef.h>
 
+#ifndef PORT
 #include <ft/ftcommon.h>
 #include <ft/ftchar.h>
+#endif
 
 // Structs
 struct FTSpecialColl
@@ -51,6 +53,17 @@ union FTAnimDesc
 
     struct
     {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+        ub32 is_use_animlocks : 1;          // 0x00000001
+        ub32 is_use_shieldpose : 1;         // 0x00000002
+        ub32 is_have_translate_scale : 1;   // 0x00000004
+        ub32 is_anim_joint : 1;             // 0x00000008 - whether current animation is type Figatree (0) or AnimJoint (1)
+        ub32 is_use_submotion_script : 1;   // 0x00000010
+        ub32 is_enabled_joints : 24;        // 0x10000000 to 0x00000020 - not actually a single variable, but 24 bits, each corresponding to a joint ID
+        ub32 is_use_yrotn_joint : 1;        // 0x20000000
+        ub32 is_use_transn_joint : 1;       // 0x40000000
+        ub32 is_use_xrotn_joint : 1;        // 0x80000000
+#else
         ub32 is_use_xrotn_joint : 1;        // 0x80000000
         ub32 is_use_transn_joint : 1;       // 0x40000000
         ub32 is_use_yrotn_joint : 1;        // 0x20000000
@@ -60,6 +73,7 @@ union FTAnimDesc
         ub32 is_have_translate_scale : 1;   // 0x00000004
         ub32 is_use_shieldpose : 1;         // 0x00000002
         ub32 is_use_animlocks : 1;          // 0x00000001
+#endif
 
     } flags;
 };
@@ -196,19 +210,39 @@ struct FTMotionScript
 
 struct FTMotionEventDefault // Event with no arguments
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+    u32 value : 26;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
     u32 value : 26;
+#endif
 };
 
 struct FTMotionEventDouble // Event with no arguments
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 pad1 : 26;
+	u32 opcode : 6;
+	u32 pad2 : 32;
+#else
 	u32 opcode : 6;
 	u32 pad1 : 26;
 	u32 pad2 : 32;
+#endif
 };
 
 struct FTMotionEventMakeAttack1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 element : 4;
+	ub32 can_rebound : 1;
+	u32 damage : 8;
+	s32 joint_id : 7;
+	u32 group_id : 3;
+	u32 attack_id: 3;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 attack_id: 3;
 	u32 group_id : 3;
@@ -216,34 +250,60 @@ struct FTMotionEventMakeAttack1
 	u32 damage : 8;
 	ub32 can_rebound : 1;
 	u32 element : 4;
+#endif
 };
 
 struct FTMotionEventMakeAttack2
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 off_x : 16;
+	u32 size : 16;
+#else
 	u32 size : 16;
 	s32 off_x : 16;
+#endif
 };
 
 struct FTMotionEventMakeAttack3
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 off_z : 16;
+	s32 off_y : 16;
+#else
 	s32 off_y : 16;
 	s32 off_z : 16;
+#endif
 };
 
 struct FTMotionEventMakeAttack4
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 is_hit_ground_air : 2;  // This should really be two separate bits, but it doesn't match that way
+	u32 knockback_weight : 10;
+	u32 knockback_scale : 10;
+	s32 angle : 10;
+#else
 	s32 angle : 10;
 	u32 knockback_scale : 10;
 	u32 knockback_weight : 10;
 	u32 is_hit_ground_air : 2;  // This should really be two separate bits, but it doesn't match that way
+#endif
 };
 
 struct FTMotionEventMakeAttack5
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 7; // unused low bits
+	u32 knockback_base : 10;
+	u32 fgm_kind : 4;
+	u32 fgm_level : 3;
+	s32 shield_damage : 8;
+#else
 	s32 shield_damage : 8;
 	u32 fgm_level : 3;
 	u32 fgm_kind : 4;
 	u32 knockback_base : 10;
+#endif
 };
 
 struct FTMotionEventMakeAttack
@@ -257,15 +317,27 @@ struct FTMotionEventMakeAttack
 
 struct FTMotionEventSetAttackOffset1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 7; // unused low bits
+	s32 off_x : 16;
+	u32 attack_id: 3;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 attack_id: 3;
 	s32 off_x : 16;
+#endif
 };
 
 struct FTMotionEventSetAttackOffset2
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 off_z : 16;
+	s32 off_y : 16;
+#else
 	s32 off_y : 16;
 	s32 off_z : 16;
+#endif
 };
 
 struct FTMotionEventSetAttackOffset
@@ -276,28 +348,54 @@ struct FTMotionEventSetAttackOffset
 
 struct FTMotionEventSetAttackCollDamage
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 15; // unused low bits
+	u32 damage : 8;
+	u32 attack_id: 3;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 attack_id: 3;
 	u32 damage : 8;
+#endif
 };
 
 struct FTMotionEventSetAttackCollSize
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 7; // unused low bits
+	u32 size : 16;
+	u32 attack_id: 3;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 attack_id: 3;
 	u32 size : 16;
+#endif
 };
 
 struct FTMotionEventSetAttackCollSound
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 20; // unused low bits
+	u32 fgm_level : 3;
+	u32 attack_id: 3;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 attack_id: 3;
 	u32 fgm_level : 3;
+#endif
 };
 
 struct FTMotionEventSetThrow1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 26; // unused low bits
 	u32 opcode : 6;
+#else
+	u32 opcode : 6;
+#endif
 };
 
 struct FTMotionEventSetThrow2
@@ -313,28 +411,50 @@ struct FTMotionEventSetThrow
 
 struct FTMotionEventMakeEffect1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 flag : 10;
+	u32 effect_id : 9;
+	s32 joint_id : 7;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	s32 joint_id : 7;
 	u32 effect_id : 9;
 	u32 flag : 10;
+#endif
 };
 
 struct FTMotionEventMakeEffect2
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 off_y : 16;
+	s32 off_x : 16;
+#else
 	s32 off_x : 16;
 	s32 off_y : 16;
+#endif
 };
 
 struct FTMotionEventMakeEffect3
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 rng_x : 16;
+	s32 off_z : 16;
+#else
 	s32 off_z : 16;
 	s32 rng_x : 16;
+#endif
 };
 
 struct FTMotionEventMakeEffect4
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 rng_z : 16;
+	s32 rng_y : 16;
+#else
 	s32 rng_y : 16;
 	s32 rng_z : 16;
+#endif
 };
 
 struct FTMotionEventMakeEffect
@@ -347,33 +467,60 @@ struct FTMotionEventMakeEffect
 
 struct FTMotionEventSetHitStatusPartID
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 hitstatus : 19;
+	s32 joint_id : 7;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	s32 joint_id : 7;
 	u32 hitstatus : 19;
+#endif
 };
 
 struct FTMotionEventSetDamageCollPartID1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 19; // unused low bits
+	s32 joint_id : 7;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	s32 joint_id : 7;
+#endif
 };
 
 struct FTMotionEventSetDamageCollPartID2
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 off_y : 16;
+	s32 off_x : 16;
+#else
 	s32 off_x : 16;
 	s32 off_y : 16;
+#endif
 };
 
 struct FTMotionEventSetDamageCollPartID3
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 size_x : 16;
+	s32 off_z : 16;
+#else
 	s32 off_z : 16;
 	s32 size_x : 16;
+#endif
 };
 
 struct FTMotionEventSetDamageCollPartID4
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 size_z : 16;
+	s32 size_y : 16;
+#else
 	s32 size_y : 16;
 	s32 size_z : 16;
+#endif
 };
 
 struct FTMotionEventSetDamageCollPartID
@@ -386,7 +533,12 @@ struct FTMotionEventSetDamageCollPartID
 
 struct FTMotionEventSubroutine1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 26; // unused low bits
 	u32 opcode : 6;
+#else
+	u32 opcode : 6;
+#endif
 };
 
 struct FTMotionEventSubroutine2
@@ -402,7 +554,12 @@ struct FTMotionEventSubroutine
 
 struct FTMotionEventSetDamageThrown1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 26; // unused low bits
 	u32 opcode : 6;
+#else
+	u32 opcode : 6;
+#endif
 };
 
 struct FTMotionEventSetDamageThrown2
@@ -423,7 +580,12 @@ struct FTMotionEventSetDamageThrown
 
 struct FTMotionEventGoto1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 26; // unused low bits
 	u32 opcode : 6;
+#else
+	u32 opcode : 6;
+#endif
 };
 
 struct FTMotionEventGoto2
@@ -439,7 +601,12 @@ struct FTMotionEventGoto
 
 struct FTMotionEventParallel1
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 : 26; // unused low bits
 	u32 opcode : 6;
+#else
+	u32 opcode : 6;
+#endif
 };
 
 struct FTMotionEventParallel2
@@ -455,50 +622,91 @@ struct FTMotionEventParallel
 
 struct FTMotionEventSetModelPartID
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 modelpart_id : 19;
+	s32 joint_id : 7;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	s32 joint_id : 7;
 	s32 modelpart_id : 19;
+#endif
 };
 
 struct FTMotionEventSetTexturePartID
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 frame : 20;
+	u32 texturepart_id : 6;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 texturepart_id : 6;
 	u32 frame : 20;
+#endif
 };
 
 struct FTMotionEventSetColAnimID
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 length : 18;
+	u32 colanim_id : 8;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 colanim_id : 8;
 	u32 length : 18;
+#endif
 };
 
 struct FTMotionEventSetSlopeContour
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 flags : 3;
+	u32 pad : 23;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 pad : 23;
 	u32 flags : 3;
+#endif
 };
 
 struct FTMotionEventSetAfterImage
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	s32 drawstatus : 18;
+	u32 is_itemswing : 8;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 is_itemswing : 8;
 	s32 drawstatus : 18;
+#endif
 };
 
 struct FTMotionEventMakeRumble
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 rumble_id : 13;
+	u32 length : 13;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 length : 13;
 	u32 rumble_id : 13;
+#endif
 };
 
 struct FTMotionEventStopRumble
 {
+#ifdef PORT // little-endian: same value bits as the big-endian layout below
+	u32 rumble_id : 26;
+	u32 opcode : 6;
+#else
 	u32 opcode : 6;
 	u32 rumble_id : 26;
+#endif
 };
 
 struct FTStatusDesc
@@ -511,6 +719,12 @@ struct FTStatusDesc
     void (*proc_physics)(GObj*);
     void (*proc_map)(GObj*);
 };
+
+#ifdef PORT
+// Clang rejects extern arrays of incomplete struct types, so these headers follow FTStatusDesc in the port build.
+#include <ft/ftcommon.h>
+#include <ft/ftchar.h>
+#endif
 
 struct FTOpeningDesc
 {
