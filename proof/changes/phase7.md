@@ -2,7 +2,7 @@
 
 Ready:
 - One relay binary serves the page, the data and the game traffic.
-- Host page with a NEW LOBBY button (`/host` or `?host=1`).
+- Host page with a NEW LOBBY button (`index.html?host=1`).
 - `scripts/stage.sh <empty-dir>` checks the build and makes a folder to copy. It restarts nothing.
 
 Needs the owner:
