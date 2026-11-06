@@ -6,16 +6,15 @@ set -e
 cd "$(dirname "$0")/.."
 OUT=${1:?usage: scripts/stage.sh <empty-output-dir>}
 [ ! -e "$OUT" ] || [ -z "$(ls -A "$OUT")" ] || { echo "refusing: $OUT is not empty"; exit 1; }
+# the id covers the wasm and the page code (tools/port/stamp_build.js): stamp it from what is staged
 node tools/port/stamp_build.js >/dev/null
 ID=$(sed -n 's/.*BUILD_ID = "\([0-9a-f]*\)".*/\1/p' web/build.js)
 DH=$(sed -n 's/.*DATA_HASH = "\([0-9a-f]*\)".*/\1/p' web/build.js)
-W=$(sha256sum web/ssb64.wasm | cut -c1-16)
 D=$(sha256sum web/ssb64.data | cut -c1-16)
-[ "$ID" = "$W" ] || { echo "FAIL build id $ID does not match wasm $W"; exit 1; }
 [ "$DH" = "$D" ] || { echo "FAIL data hash $DH does not match web/ssb64.data $D (copy the new data file)"; exit 1; }
 cmp -s web/ssb64.data build/us/port/ssb64.data || { echo "FAIL web/ssb64.data is not the built data file"; exit 1; }
 [ -x relay/target/release/ssb64-relay ] || { echo "FAIL relay is not built"; exit 1; }
-[ relay/target/release/ssb64-relay -nt relay/src/main.rs ] || { echo "FAIL relay is older than its source"; exit 1; }
+for s in relay/src/*.rs; do [ relay/target/release/ssb64-relay -nt "$s" ] || { echo "FAIL relay is older than $s"; exit 1; }; done
 mkdir -p "$OUT/web"
 cp web/index.html web/*.js web/ssb64.wasm web/ssb64.data "$OUT/web/"
 cp relay/target/release/ssb64-relay "$OUT/"

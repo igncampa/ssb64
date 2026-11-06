@@ -1,7 +1,7 @@
 // 8-player browser proof: eight real pages join one lobby through the UI, press real keys, and agree on the game.
 import { launch } from './lib.mjs'; import { spawn } from 'node:child_process'; import path from 'node:path'; import fs from 'node:fs';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
-const out = process.argv[2] || '/tmp'; const port = 18800 + Math.floor(Math.random() * 90);
+const out = process.argv[2] || '/tmp'; const port = (+process.env.PORT_BASE || 18100) + Math.floor(Math.random() * 20);
 const build = /BUILD_ID = "(\w+)"/.exec(fs.readFileSync(root + '/web/build.js', 'utf8'))[1];
 const relay = spawn(root + '/relay/target/release/ssb64-relay', [], { env: { ...process.env, PORT: String(port), SITE: root + '/web', RELAY_SECRET: 'testsecret', BUILD_ID: build }, stdio: ['ignore', 'pipe', 'inherit'] });
 await new Promise(r => relay.stdout.once('data', r));
@@ -24,8 +24,8 @@ try {
   const host = pages[0];
   await host.waitForFunction(() => document.querySelectorAll('#roster tr').length === 8, null, { timeout: 30000 });
   check('eight players on the roster', true);
-  await Promise.all(pages.map((p, i) => p.selectOption('#fighter', FIGHTERS[i])));
-  await host.selectOption('#stage_', '6'); await host.selectOption('#time', '1');
+  await Promise.all(pages.map((p, i) => p.selectOption('#fighter', FIGHTERS[i], { force: true })));
+  await host.selectOption('#stage_', '6', { force: true }); await host.selectOption('#time', '1', { force: true });
   const nine = await page('ninth');
   await nine.goto(base + `index.html?room=${code}`); await nine.fill('#name', 'Ivy'); await nine.click('#join');
   await nine.waitForFunction(() => document.getElementById('err').textContent.length > 0, null, { timeout: 90000 });

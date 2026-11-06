@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process'; import path from 'node:path';
 import { ITEMS, itemMask } from '../items.js';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
 const relayBin = root + '/relay/target/release/ssb64-relay';
-let fails = 0, port = 19100 + Math.floor(Math.random() * 400);
+let fails = 0, port = (+process.env.PORT_BASE || 18100) + Math.floor(Math.random() * 20);
 const check = (name, ok, extra = '') => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${extra ? '  ' + extra : ''}`); if (!ok) fails++; };
 const startRelay = () => new Promise(res => {
   const own = ++port;
@@ -49,6 +49,7 @@ const T = async (name, o, test) => {
   const why = test(r);
   check(name, r.same && why === true, `${r.same ? '' : 'PAGES DISAGREE '}${why === true ? '' : why} | stage ${r.info?.stage} fkind ${r.info?.fkind?.join(',')} pkind ${r.info?.pkind?.join(',')} mask ${hex(r.info?.mask)} seen ${hex(r.seen)} frames ${r.frames} rollbacks ${r.rb.join('/')}`);
   for (const x of r.res) if (x.why !== 'frames' && x.why !== 'ended') console.log('     ', x.name, x.why, x.out ?? '');
+  if (!r.same) for (const x of r.res) console.log('      diag', x.name, x.why, 'desync', x.desync, 'seen', (x.itemsSeen >>> 0).toString(16), JSON.stringify(x.info), 'hashes', x.hashCsv.split(',').slice(-2).join(','), 'conf', x.stats?.confirmed, 'now', x.stats?.now);
 };
 const kindsOk = (r, want) => want.every((k, i) => r.info?.fkind[i] === k) || `fkind want ${want.join(',')}`;
 

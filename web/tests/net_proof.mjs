@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process'; import path from 'node:path'; import fs from 'node:fs';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
 const relayBin = root + '/relay/target/release/ssb64-relay';
-let fails = 0, port = 18600 + Math.floor(Math.random() * 500);
+let fails = 0, port = (+process.env.PORT_BASE || 18100) + Math.floor(Math.random() * 20);
 const startRelay = (env = {}) => new Promise(res => {
   const own = ++port; // races may run in parallel, each with its own relay
   const p = spawn(relayBin, [], { env: { ...process.env, PORT: String(own), SITE: root + '/web', RELAY_SECRET: '', RELAY_TEST: '1', ...env }, stdio: ['ignore', 'pipe', 'inherit'] });
@@ -33,7 +33,7 @@ async function race(name, { n = 2, frames = 1800, per = () => ({}), cfg = {}, en
   const desync = res.some(r => r.desync !== null && r.desync !== undefined);
   const ok = same && !desync && refused && expect(res, stat);
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}`);
-  for (const r of res) console.log(`     ${r.name} slot ${r.slot} ${r.why} frame ${r.stats?.now} conf ${r.stats?.confirmed} rtt ${r.stats?.rtt} rb ${r.stats?.rollbacks} resim ${r.stats?.resim} depth ${r.stats?.maxDepth} repl ${r.stats?.replacedBundles} stalls ${r.stats?.stalls} hashes ${r.hashes} desync ${r.desync} ev ${(r.events || []).map(e => e.t + (e.slot ?? '')).join(',')} ${r.out ?? ''}`);
+  for (const r of res) console.log(`     ${r.name} slot ${r.slot} ${r.why} frame ${r.stats?.now} conf ${r.stats?.confirmed} rtt ${r.stats?.rtt} rb ${r.stats?.rollbacks} resim ${r.stats?.resim} depth ${r.stats?.maxDepth} repl ${r.stats?.replacedBundles} stalls ${r.stats?.stalls} hashes ${r.hashes} desync ${r.desync} ev ${(r.events || []).map(e => e.t + (e.slot ?? '')).join(',')}${r.idle && r.idle.away.n + r.idle.here.n ? ' idle ' + JSON.stringify(r.idle) : ''} ${r.out ?? ''}`);
   { const h = {}; for (const r of res) (r.stats?.corrections ?? []).forEach((c, d) => { if (c) h[d] = (h[d] ?? 0) + c; }); console.log('     corrections by frames rewound ' + JSON.stringify(h)); }
   if (!ok) { fails++; console.log('     fps', res.map(r => r.fps).join(' ')); if (!same) console.log('     hashes differ'); }
   return res;
@@ -56,15 +56,15 @@ await T('rollback two pages, no lag', { n: 2, frames: 1800, per: () => ({ pad: 1
 await T('rollback four pages, 40 ms each way', { n: 4, frames: 1800, per: () => ({ pad: 2, lagup: 40, lagdown: 40 }), expect: r => r.some(x => x.stats.rollbacks > 0) });
 await T('rollback eight pages, 40 ms each way', { n: 8, frames: 1800, per: () => ({ pad: 2, lagup: 40, lagdown: 40 }), expect: r => r.length === 8 && new Set(r.map(x => x.slot)).size === 8 && r.some(x => x.stats.rollbacks > 0) });
 await T('eight pages, mixed lag 5 to 120 ms and jitter', { n: 8, frames: 1800, per: i => ({ pad: 2, lagup: 5 + i * 16, lagdown: 5 + i * 16, jitter: 20 }), expect: r => r.length === 8 });
-await T('eight pages, two drop out and go CPU', { n: 8, frames: 1500, env: { SILENCE_MS: '2000' }, per: i => ({ pad: 2, stopframe: i === 6 ? 400 : 0, leaveframe: i === 7 ? 500 : 0 }), expect: r => r[0].events.filter(e => e.t === 'cpu').length === 2 });
+await T('eight pages, two go away, their fighters stand, nobody plays them', { n: 8, frames: 1500, env: { SILENCE_MS: '2000' }, per: i => ({ pad: 2, track: 6, stopframe: i === 6 ? 400 : 0, leaveframe: i === 7 ? 500 : 0 }), expect: r => r[0].events.filter(e => e.t === 'away').length === 2 && !r[0].events.some(e => e.t === 'cpu') && r[0].idle.away.n > 100 && r[0].idle.away.moved === 0 });
 await T('a ninth page is refused', { n: 8, frames: 300, per: () => ({ pad: 1 }), ninth: true });
 await T('five pages and CPUs up to eight fighters', { n: 5, frames: 1800, cfg: { cpu: [1, 1, 1, 1, 1, 1, 1, 1], levels: [9, 9, 9, 9, 9, 9, 9, 9] }, per: () => ({ pad: 2, lagup: 20, lagdown: 20 }) });
 await T('rollback lopsided lag 100 and 10 ms, wrong predictions', { n: 2, frames: 1800, per: i => ({ pad: 1, lagup: i ? 100 : 10, lagdown: i ? 100 : 10 }), expect: r => r.some(x => x.stats.rollbacks > 20) });
 await T('jitter 30 ms', { n: 3, frames: 1800, per: () => ({ pad: 1, lagup: 20, lagdown: 20, jitter: 30 }) });
 await T('a very laggy page does not hold the others', { n: 2, frames: 1800, per: i => ({ pad: 2, lagup: i ? 180 : 5, lagdown: i ? 180 : 5 }), expect: r => r[0].stats.stalls < 30 });
 await T('a slow page costs the others nothing', { n: 2, frames: 1500, per: i => ({ pad: 2, busy: i ? 30 : 0, timeout: 90000 }), expect: r => r[0].stats.stalls < 30 && r[1].fps < 45 });
-await T('a page that stops goes CPU, the others play on', { n: 3, frames: 1500, env: { SILENCE_MS: '2000' }, per: i => ({ pad: 2, stopframe: i === 2 ? 400 : 0 }), expect: r => r[0].events.some(e => e.t === 'cpu') });
-await T('a page that leaves goes CPU', { n: 3, frames: 1500, per: i => ({ pad: 2, leaveframe: i === 2 ? 400 : 0 }), expect: r => r[0].events.some(e => e.t === 'cpu') });
+await T('a page that stops goes away, its fighter stands, the others play on', { n: 3, frames: 1500, env: { SILENCE_MS: '2000' }, per: i => ({ pad: 2, track: 2, stopframe: i === 2 ? 400 : 0 }), expect: r => r[0].events.some(e => e.t === 'away' && e.slot === 2) && r[0].idle.away.n > 100 && r[0].idle.away.moved === 0 && r[0].idle.here.moved > 0 });
+await T('a page that leaves: its fighter stands', { n: 3, frames: 1500, per: i => ({ pad: 2, track: 2, leaveframe: i === 2 ? 400 : 0 }), expect: r => r[0].events.some(e => e.t === 'away' && e.slot === 2) && r[0].idle.away.moved === 0 });
 await T('a whole match to its end', { n: 2, frames: 99999, cfg: { time: 1 }, per: () => ({ pad: 2, lagup: 30, lagdown: 30 }), expect: r => r.every(x => x.why === 'ended') && r[0].stats.now === r[1].stats.now });
 await T('a stock match to its end with a CPU', { n: 2, frames: 99999, cfg: { rules: 2, stocks: 0, time: 100, cpu: [0, 0, 1, 0], levels: [5, 5, 9, 5] }, per: () => ({ pad: 2, lagup: 20, lagdown: 20, timeout: 200000 }), expect: r => r.every(x => x.why === 'ended') });
 console.log('fails=' + fails);

@@ -4,7 +4,13 @@ import { readPad } from './input.js';
 const FRAME_MS = 1000 / 60;
 export class Engine {
   static wide = (() => { try { return localStorage.getItem('ssb64.wide') !== '0'; } catch { return true; } })();
-  static async load(onStatus = () => {}) {
+  // idle, loading, ready or failed, for the page: Engine.load sets it.
+  static state = 'idle';
+  static load(onStatus = () => {}) {
+    Engine.state = 'loading';
+    return Engine.boot(onStatus).then(e => { Engine.state = 'ready'; return e; }, x => { Engine.state = 'failed'; throw x; });
+  }
+  static async boot(onStatus) {
     const { default: SSB64 } = await import('./ssb64.js');
     onStatus('engine'); 
     const m = await SSB64({ canvas: document.getElementById('game') });
@@ -42,14 +48,19 @@ export class Engine {
     if (!this.ro) { this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(box); }
     fit();
   }
+  // none, creating, running, or suspended (a browser that wants a press first).
+  get audioState() { return !this.ac ? 'none' : !this.node ? 'creating' : this.ac.state === 'running' ? 'running' : 'suspended'; }
+  // Safe to call any number of times: makes the context once, and asks it to run every time it is not.
   async startAudio() {
-    if (this.ac) return;
-    this.ac = new AudioContext({ sampleRate: 32000, latencyHint: 'interactive' });
-    await this.ac.audioWorklet.addModule('audio-worklet.js');
-    this.node = new AudioWorkletNode(this.ac, 'ring', { outputChannelCount: [2] });
-    this.node.connect(this.ac.destination);
-    this.ac.resume();
-    this.tail = this.m._AudioHead();
+    this.audioReady ??= (async () => {
+      this.ac = new AudioContext({ sampleRate: 32000, latencyHint: 'interactive' });
+      await this.ac.audioWorklet.addModule('audio-worklet.js');
+      this.node = new AudioWorkletNode(this.ac, 'ring', { outputChannelCount: [2] });
+      this.node.connect(this.ac.destination);
+      this.tail = this.m._AudioHead();
+    })();
+    await this.audioReady;
+    if (this.ac.state !== 'running') await this.ac.resume().catch(() => {});
   }
   pumpAudio() {
     const m = this.m, head = m._AudioHead();

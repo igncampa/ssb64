@@ -26,7 +26,6 @@ extern uint32_t port_hash_sim(void);
 extern void port_set_sim_frame(uint32_t f);
 extern void port_audio_tick(void);
 extern void port_bgm_reconcile(void);
-extern void ftComputerSetupAll(GObj *);
 extern void port_draw_only(void);
 
 #define NET_SLOTS 8      // the wire and rings carry 8 slots; the game reads as many as it has fighters
@@ -45,7 +44,7 @@ static uint8_t sReplaced[R];
 static int32_t sNow, sC, sTop, sTruthTop, sBase;
 static int sW = 12, sOn, sLocalMask, sLockstep, sEndFrame = -1, sEnded;
 static char *sSnaps[SNAPS];
-static int32_t sCpuAt[NET_SLOTS];
+
 static uint32_t sHash[R];
 static int32_t sHashOutNext;
 static struct { uint32_t rollbacks, resim_frames, max_depth, replaced, stalls, ms_max; } sStats;
@@ -63,7 +62,6 @@ EXPORT void NetInit(int window, int localMask, int lockstep)
     memset(sTruth, 0, sizeof sTruth); memset(sApplied, 0, sizeof sApplied); memset(sLocal, 0, sizeof sLocal);
     memset(sLastTruth, 0, sizeof sLastTruth); memset(&sStats, 0, sizeof sStats); memset(sDepthHist, 0, sizeof(sDepthHist)); memset(sCur, 0, sizeof sCur);
     sNow = sC = sTop = sTruthTop = -1; sEndFrame = -1; sEnded = 0; sHashOutNext = 0;
-    for (i = 0; i < NET_SLOTS; i++) sCpuAt[i] = -1;
 }
 
 EXPORT void NetOff(void) { sOn = 0; }
@@ -101,10 +99,15 @@ EXPORT int NetLocalPacked(int slot, int32_t f, int n, uint8_t *out)
 }
 
 // One frame bundle from the relay: pads is n x {u16 big-endian, i8, i8}.
-EXPORT void NetBundle(int32_t frame, int n, int replaced, const uint8_t *pads)
+// 1 taken; 0 already had it; 2 no room yet (the page keeps it and offers it again); 3 a frame is missing.
+// Truth must stay in the ring until it is confirmed, so the ring holds at most R frames past C: a page far
+// behind (a hidden tab, a reconnect) keeps the rest and feeds them in as it catches up.
+EXPORT int NetBundle(int32_t frame, int n, int replaced, const uint8_t *pads)
 {
     int i;
-    if (frame != sTruthTop + 1) return; // one socket, in order; anything else is a stale duplicate
+    if (frame <= sTruthTop) return 0;
+    if (frame != sTruthTop + 1) return 3;
+    if (frame - sC >= R - 1) return 2;
     for (i = 0; i < n && i < NET_SLOTS; i++) {
         Pad *t = &sTruth[i][frame & MASK];
         t->b = (pads[i * 4] << 8) | pads[i * 4 + 1]; t->x = (int8_t)pads[i * 4 + 2]; t->y = (int8_t)pads[i * 4 + 3];
@@ -113,12 +116,11 @@ EXPORT void NetBundle(int32_t frame, int n, int replaced, const uint8_t *pads)
     sReplaced[frame & MASK] = (uint8_t)replaced;
     if (replaced) sStats.replaced++;
     sTruthTop = frame;
+    return 1;
 }
 
-// A racer dropped: its fighter turns CPU from frame + 1 on every page.
-EXPORT void NetCpu(int slot, int32_t frame) { sCpuAt[slot] = frame + 1; }
-
 // The pad for a frame: truth if it has arrived, the player's own pad if local, otherwise the last real pad.
+// A player who is away gets the zero pad from the relay, so their fighter stands. Nobody else plays it.
 static Pad pad_for(int slot, int32_t f)
 {
     if (f <= sTruthTop) return sTruth[slot][f & MASK];
@@ -132,19 +134,6 @@ void port_pad_net(int slot, uint32_t f, u16 *b, s8 *x, s8 *y)
     *b = p->b; *x = p->x; *y = p->y;
 }
 
-static void apply_cpu(int32_t f)
-{
-    int s;
-    GObj *g;
-    for (s = 0; s < GMCOMMON_PLAYERS_MAX; s++) {
-        if (sCpuAt[s] != f) continue;
-        for (g = gGCCommonLinks[nGCCommonLinkIDFighter]; g != NULL; g = g->link_next) {
-            FTStruct *fp = ftGetStruct(g);
-            if (fp->player == s && fp->pkind == nFTPlayerKindMan) { fp->pkind = nFTPlayerKindCom; ftComputerSetupAll(g); }
-        }
-    }
-}
-
 // Simulate frame f. Returns 1 while the scene runs.
 static int step(int32_t f, int resim, int draw)
 {
@@ -153,7 +142,6 @@ static int step(int32_t f, int resim, int draw)
     port_sfx_frame_begin(f);
     if (f > sTop) for (s = 0; s < NET_SLOTS; s++) if (sLocalMask & (1 << s)) sLocal[s][f & MASK] = sCur[s];
     for (s = 0; s < NET_SLOTS; s++) sApplied[s][f & MASK] = pad_for(s, f);
-    apply_cpu(f);
     gPortResim = resim;
     port_set_sim_frame(f);
     r = port_step(draw);
@@ -197,12 +185,13 @@ static void rollback_to(int32_t r, int anyFirstTime)
     port_bgm_reconcile();
 }
 
-// One browser tick. `steps` is how many new frames pacing asks for. Returns frames run; draws the newest.
-EXPORT int NetTick(int steps, int draw)
+// Confirm what arrived, make a held finish final, then run up to `steps` new frames. truth_only: only
+// frames whose truth is in (catching up). Returns frames run, or -1 once the match is over.
+static int advance(int steps, int draw, int truth_only)
 {
     int ran = 0, did_roll = 0, i;
 
-    if (!sOn || sEnded) return 0;
+    if (!sOn || sEnded) return -1;
 
     // compare what arrived against what we simulated
     while (sC < sTruthTop && sC < sNow) {
@@ -212,8 +201,7 @@ EXPORT int NetTick(int steps, int draw)
             const Pad *a = &sApplied[s][f & MASK], *t = &sTruth[s][f & MASK];
             if (a->b != t->b || a->x != t->x || a->y != t->y) { bad = 1; break; }
         }
-        for (s = 0; s < GMCOMMON_PLAYERS_MAX; s++) if (sCpuAt[s] >= 0 && sCpuAt[s] <= sNow && sCpuAt[s] == f) bad = 1;
-        if (bad) { rollback_to(f, 0); did_roll = 1; if (sEnded) return 0; }
+        if (bad) { rollback_to(f, 0); did_roll = 1; if (sEnded) return -1; }
         sC = f;
     }
     // confirmed hashes go out
@@ -221,19 +209,44 @@ EXPORT int NetTick(int steps, int draw)
     if (sEndFrame >= 0 && sC >= sEndFrame) {
         int32_t e = sEndFrame;
         sEndFrame = -1;
-        if (!port_force_scene_end(e)) { sEnded = 1; return 0; }
+        if (!port_force_scene_end(e)) { sEnded = 1; return -1; }
     }
     for (i = 0; i < steps; i++) {
         int32_t f = sNow + 1;
         if (sEndFrame >= 0) break;
+        if (truth_only && f > sTruthTop) break;
         if (sLockstep ? (f > sTruthTop) : (f > sC + sW)) { sStats.stalls++; break; }
         if (!step(f, f <= sTop, (draw && i == steps - 1) ? 1 : 0)) { sEnded = 1; break; }
         ran++;
     }
     if (did_roll && ran == 0 && draw) port_draw_only();
+    return ran;
+}
+
+// One browser tick. `steps` is how many new frames pacing asks for. Returns frames run; draws the newest.
+EXPORT int NetTick(int steps, int draw)
+{
+    int ran = advance(steps, draw, 0);
+    if (ran < 0) return 0;
     port_audio_tick();
     return ran;
 }
+
+// Far behind the relay: run up to `max` frames whose truth is in, with no picture and no audio frame.
+// The sim runs exactly as it would one tick at a time; only presentation is skipped.
+EXPORT int NetCatchUp(int max)
+{
+    int ran = 0;
+    while (ran < max) {
+        int r = advance(max - ran, 0, 1);
+        if (r <= 0) break;
+        ran += r;
+    }
+    return ran;
+}
+
+// After a burst of caught-up frames their sound effects would all start at once. Audio only.
+EXPORT void NetQuietSfx(void) { extern void func_800266A0_272A0(void); func_800266A0_272A0(); }
 
 EXPORT int NetPollHash(int32_t *frame, uint32_t *hash)
 {

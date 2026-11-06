@@ -6,7 +6,7 @@ import { launch } from './lib.mjs'; import { spawn } from 'node:child_process'; 
 import { ITEMS, itemMask } from '../items.js';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
 const out = process.argv[2] || '/tmp'; fs.mkdirSync(out, { recursive: true });
-const port = 19600 + Math.floor(Math.random() * 90);
+const port = (+process.env.PORT_BASE || 18100) + Math.floor(Math.random() * 20);
 const build = /BUILD_ID = "(\w+)"/.exec(fs.readFileSync(root + '/web/build.js', 'utf8'))[1];
 const relay = spawn(root + '/relay/target/release/ssb64-relay', [], { env: { ...process.env, PORT: String(port), SITE: root + '/web', RELAY_SECRET: 'testsecret', BUILD_ID: build }, stdio: ['ignore', 'pipe', 'inherit'] });
 await new Promise(r => relay.stdout.once('data', r));

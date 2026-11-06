@@ -3,7 +3,7 @@
 // Compares the sounds each heard up to a frame both confirmed. Run with old=1 for the negative control.
 import { spawn } from 'node:child_process'; import path from 'node:path';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
-const port = 18200 + Math.floor(Math.random() * 300);
+const port = (+process.env.PORT_BASE || 18100) + Math.floor(Math.random() * 20);
 const old = process.argv.includes('old=1');
 const pair = (process.argv.find(a => a.startsWith('fighters=')) || 'fighters=7,7').slice(9).split(',').map(Number);
 const relay = spawn(root + '/relay/target/release/ssb64-relay', [], { env: { ...process.env, PORT: String(port), SITE: root + '/web', RELAY_SECRET: '', RELAY_TEST: '1' }, stdio: ['ignore', 'pipe', 'inherit'] });

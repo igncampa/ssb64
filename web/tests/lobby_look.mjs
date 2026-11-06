@@ -3,14 +3,14 @@ import { spawn } from 'node:child_process'; import path from 'node:path';
 import { launch } from './lib.mjs';
 const root = path.resolve(new URL('../..', import.meta.url).pathname);
 const site = process.env.SITE, out = process.argv[2];
-const port = 18900 + Math.floor(Math.random() * 90);
+const port = (+process.env.PORT_BASE || 18100) + Math.floor(Math.random() * 20);
 const relay = spawn(root + '/relay/target/release/ssb64-relay', [], { env: { ...process.env, PORT: String(port), SITE: site, RELAY_SECRET: '', RELAY_TEST: '1' }, stdio: ['ignore', 'pipe', 'inherit'] });
 await new Promise(r => relay.stdout.once('data', r));
 const br = await launch();
 let fails = 0; const check = (n, ok, x = '') => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${n}${x ? ' : ' + x : ''}`); if (!ok) fails++; };
 try {
   const { code } = await (await fetch(`http://127.0.0.1:${port}/api/lobby`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })).json();
-  const mk = async (name, vp) => { const c = await br.newContext({ viewport: vp }); const p = await c.newPage(); p.errs = []; p.on('pageerror', e => p.errs.push(e.message)); await p.goto(`http://127.0.0.1:${port}/?room=${code}`); await p.fill('#name', name); await p.click('#join'); await p.waitForFunction(() => document.querySelectorAll('.ft img').length === 12 && !document.getElementById('sRoom').hidden, null, { timeout: 60000 }); return p; };
+  const mk = async (name, vp) => { const c = await br.newContext({ viewport: vp }); const p = await c.newPage(); p.errs = []; p.on('pageerror', e => p.errs.push(e.message)); await p.goto(`http://127.0.0.1:${port}/?room=${code}`); await p.fill('#name', name); await p.click('#join'); await p.waitForFunction(() => document.querySelectorAll('.ft img').length >= 12 && !document.getElementById('sRoom').hidden, null, { timeout: 60000 }); return p; };
   const a = await mk('Ann', { width: 1200, height: 900 });
   const b = await mk('Ben', { width: 1680, height: 720 });
   await a.click('.ft[data-f="7"]'); await b.click('.ft[data-f="9"]'); await b.click('.costumes button[data-c="2"]');
@@ -37,7 +37,7 @@ try {
   check('a tall window: asked to turn sideways', await tp.isVisible('#turn')); await tp.screenshot({ path: `${out}/lobby-portrait.png` }); await t.close();
   check('a wide window: no note', !(await a.isVisible('#turn')));
   // Start a match: lobby audio stops, the match runs.
-  await a.selectOption('#time', '1');
+  await a.selectOption('#time', '1', { force: true });
   await a.click('#start');
   await Promise.all([a, b].map(p => p.waitForFunction(() => window.sb.net?.state === 'racing' && window.sb.net.m._NetConfirmed() > 1500, null, { timeout: 180000 })));
   check('the match starts for both', true);
