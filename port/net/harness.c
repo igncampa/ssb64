@@ -261,6 +261,9 @@ void port_audio_fields_unstash(void)
 
 // ---- match setup ----
 static int sMatchOn;
+// For proofs: which item kinds have been on the stage this match (bit = 1 << ITKind, kinds 0 to 31).
+// Outside the sim: read only, never part of a snapshot or a hash.
+static uint32_t sItemsSeen;
 static int sPoison = 0;
 EXPORT void SetPoison(int v) { sPoison = v; }
 EXPORT void SetFlipFrame(int f) { sFlipFrame = f; }
@@ -328,17 +331,37 @@ EXPORT void StartMatch(const int32_t *kinds, const int32_t *fkinds, const int32_
 
     syUtilsSetRandomSeed(seed);
     sMatchOn = 1;
+    sItemsSeen = 0;
     port_event(1, seed);
     port_match_begin();
 }
 
 EXPORT void Park(void) { port_match_park(); sMatchOn = 0; port_event(12, 0); }
 
+EXPORT uint32_t PortItemsSeen(void) { return sItemsSeen; }
+// For proofs: what StartMatch handed the sim. 0 stage, 1 item mask, 2 a slot's FTKind, 3 a slot's player kind.
+EXPORT int PortMatchInfo(int what, int slot)
+{
+    if (gSCManagerBattleState == NULL) return -1;
+    switch (what) {
+    case 0: return gSCManagerSceneData.gkind;
+    case 1: return (int)gSCManagerBattleState->item_toggles;
+    case 2: return gSCManagerBattleState->players[slot].fkind;
+    case 3: return gSCManagerBattleState->players[slot].pkind;
+    default: return -1;
+    }
+}
+
 void port_net_frame_begin(void) {}
 void port_net_frame_end(void)
 {
     GObj *g;
     static int reported;
+    for (g = gGCCommonLinks[nGCCommonLinkIDItem]; g != NULL; g = g->link_next)
+    {
+        s32 k = itGetStruct(g)->kind;
+        if (k >= 0 && k < 32) sItemsSeen |= 1u << k;
+    }
     if (reported) return;
     for (g = gGCCommonLinks[nGCCommonLinkIDFighter]; g != NULL; g = g->link_next)
     {

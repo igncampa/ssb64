@@ -28,7 +28,7 @@ END_O   := $(BUILD)/w/port/net/game_end.o
 LINK_O  := $(BEGIN_O) $(SIM_O) $(END_O) $(OUT_O) $(PORT_O)
 EMFLAGS := --profiling-funcs -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=536870912 -sSTACK_SIZE=2097152 -sASSERTIONS=0 -Wl,--Map=$(BUILD)/ssb64.map -Wl,--stack-first
 
-EXPORTS := _malloc,_PortSetCanvas,_LobbyCue,_LobbyMusic,_LobbyAudioTick,_LobbyQuiet,_GfxTrace,_GfxCoverageDump,_GfxCoverage,_SfxLog,_SfxLogCount,_SfxJournalOld,_free,_PortBoot,_StartMatch,_Park,_StepFrame,_SimFrame,_Hash,_GameStatus,_SetScriptedSlot,_PadRing,_Confirmed,_PadRingLen,_EventRing,_RngTrace,_RngTraceCount,_port_gfx_tris,_AudioRing,_AudioRingFrames,_AudioHead,_AudioConsumed,_NetInit,_NetOff,_NetSetLocal,_NetLocalPacked,_NetBundle,_NetCpu,_NetTick,_NetPollHash,_NetNow,_NetConfirmed,_NetTop,_NetTruthTop,_NetEnded,_NetStat,_NetSnapshotSize,_ScriptPadPacked,_port_fighter_x,_NetDepthHist,_RbInit,_RbStep,_RbBudget,_RbMismatches,_NetOff
+EXPORTS := _malloc,_PortItemsSeen,_PortMatchInfo,_PortSetCanvas,_LobbyCue,_LobbyMusic,_LobbyAudioTick,_LobbyQuiet,_GfxTrace,_GfxCoverageDump,_GfxCoverage,_SfxLog,_SfxLogCount,_SfxJournalOld,_free,_PortBoot,_StartMatch,_Park,_StepFrame,_SimFrame,_Hash,_GameStatus,_SetScriptedSlot,_PadRing,_Confirmed,_PadRingLen,_EventRing,_RngTrace,_RngTraceCount,_port_gfx_tris,_AudioRing,_AudioRingFrames,_AudioHead,_AudioConsumed,_NetInit,_NetOff,_NetSetLocal,_NetLocalPacked,_NetBundle,_NetCpu,_NetTick,_NetPollHash,_NetNow,_NetConfirmed,_NetTop,_NetTruthTop,_NetEnded,_NetStat,_NetSnapshotSize,_ScriptPadPacked,_port_fighter_x,_NetDepthHist,_RbInit,_RbStep,_RbBudget,_RbMismatches,_NetOff
 .PHONY: all objs run web netnode
 all: run web netnode
 objs: $(LINK_O)
