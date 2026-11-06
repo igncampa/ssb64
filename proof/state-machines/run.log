@@ -1,0 +1,25 @@
+== cargo start 17:04:18 load 18.66
+== cargo rc=0 17:04:18 0 ok, 0 FAIL
+== net start 17:04:18 load 18.66
+== net rc=0 17:13:17 16 ok, 0 FAIL
+== away start 17:13:17 load 12.83
+== away rc=0 17:22:03 9 ok, 0 FAIL
+== modes start 17:22:03 load 86.50
+== modes rc=0 17:23:21 9 ok, 0 FAIL
+== lobby start 17:23:21 load 94.87
+== lobby rc=0 17:24:42 13 ok, 0 FAIL
+== lobby8 start 17:24:42 load 48.27
+== lobby8 rc=1 17:25:03 4 ok, 1 FAIL
+== lobbylook start 17:25:03 load 46.62
+== lobbylook rc=0 17:25:35 11 ok, 0 FAIL
+== extras start 17:25:35 load 36.15
+== extras rc=0 17:40:30 23 ok, 0 FAIL
+== extraslob start 17:40:30 load 75.60
+== extraslob rc=0 17:40:47 16 ok, 0 FAIL
+== sound start 17:40:47 load 80.01
+== sound rc=0 17:41:29 1 ok, 0 FAIL
+== soundold start 17:41:29 load 62.96
+== soundold rc=1 17:42:12 0 ok, 1 FAIL
+== bgm start 17:42:12 load 36.45
+== bgm rc=0 17:45:17 1 ok, 0 FAIL
+== all done 17:45:17

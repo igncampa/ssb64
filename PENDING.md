@@ -50,6 +50,18 @@ Meta Crystal, Duel Zone, Final Destination; Metal Mario, Giant DK, the Fighting 
 checklist. Also fixes random items always coming out as one kind. Proofs and what is left: `proof/extras/README.md`.
 Deploying means merging the branch, building the page into `web/` and staging it.
 
+## State machines, built on branch `state-machines`, not deployed (6 Nov)
+
+The owner's rules from `spec/state-machines.md`: no CPU takes an away player's fighter (it stands on the zero pad and
+plays again when they are back), away pages never hold up the end, a desync ends the race. Proofs and what is left:
+`proof/state-machines/README.md`. Deploying means building the page into `web/`, staging page and relay together
+(the build id now covers the page code) and restarting the relay, which drops matches in progress. The n64 portal
+carries a copy of the relay (`~/n64/crates/ssb64-lobby`) and pins the page: it needs the same relay changes.
+
+- **A player who pauses and then goes away** leaves the match paused: only the pausing player can unpause, and
+  their pad is now the zero pad. The same was true with the old CPU takeover (a CPU never presses Start).
+- **Autoplay in a real Chrome** after an auto-join: proven with an emulated press-first policy only.
+
 ## Phase 8 extras, not built, waiting for the owner's go
 
 - Couch play: two people sharing one page. The plan calls this the cheap one.

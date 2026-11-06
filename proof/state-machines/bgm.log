@@ -1,0 +1,3 @@
+     new rule: restarts 0/0 rollbacks 293/288 items seen 0x802007 hashes equal true
+     old rule: restarts 1/2 rollbacks 293/290 items seen 0x802007 hashes equal true
+ok   music after rollbacks follows the request: far page restarts 0 (old rule 2), pages agree, hammer present true

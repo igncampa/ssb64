@@ -1,0 +1,3 @@
+     near frames rollbacks 126 resim 509 sounds 113
+     far frames rollbacks 128 resim 1957 sounds 95
+FAIL (old journal) fighters 7,7: both heard the same 112 sounds up to frame 2370 : 17 ids differ, 13: 3 vs 5, 19: 10 vs 3, 31: 1 vs 2, 32: 1 vs 0, 41: 5 vs 3, 42: 13 vs 9, 43: 5 vs 0, 95: 1 vs 0

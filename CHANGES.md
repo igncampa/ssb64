@@ -27,3 +27,27 @@ What the owner noticed, and what was found under it. Proofs in `proof/changes2/`
 - **The portal hooks** (`window.N64`, from n64's former patch) are in the page itself and do nothing outside the portal.
 - **Debug tools, render only and off by default:** `GfxTrace(n)`, `GfxCoverage` and `GfxCoverageDump` (every distinct draw state a match uses), `web/tests/probe.mjs`, `sweep.mjs`, `coverage.mjs`.
 - **Build output:** `make -f Makefile.port web WEB=<dir>` builds the page elsewhere. `web/` is what the live site serves; a build there changes the live site.
+
+## Third pass, 6 Nov 2026: the state machines (`spec/state-machines.md`), branch `state-machines`
+
+Not deployed. Page and relay change together (the build id now covers the page code too). Proofs: `proof/state-machines/`.
+
+- **No CPU ever takes a fighter (owner).** A player who is away (hidden tab, socket gone, silent 3 s, or whose
+  match failed to start) gets the zero pad from the relay for every frame: the fighter stands. When their pads
+  reach the relay for a frame not yet closed, they count again from there. The relay is the only truth for
+  every frame's pads, so every page simulates the same thing. `cpu`, `NetCpu`, `sCpuAt` and `apply_cpu` are gone.
+- **Away pages never hold anyone up.** The match ends when every *present* racer finished, or 10 s after the
+  first. A desync ends the race for everyone 2 s later (`over`, why `desync`) and the room can start again.
+- **Coming back works from anywhere.** The relay keeps the whole race (up to 30 minutes), sends what a
+  reconnecting page missed in batches, and the page runs those frames flat out with no picture. A hidden tab,
+  a 20 s outage or a reload in the middle of a match all rejoin the match. The truth ring no longer overflows
+  for a page more than 8.5 s behind (it used to desync).
+- **The page has one mode and one banner.** No path leaves a frozen canvas: a refusal, a lost relay, a failed
+  game load, a failed match start all return to a screen with a plain message. The stall banner says why.
+  Sound asks for a press when the browser wants one. The portal has one retry timer with back-off, and its
+  "still loading" names are matched as the relay keeps them.
+- **The relay:** one lock per room, a clock thread that wakes each room when its frame is due, bounded
+  queues (a page that cannot keep up is cut off and resumes), shared buffers instead of a copy per member,
+  binary pings echoed without parsing. People can join a room while a match is on and play the next one.
+- **Music after a rollback** is put right against what the game last asked for, so an item song that ended
+  does not start again. Per-match resets of the sound journal; sudden death's first frames are first runs.

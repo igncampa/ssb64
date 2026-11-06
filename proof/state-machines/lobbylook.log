@@ -1,0 +1,11 @@
+ok   two people, picks shown on both
+ok   the host picks the stage, the friend sees it
+ok   the friend cannot pick a stage
+ok   lobby audio runs (about a second of samples a second) : 33120
+ok   and it is not silence (the select-screen music) : rms 902
+ok   Sound off: the music stops : rms 47
+ok   a tall window: asked to turn sideways
+ok   a wide window: no note
+ok   the match starts for both
+ok   a 4:3 screen and a 21:9 screen stay in sync for 1500 frames : 101 hashes
+ok   no page errors

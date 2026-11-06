@@ -417,7 +417,7 @@ Snapshots and the boot image (D6) are the same mechanism. Phase 1 already uses t
 - Hash, page → relay: `type=2, u8 slot, u32 frame, u32 hash`, every 15 frames.
 - Frame bundle, relay → page: `type=4, u32 frame, u8 n, u8 replacedMask, n × {u16, i8, i8}` in slot order, 60/s ≈ 1.4 kB/s down at 4 humans. The bundle is the only truth.
 
-**Clock**: starts when every page has simulated past frame 12 (first picture). Frame `f` closes when every slot delivered its pad for `f`, never before `t0 + f/60 s`, and at `t0 + (f+G)/60 s` regardless, G = 6 frames (100 ms). A missing pad is the slot's last pad, marked replaced. A late pad becomes that slot's last pad. A slot silent for 3 s (180 frames) goes CPU by a `cpu{frame}` message ordered with the bundles; `left` likewise. A page that simulated past that frame rolls back.
+**Clock**: starts when every page has simulated past frame 12 (first picture). Frame `f` closes when every slot delivered its pad for `f`, never before `t0 + f/60 s`, and at `t0 + (f+G)/60 s` regardless, G = 6 frames (100 ms). A missing pad is the slot's last pad, marked replaced. A late pad becomes that slot's last pad. A slot silent for 3 s (180 frames) goes CPU by a `cpu{frame}` message ordered with the bundles; `left` likewise. A page that simulated past that frame rolls back. **Changed 6 Nov 2026 (owner): no CPU ever takes a fighter.** A slot that is away (hidden tab, socket gone, silent 3 s, failed to start) gets the zero pad in every bundle and holds nobody up; its fighter stands. Its pads count again from the first frame still open when one arrives. A present slot quiet for 0.5 s gets the zero pad instead of repeating its last one. See `spec/state-machines.md` and `proof/state-machines/`.
 
 **Netcode v1, lockstep over bundles**: local pad sampled at `f` applies at `f + D`, `D = clamp(ceil((RTT/2 + 16 ms)/16.7 ms), 2, 10)` from RTT at `go`. The page simulates `f` only when bundle `f` is held. Stall overlay after 24 frames with a reason. Hash compare every 15 frames; mismatch = banner, `desync`, RNG dump, park.
 
@@ -447,7 +447,7 @@ Relay between the players (US east coast for Costa Rica–Germany per the playbo
 | Relay close grace G | 6 frames (100 ms) | floor at `t0 + f/60` |
 | Clock start | every page past frame 12 | past first picture |
 | Pacing lead | `ceil(RTT/16.7) + 2` | lowest recent RTT |
-| Auto-CPU after silence | 180 frames (3 s) | relay-timed |
+| Away after silence (zero pad, no CPU; 6 Nov) | 180 frames (3 s) | relay-timed |
 | Stall banner | 24 frames (400 ms) | with a reason |
 | Lobby code | 5 chars | rate-limited creates |
 | Room idle expiry | 30 min | empty rooms sooner |

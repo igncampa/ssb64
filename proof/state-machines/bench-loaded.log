@@ -1,0 +1,6 @@
+load 41.51
+old: rooms 40 sockets 320 bundles 348018 | lateness ms p50 2.348 p90 4.323 p99 7.142 p99.9 10.284 max 15.553 | relay cpu 28.2% of a core | VmRSS:	   53924 kB
+new: rooms 40 sockets 320 bundles 444052 | lateness ms p50 1.405 p90 3.702 p99 10.064 p99.9 20.182 max 37.352 | relay cpu 37.4% of a core | VmRSS:	   56060 kB
+load 52.07
+old: rooms 40 sockets 320 bundles 420018 | lateness ms p50 3.342 p90 8.172 p99 15.840 p99.9 22.133 max 60.756 | relay cpu 33.7% of a core | VmRSS:	   54540 kB
+new: rooms 40 sockets 320 bundles 420046 | lateness ms p50 1.807 p90 5.813 p99 12.146 p99.9 18.364 max 32.052 | relay cpu 35.3% of a core | VmRSS:	   55784 kB

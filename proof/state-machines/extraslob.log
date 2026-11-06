@@ -1,0 +1,20 @@
+stages ["0:Peach's Castle","1:Sector Z","2:Kongo Jungle","3:Planet Zebes","4:Hyrule Castle","5:Yoshi's Island","6:Dream Land","7:Saffron City","8:Mushroom Kingdom","13:Meta Crystal","14:Duel Zone","16:Final Destination"]
+extras ["13:Metal Mario","26:Giant DK","14:Polygon Mario","15:Polygon Fox","16:Polygon Donkey Kong","17:Polygon Samus","18:Polygon Luigi","19:Polygon Link","20:Polygon Yoshi","21:Polygon Captain Falcon","22:Polygon Kirby","23:Polygon Pikachu","24:Polygon Jigglypuff","25:Polygon Ness"]
+ok   stage tile 13 offered with a picture 
+ok   stage tile 14 offered with a picture 
+ok   stage tile 16 offered with a picture 
+ok   12 regular fighters + 14 extras, no Master Hand 
+ok   item checklist: 15 switches, all on by default Beam Sword, Home-Run Bat, Hammer, Fan, Motion-Sensor Bomb, Bob-omb, Bumper, Shell, Poké Ball, Ray Gun, Fire Flower, Star Rod, Maxim Tomato, Heart, Star Man
+ok   item rate defaults to Medium 
+ok   the friend cannot change items 
+ok   friend sees Final Destination and the host checklist [false,false,true,false,false,false,false,false,false,false,false,false,true,false,false]
+ok   host roster shows the friend as Polygon Kirby and self as Metal Mario 
+ok   colour buttons are off for a one-look fighter 
+host sim {"stage":16,"mask":4293926943,"fkind":[13,22,28,28]} slot 0  friend sim {"stage":16,"mask":4293926943,"fkind":[13,22,28,28]} slot 1
+ok   both sims run Final Destination 
+ok   both sims got the item mask fff0201f 
+ok   both sims: host slot Metal Mario (13), friend slot Polygon Kirby (22) 
+ok   a real key press moved Metal Mario x -900 to -800
+ok   both pages agree on every hash so far 40 hashes
+ok   no page errors 
+fails=0

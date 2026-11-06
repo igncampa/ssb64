@@ -1,0 +1,25 @@
+    Finished `release` profile [optimized] target(s) in 0.05s
+     Running unittests src/main.rs (target/release/deps/ssb64_relay-766d4eae37cc8465)
+
+running 18 tests
+test room::tests::a_desync_ends_the_race_and_a_rematch_starts ... ok
+test room::tests::a_newcomer_waits_in_the_room_during_a_race ... ok
+test room::tests::a_slow_page_is_cut_off_not_buffered ... ok
+test room::tests::a_failed_start_holds_nobody ... ok
+test room::tests::a_stale_ring_entry_is_never_used ... ok
+test room::tests::frames_close_on_time_with_every_pad ... ok
+test room::tests::start_waits_for_every_engine ... ok
+test room::tests::the_host_is_the_lowest_online_member_everywhere ... ok
+test room::tests::match_end_waits_for_present_racers_only ... ok
+test room::tests::everyone_gone_ends_the_race ... ok
+test room::tests::equal_hashes_are_fine ... ok
+test room::tests::a_missing_pad_repeats_then_stands_then_away ... ok
+test room::tests::a_reloaded_page_gets_the_match_from_its_start ... ok
+test room::tests::an_away_racer_holds_nobody_and_comes_back ... ok
+test room::tests::a_stalled_relay_does_not_mark_everyone_away ... ok
+test room::tests::match_end_times_out_for_a_stuck_present_racer ... ok
+test room::tests::a_racer_who_reconnects_gets_every_frame_it_missed ... ok
+test room::tests::history_is_bounded ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
