@@ -1337,6 +1337,12 @@ void syAudioSetFXType(s32 fx_type)
         sSYAudioCurrentSettings.fx_type = fx_type;
     }
 }
+#ifdef PORT
+// What the game last asked each song player for: an id, or -1 after a stop. The mailbox's id goes to -1 by
+// itself when a song ends; this one does not, so a song that ended stays ended (as on the N64) until the
+// sim asks for something else. port_bgm_reconcile and the lobby compare against this, never the mailbox.
+s32 gPortBGMRequested[SYAUDIO_BGMPLAYERS_NUM] = { -1 };
+#endif
 
 // 0x80020A74
 void syAudioStopBGMAll(void)
@@ -1362,6 +1368,9 @@ s32 syAudioPlayBGM(s32 sngplayer, u32 bgm)
     {
         sSYAudioCSPlayerStatuses[sngplayer] = AL_PLAYING;
         sSYAudioBGMPlayingIDs[sngplayer] = bgm;
+#ifdef PORT
+        gPortBGMRequested[sngplayer] = bgm;
+#endif
 
         return bgm;
     }
@@ -1376,6 +1385,9 @@ void syAudioStopBGM(s32 sngplayer)
 #endif
     sSYAudioCSPlayerStatuses[sngplayer] = AL_PLAYING;
     sSYAudioBGMPlayingIDs[sngplayer] = -1;
+#ifdef PORT
+    gPortBGMRequested[sngplayer] = -1;
+#endif
 }
 
 // 0x80020B38
@@ -1591,10 +1603,17 @@ void syAudioUpdateMesgQueue(void)
 }
 
 #ifdef PORT
-// After a rollback the sim may want different music than the mailbox holds.
+// After a rollback the sim may want different music than the first run asked for. Compared with the
+// request, not the mailbox: an item song that ended by itself must not start again from the top.
 extern u32 gMPCollisionBGMCurrent;
+static u32 sPortBGMRestarts;
+static s32 sPortBGMReconcileOld;
 void port_bgm_reconcile(void)
 {
-    if (sSYAudioBGMPlayingIDs[0] != (s32)gMPCollisionBGMCurrent) syAudioPlayBGM(0, gMPCollisionBGMCurrent);
+    s32 have = sPortBGMReconcileOld ? sSYAudioBGMPlayingIDs[0] : gPortBGMRequested[0];
+    if (have != (s32)gMPCollisionBGMCurrent) { syAudioPlayBGM(0, gMPCollisionBGMCurrent); sPortBGMRestarts++; }
 }
+// For proofs: how many times a rollback restarted the music, and the old rule as a negative control.
+u32 BgmRestarts(void) { return sPortBGMRestarts; }
+void BgmReconcileOld(s32 on) { sPortBGMReconcileOld = on; }
 #endif

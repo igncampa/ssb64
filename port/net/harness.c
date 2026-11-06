@@ -268,6 +268,17 @@ static int sPoison = 0;
 EXPORT void SetPoison(int v) { sPoison = v; }
 EXPORT void SetFlipFrame(int f) { sFlipFrame = f; }
 
+// Port statics outside the sim image that live for one match. The sim itself comes back whole from the
+// boot image and the rollback core from NetInit; this is the rest, in one place.
+static int sNanReported;
+static void port_match_reset(void)
+{
+    extern void port_sfx_reset(void);
+    port_sfx_reset();
+    sNanReported = 0;
+    sItemsSeen = 0;
+}
+
 // Slot arrays are 4 entries. kinds: 0 human, 1 CPU, 2 none.
 EXPORT void StartMatch(const int32_t *kinds, const int32_t *fkinds, const int32_t *costumes, const int32_t *levels,
                        const int32_t *teams, const int32_t *handicaps, int stage, int rules, int time_limit, int stocks,
@@ -331,7 +342,7 @@ EXPORT void StartMatch(const int32_t *kinds, const int32_t *fkinds, const int32_
 
     syUtilsSetRandomSeed(seed);
     sMatchOn = 1;
-    sItemsSeen = 0;
+    port_match_reset();
     port_event(1, seed);
     port_match_begin();
 }
@@ -363,17 +374,16 @@ void port_net_frame_begin(void) {}
 void port_net_frame_end(void)
 {
     GObj *g;
-    static int reported;
     for (g = gGCCommonLinks[nGCCommonLinkIDItem]; g != NULL; g = g->link_next)
     {
         s32 k = itGetStruct(g)->kind;
         if (k >= 0 && k < 32) sItemsSeen |= 1u << k;
     }
-    if (reported) return;
+    if (sNanReported) return;
     for (g = gGCCommonLinks[nGCCommonLinkIDFighter]; g != NULL; g = g->link_next)
     {
         f32 x = DObjGetStruct(g)->translate.vec.f.x;
-        if (x != x) { reported = 1; port_log("first NaN at frame %u", port_sim_frame()); port_dump_state(); return; }
+        if (x != x) { sNanReported = 1; port_log("first NaN at frame %u", port_sim_frame()); port_dump_state(); return; }
     }
 }
 

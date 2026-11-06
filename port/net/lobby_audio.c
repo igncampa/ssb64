@@ -59,11 +59,13 @@ EXPORT void LobbyCue(int cue, int arg)
 }
 
 // on: the select-screen theme on song player 0. vol: 0 to 0x7F00, for the mute button and the mics.
+// "Is it on" is the audio's own record of what was asked for (audio.c), not a second flag here.
+extern s32 gPortBGMRequested[];
 EXPORT void LobbyMusic(int on, int vol)
 {
-    static int playing;
-    if (on && !playing) { syAudioPlayBGM(0, nSYAudioBGMBattleSelect); playing = 1; }
-    if (!on && playing) { syAudioStopBGMAll(); playing = 0; }
+    int playing = gPortBGMRequested[0] == nSYAudioBGMBattleSelect;
+    if (on && !playing) syAudioPlayBGM(0, nSYAudioBGMBattleSelect);
+    if (!on && playing) syAudioStopBGMAll();
     if (on) syAudioSetBGMVolume(0, vol < 0 ? 0 : vol > 0x7F00 ? 0x7F00 : vol);
 }
 

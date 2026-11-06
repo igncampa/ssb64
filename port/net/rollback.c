@@ -41,7 +41,7 @@ static Pad sTruth[NET_SLOTS][R], sApplied[NET_SLOTS][R], sLocal[NET_SLOTS][R];
 static Pad sLastTruth[NET_SLOTS];
 static Pad sCur[NET_SLOTS];
 static uint8_t sReplaced[R];
-static int32_t sNow, sC, sTop, sTruthTop, sBase;
+static int32_t sNow, sC, sTop, sCapTop, sTruthTop, sBase; // sCapTop: newest frame whose local pad was captured
 static int sW = 12, sOn, sLocalMask, sLockstep, sEndFrame = -1, sEnded;
 static char *sSnaps[SNAPS];
 
@@ -61,7 +61,7 @@ EXPORT void NetInit(int window, int localMask, int lockstep)
     if (!sSnaps[0]) for (i = 0; i < SNAPS; i++) { sSnaps[i] = malloc(SNAP_BYTES); if (!sSnaps[i]) port_fatal("snapshot ring allocation"); }
     memset(sTruth, 0, sizeof sTruth); memset(sApplied, 0, sizeof sApplied); memset(sLocal, 0, sizeof sLocal);
     memset(sLastTruth, 0, sizeof sLastTruth); memset(&sStats, 0, sizeof sStats); memset(sDepthHist, 0, sizeof(sDepthHist)); memset(sCur, 0, sizeof sCur);
-    sNow = sC = sTop = sTruthTop = -1; sEndFrame = -1; sEnded = 0; sHashOutNext = 0;
+    sNow = sC = sTop = sCapTop = sTruthTop = -1; sEndFrame = -1; sEnded = 0; sHashOutNext = 0;
 }
 
 EXPORT void NetOff(void) { sOn = 0; }
@@ -73,7 +73,12 @@ void port_net_scene_ready(int32_t first)
     if (!sOn) return;
     sBase = first - 1;
     sNow = sC = first - 1;
-    if (sTop < sNow) sTop = sNow;
+    // A new scene (the match, or sudden death after a held finish): its frames run for the first time,
+    // whatever an earlier wrong prediction of the old scene ran at the same numbers. The local pads for
+    // them were already captured and sent, so capturing goes on from sCapTop, not from here.
+    sTop = sNow;
+    if (sCapTop < sNow) sCapTop = sNow;
+    { extern void port_sfx_scene_reset(void); port_sfx_scene_reset(); }
     if (port_snapshot_size() > SNAP_BYTES) port_fatal("snapshot larger than its ring slot");
     port_snapshot_save(snap_for(sNow));
     sEndFrame = -1;
@@ -140,7 +145,7 @@ static int step(int32_t f, int resim, int draw)
     int s, r;
     extern void port_sfx_frame_begin(int32_t), port_sfx_frame_end(int32_t, int);
     port_sfx_frame_begin(f);
-    if (f > sTop) for (s = 0; s < NET_SLOTS; s++) if (sLocalMask & (1 << s)) sLocal[s][f & MASK] = sCur[s];
+    if (f > sCapTop) for (s = 0; s < NET_SLOTS; s++) if (sLocalMask & (1 << s)) sLocal[s][f & MASK] = sCur[s];
     for (s = 0; s < NET_SLOTS; s++) sApplied[s][f & MASK] = pad_for(s, f);
     gPortResim = resim;
     port_set_sim_frame(f);
@@ -153,6 +158,7 @@ static int step(int32_t f, int resim, int draw)
         if (f % 15 == 0) sHash[f & MASK] = port_hash_sim();
         sNow = f;
         if (f > sTop) sTop = f;
+        if (f > sCapTop) sCapTop = f;
     }
     return r;
 }
@@ -262,7 +268,7 @@ EXPORT int NetPollHash(int32_t *frame, uint32_t *hash)
 
 EXPORT int32_t NetNow(void) { return sNow; }
 EXPORT int32_t NetConfirmed(void) { return sC; }
-EXPORT int32_t NetTop(void) { return sTop; }
+EXPORT int32_t NetTop(void) { return sCapTop; } // how far ahead this page's pads go (pacing, the wire)
 EXPORT int32_t NetTruthTop(void) { return sTruthTop; }
 EXPORT int NetEnded(void) { return sEnded; }
 EXPORT uint32_t NetStat(int i) { return ((uint32_t *)&sStats)[i]; }

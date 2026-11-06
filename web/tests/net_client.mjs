@@ -18,6 +18,7 @@ const { default: SSB64 } = await import(pathToFileURL(R + '/ssb64_net.mjs'));
 const m = await SSB64({ printErr: () => {}, print: () => {} });
 const img = fs.readFileSync(R + '/ssb64.data'); const p = m._malloc(img.length); m.HEAPU8.set(img, p); m._PortBoot(p, img.length);
 if (a.oldsfx) m._SfxJournalOld(1);
+if (a.oldbgm) m._BgmReconcileOld(1);
 if (a.throwongo) { m._StartMatch = () => { throw new Error('test: StartMatch threw'); }; }
 const mode = +(a.pad ?? 2);
 const token = a.token ?? String(Math.random());
@@ -51,7 +52,7 @@ const finish = why => {
   const sfx = []; { const n = m._SfxLogCount(), q = m._SfxLog() >> 2; for (let i = 0; i < n; i++) if (!m.HEAP32[q + i * 3 + 2]) sfx.push(m.HEAP32[q + i * 3] + ':' + m.HEAP32[q + i * 3 + 1]); }
   const stats = statsAtEnd ?? (cl.race ? cl.stats() : null);
   const out = { sfx, name: a.name, slot: cl.slot, why, stats, hashes: cl.hashes.length, lastHash: cl.hashes.at(-1), hashCsv: csv(cl.hashes), allHashes: a.allhashes ? cl.hashes.map(h => h.join(':')).join(',') : undefined,
-    desync: cl.desync, events, fps: tickRate, info: infoAtEnd ?? matchInfo(), itemsSeen: m._PortItemsSeen ? m._PortItemsSeen() >>> 0 : null, races, idle, overAfterEnd: endedAt ? overAt - endedAt : null };
+    desync: cl.desync, events, fps: tickRate, info: infoAtEnd ?? matchInfo(), itemsSeen: m._PortItemsSeen ? m._PortItemsSeen() >>> 0 : null, races, idle, bgmRestarts: m._BgmRestarts ? m._BgmRestarts() : null, overAfterEnd: endedAt ? overAt - endedAt : null };
   fs.writeSync(1, JSON.stringify(out) + '\n'); process.exit(0);
 };
 let overAt = 0;

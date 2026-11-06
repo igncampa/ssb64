@@ -89,3 +89,18 @@ int port_sfx_claim(uint16_t id, void **h)
 uint32_t port_sfx_started(void) { return gPortSfxStarted; }
 uint32_t port_sfx_late(void) { return sLate; }
 uint32_t port_sfx_cut(void) { return sCut; }
+
+// A new scene (sudden death) starts its frames afresh: the old scene's predicted frames are not re-runs.
+void port_sfx_scene_reset(void)
+{
+    int i;
+    for (i = 0; i < FRAMES; i++) { sF[i] = -1; sN[i] = 0; }
+    sCur = -1;
+}
+
+// A new match: frame numbers start at 0 again, so nothing of the last match may look like a first run.
+void port_sfx_reset(void)
+{
+    port_sfx_scene_reset();
+    sLogN = 0; sLate = sCut = 0; gPortSfxStarted = 0;
+}
