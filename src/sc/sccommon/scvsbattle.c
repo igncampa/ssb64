@@ -229,6 +229,15 @@ void scVSBattleStartBattle(void)
 	ifCommonPlayerStockInitInterface();
 	ifCommonEntryAllMakeInterface();
 	mpCollisionSetPlayBGM();
+#if defined (PORT)
+	// Final Destination's map names the boss entrance jingle; the 1P game swaps in the stage's theme
+	// when the fight starts (sc1PGameBossStartBattle). The VS game never does, so do it here.
+	if (gSCManagerSceneData.gkind == nGRKindLast)
+	{
+		gMPCollisionBGMCurrent = gMPCollisionBGMDefault = nSYAudioBGMLast;
+		syAudioPlayBGM(0, nSYAudioBGMLast);
+	}
+#endif
 	func_800269C0_275C0(nSYAudioVoicePublicExcited);
 	ifCommonTimerMakeInterface(ifCommonAnnounceTimeUpInitInterface);
 	ifCommonTimerMakeDigits();
@@ -506,6 +515,15 @@ void scVSBattleStartSuddenDeath(void)
 	ifCommonPlayerStockInitInterface();
 	ifCommonSuddenDeathMakeInterface();
 	mpCollisionSetPlayBGM();
+#if defined (PORT)
+	// Final Destination's map names the boss entrance jingle; the 1P game swaps in the stage's theme
+	// when the fight starts (sc1PGameBossStartBattle). The VS game never does, so do it here.
+	if (gSCManagerSceneData.gkind == nGRKindLast)
+	{
+		gMPCollisionBGMCurrent = gMPCollisionBGMDefault = nSYAudioBGMLast;
+		syAudioPlayBGM(0, nSYAudioBGMLast);
+	}
+#endif
 	func_800269C0_275C0(nSYAudioVoicePublicExcited);
 	ifCommonTimerMakeInterface(ifCommonAnnounceTimeUpInitInterface);
 	ifCommonTimerMakeDigits();

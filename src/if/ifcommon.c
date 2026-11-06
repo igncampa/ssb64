@@ -1396,7 +1396,19 @@ void ifCommonPlayerStockStealProcUpdate(GObj *interface_gobj)
 void ifCommonPlayerStockStealMakeInterface(s32 thief, s32 stolen)
 {
     FTStruct *fp = ftGetStruct(gSCManagerBattleState->players[stolen].fighter_gobj);
+#if defined (PORT)
+    GObj *interface_gobj;
+
+    // The Fighting Polygons have no stock icon (their FTSprites are NULL): no flying icon, as the
+    // stock HUD itself already skips them. The steal itself has happened by now.
+    if ((fp->attr->sprites == NULL) || (fp->attr->sprites->stock_sprite == NULL))
+    {
+        return;
+    }
+    interface_gobj = gcMakeGObjSPAfter(nGCCommonKindInterface, NULL, nGCCommonLinkIDInterface, GOBJ_PRIORITY_DEFAULT);
+#else
     GObj *interface_gobj = gcMakeGObjSPAfter(nGCCommonKindInterface, NULL, nGCCommonLinkIDInterface, GOBJ_PRIORITY_DEFAULT);
+#endif
 
     if (interface_gobj != NULL)
     {
