@@ -553,15 +553,24 @@ s32 itMainSearchRandomWeight(s32 random, ITRandomWeights *weights, u32 min, u32 
     {
         s32 avg = (s32) (min + max) / 2;
 
+        // The original drops the recursive calls' results and returns what is left in v0, which is
+        // that result. Elsewhere that is undefined: every random item came out the same kind.
         if (random < weights->blocks[avg])
         {
+#if defined (AVOID_UB)
+            return
+#endif
             itMainSearchRandomWeight(random, weights, min, avg);
         }
         else if (random < weights->blocks[avg + 1])
         {
             return avg;
         }
+#if defined (AVOID_UB)
+        else return itMainSearchRandomWeight(random, weights, avg, max);
+#else
         else itMainSearchRandomWeight(random, weights, avg, max);
+#endif
     }
 }
 
