@@ -5,6 +5,7 @@
 #include <PR/ultratypes.h>
 #include <sys/audio.h>
 #include <gm/gmsound.h>
+#include <ft/ftdef.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #define EXPORT EMSCRIPTEN_KEEPALIVE
@@ -19,7 +20,9 @@ extern void port_audio_tick(void);
 
 enum { CUE_SCROLL, CUE_SELECT, CUE_DENIED, CUE_FIGHTER, CUE_CHOOSE, CUE_FREE_FOR_ALL, CUE_STAGE, CUE_TEAMS, CUE_COUNT };
 
-// The lobby lists fighters in FTKind order, as the game's own select screen does.
+// The lobby passes a fighter's FTKind (src/ft/ftdef.h). 0 to 11 as on the game's own select screen;
+// 13 Metal Mario, 14 to 25 the Fighting Polygons, 26 Giant DK use the 1P game's own calls for them.
+// 12 is Master Hand: never offered, so no call.
 static const u16 sAnnounce[12] = {
     nSYAudioVoiceAnnounceMario, nSYAudioVoiceAnnounceFox, nSYAudioVoiceAnnounceDonkey, nSYAudioVoiceAnnounceSamus,
     nSYAudioVoiceAnnounceLuigi, nSYAudioVoiceAnnounceLink, nSYAudioVoiceAnnounceYoshi, nSYAudioVoiceAnnounceCaptain,
@@ -35,11 +38,18 @@ EXPORT void LobbyCue(int cue, int arg)
     case CUE_DENIED: func_800269C0_275C0(nSYAudioFGMMenuDenied); break;
     case CUE_STAGE: func_800269C0_275C0(nSYAudioFGMStageSelect); break;
     case CUE_FIGHTER:
-        if (arg < 0 || arg >= 12) break;
-        // One name at a time, as on the select screen: a new pick cuts the last call short.
-        if (sVoice != NULL) func_80026738_27338(sVoice);
-        func_800269C0_275C0(nSYAudioFGMMarioDash);
-        sVoice = func_800269C0_275C0(sAnnounce[arg]);
+        {
+            u16 v;
+            if (arg >= 0 && arg < 12) v = sAnnounce[arg];
+            else if (arg == nFTKindMMario) v = nSYAudioVoiceAnnounceMMario;
+            else if (arg >= nFTKindNStart && arg <= nFTKindNEnd) v = nSYAudioVoiceAnnounceZako;
+            else if (arg == nFTKindGDonkey) v = nSYAudioVoiceAnnounceGDonkey;
+            else break;
+            // One name at a time, as on the select screen: a new pick cuts the last call short.
+            if (sVoice != NULL) func_80026738_27338(sVoice);
+            func_800269C0_275C0(nSYAudioFGMMarioDash);
+            sVoice = func_800269C0_275C0(v);
+        }
         break;
     case CUE_CHOOSE: func_800269C0_275C0(nSYAudioVoiceAnnounceSelectPlayer); break;
     case CUE_FREE_FOR_ALL: func_800269C0_275C0(nSYAudioVoiceAnnounceFreeForAll); break;
