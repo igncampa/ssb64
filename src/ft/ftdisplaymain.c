@@ -1,3 +1,6 @@
+#ifdef PORT
+extern int port_gfx_in_wide_frame(float x, float y);
+#endif
 #include <ft/fighter.h>
 #include <if/interface.h>
 #include <sc/scene.h>
@@ -1128,7 +1131,13 @@ void ftDisplayMainProcDisplay(GObj *fighter_gobj)
 
                 func_ovl2_800EB924(CObjGetStruct(gGMCameraGObj), gGMCameraMatrix, &ft_pos, &cam_pos_x, &cam_pos_y);
 
+#ifdef PORT
+                // Widescreen: a fighter in the side bands is on the screen, so no bubble (draw only, see
+                // proof/widescreen-spec.md 2.6). At 4:3 this is gmCameraCheckTargetInBounds exactly.
+                if (port_gfx_in_wide_frame(cam_pos_x, cam_pos_y) == FALSE)
+#else
                 if (gmCameraCheckTargetInBounds(cam_pos_x, cam_pos_y) == FALSE)
+#endif
                 {
                     ft_pos = fp->joints[nFTPartsJointTopN]->translate.vec.f;
                     ft_pos.y += 300.0F;

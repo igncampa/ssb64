@@ -81,9 +81,15 @@ MObjSub *dMarioSpecial3_MObjSubArr_0x00160[2] = {
 	NULL,
 };
 
-/* Vtx: JointVerts @ 0x168 (7 vertices) */
-Vtx dMarioSpecial3_JointVerts_Vtx[7] = {
+/* Vtx: JointVerts @ 0x168 (4 vertices) */
+Vtx dMarioSpecial3_JointVerts_Vtx[4] = {
 	#include <MarioSpecial3/JointVerts.vtx.inc.c>
+};
+
+/* DisplayList: SuperJumpPunchDL_head @ 0x1A8 (48 bytes). Was typed as the last 3 "vertices" of JointVerts:
+ * the coin's list really starts here (MarioSpecial1 points at 0x1A8) and runs on into SuperJumpPunchDL. */
+Gfx dMarioSpecial3_SuperJumpPunchDL_head_DisplayList[6] = {
+	#include <MarioSpecial3/SuperJumpPunchDL_head.dl.inc.c>
 };
 
 /* DisplayList: SuperJumpPunchDL @ 0x1D8 (184 bytes) */

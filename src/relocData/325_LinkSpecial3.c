@@ -19,6 +19,7 @@ extern Vtx dLinkSpecial3_Vtx_0x0210_Vtx[];
 extern Vtx dLinkSpecial3_Vtx_0x0240_Vtx[];
 extern Vtx dLinkSpecial3_Vtx_0x0270_Vtx[];
 extern Vtx dLinkSpecial3_Vtx_0x02A0_Vtx[];
+extern Gfx dLinkSpecial3_BoomerangDL_head_0x348[];
 
 extern u32 dLinkSpecial3_BoomerangDL_post_anim_script[];
 
@@ -72,9 +73,21 @@ Vtx dLinkSpecial3_Vtx_0x0270_Vtx[3] = {
 	#include <LinkSpecial3/Vtx_0x0270.vtx.inc.c>
 };
 
-/* Vtx: Vtx_0x02A0 @ 0x2A0 (14 vertices) */
-Vtx dLinkSpecial3_Vtx_0x02A0_Vtx[14] = {
+/* Vtx: Vtx_0x02A0 @ 0x2A0 (3 vertices) */
+Vtx dLinkSpecial3_Vtx_0x02A0_Vtx[3] = {
 	#include <LinkSpecial3/Vtx_0x02A0.vtx.inc.c>
+};
+
+/* The next 176 bytes were typed as 11 more vertices. They are display list commands (geometry mode,
+ * tiles, combiner) up to BoomerangDL. DL_0x458 calls into them at 0x348. */
+/* @dl-prefix: no EndDL by design — runs on into the next list */
+Gfx dLinkSpecial3_BoomerangDL_pre_0x2D0[15] = {
+	#include <LinkSpecial3/BoomerangDL_pre_0x2D0.dl.inc.c>
+};
+
+/* @dl-prefix: no EndDL by design — runs on into BoomerangDL */
+Gfx dLinkSpecial3_BoomerangDL_head_0x348[7] = {
+	#include <LinkSpecial3/BoomerangDL_head_0x348.dl.inc.c>
 };
 
 /* DisplayList: BoomerangDL @ 0x380 (216 bytes) */

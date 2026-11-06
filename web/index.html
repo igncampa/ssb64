@@ -1,31 +1,81 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Smash 64 Online</title>
+<script>
+// Inside the n64 portal (a frame with ?epoch) the page is one cart: the portal's contract loads first.
+if (window.parent !== window && new URLSearchParams(location.search).has('epoch')) document.write('<script src="/n64-embed.js"><\/script>');
+</script>
 <style>
-:root{--bg:#101218;--panel:#1a1d26;--line:#2c3140;--fg:#e8e8ee;--dim:#98a0b5;--acc:#e0483c;--ok:#5ac46a;--warn:#e8b23c}
+:root{--bg:#0e0f16;--panel:#191b27;--panel2:#22253a;--line:#30344c;--fg:#eef0f8;--dim:#9aa2bd;--acc:#e0483c;--acc2:#ffb648;--ok:#5ac46a;--warn:#e8b23c;
+  --p1:#e8413a;--p2:#3b7bff;--p3:#f2c230;--p4:#35b65a}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,sans-serif}
 #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
-canvas{background:#000;height:100%;max-width:100%;aspect-ratio:4/3}
-#lobby{position:fixed;inset:0;overflow:auto;background:var(--bg);display:flex;justify-content:center;padding:32px 16px}
-#lobby[hidden],#strip[hidden],#banner[hidden],.screen[hidden]{display:none}
-.col{width:100%;max-width:720px;display:flex;flex-direction:column;gap:16px}
-h1{font-size:24px;margin:0}h2{font-size:15px;margin:0 0 8px;color:var(--dim);font-weight:600}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
-label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--dim)}
-select,input{background:#0d0f14;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
-button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+canvas{background:#000;display:block}
+#lobby{position:fixed;inset:0;overflow:auto;background:radial-gradient(ellipse at top,#23263c 0,var(--bg) 60%);display:flex;justify-content:center;padding:20px 16px}
+#lobby[hidden],#strip[hidden],#banner[hidden],.screen[hidden]{display:none!important}
+.col{width:100%;max-width:980px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:24px;margin:0}h2{font-size:13px;margin:0 0 10px;color:var(--dim);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--dim)}
+select,input{background:#0d0f14;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px;font:inherit}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
 button.ghost{background:transparent;border:1px solid var(--line);color:var(--fg)}
 button:disabled{opacity:.45;cursor:default}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--dim);font-weight:500}
 .dim{color:var(--dim)}.code{font:600 22px ui-monospace,monospace;letter-spacing:3px}
 #strip{position:fixed;left:0;right:0;bottom:0;padding:3px 10px;background:#000a;color:var(--dim);font:12px ui-monospace,monospace;white-space:pre}
-#banner{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--warn);color:var(--fg);border-radius:8px;padding:8px 14px;max-width:90vw}
-#err{color:var(--acc)}
+#banner{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--warn);color:var(--fg);border-radius:8px;padding:8px 14px;max-width:90vw;z-index:5}
+#err{color:var(--acc)}#err:empty{display:none}
+img.px{image-rendering:pixelated;display:block}
+/* The room: players across the top, fighters and stages below, the start at the bottom. */
+#sRoom{display:flex;flex-direction:column;gap:14px}
+.split{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+@media (max-width:820px){.split{grid-template-columns:1fr}}
+#roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+#roster tr{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px solid var(--line);border-radius:10px;padding:8px}
+#roster tr.me{border-color:var(--acc2)}
+#roster td{padding:0;border:0}
+#roster .pic{width:46px;height:46px;border-radius:6px;background:#0008;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--dim)}
+#roster .pic img{width:46px;height:46px}
+#roster .who{display:flex;flex-direction:column;min-width:0}
+#roster .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#roster .st{font-size:12px;color:var(--dim)}
+#roster .host{color:var(--acc2);font-size:11px;font-weight:700;margin-left:4px}
+#roster tr.off{opacity:.5}
+#fighters{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.ft{position:relative;padding:0;background:var(--panel2);border:3px solid transparent;border-radius:10px;overflow:hidden;aspect-ratio:1;transition:transform .08s}
+.ft img{width:100%;height:100%}
+.ft:hover:not(:disabled){transform:translateY(-2px);border-color:#fff4}
+.ft.on{border-color:var(--acc2);box-shadow:0 0 0 2px #0008,0 0 14px #ffb64880}
+.ft .tags{position:absolute;left:3px;bottom:3px;display:flex;gap:2px}
+.ft .tags span{width:12px;height:12px;border-radius:50%;border:2px solid #0008}
+.costumes{display:flex;gap:8px;margin-top:10px;align-items:center}
+.costumes button{width:34px;height:34px;padding:0;border-radius:50%;border:3px solid transparent;font-size:12px}
+.costumes button.on{border-color:#fff}
+#stages{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sg{padding:0;background:var(--panel2);border:3px solid transparent;border-radius:10px;overflow:hidden;text-align:left;color:var(--fg)}
+.sg img{width:100%;aspect-ratio:4/3}
+.sg span{display:block;padding:4px 8px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg.on{border-color:var(--acc2);box-shadow:0 0 14px #ffb64880}
+.sg:hover:not(:disabled){border-color:#fff4}
+.sg:disabled{opacity:1;cursor:default}
+.sg:disabled:not(.on){filter:saturate(.5) brightness(.75)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.go{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#start{font-size:20px;padding:14px 34px;border-radius:12px;background:linear-gradient(#ff5a4a,#c42c22);box-shadow:0 4px 0 #7d1a14;letter-spacing:.04em}
+#start:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #7d1a14}
+#sound.on,#wide.on{border-color:var(--acc2);color:var(--acc2)}
+.hidden-src{display:none}
+body.n64 #copy,body.n64 #leave,body.n64 h1,body.n64 #roomPanel{display:none!important}
+/* Smash is played sideways only. A tall window shows this instead of a squeezed game. */
+#turn{position:fixed;inset:0;z-index:9;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
+#turn .ph{width:46px;height:78px;border:4px solid var(--fg);border-radius:9px;animation:turn 1.6s ease-in-out infinite}
+@keyframes turn{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait){#turn{display:flex}}
 </style></head><body>
 <div id="stage"><canvas id="game" width="960" height="720"></canvas></div>
+<div id="turn" role="alert"><div class="ph"></div><b>Turn your screen sideways</b><span class="dim">Smash 64 plays in landscape only.</span></div>
 <div id="lobby"><div class="col">
   <h1>Smash 64 Online</h1>
   <div id="err" role="alert"></div>
@@ -47,18 +97,25 @@ table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;text-align:left;
     </div>
     <p class="dim">You paste this once on each device. Friends only need the link.</p>
   </section>
-  <section class="screen" id="sRoom" hidden style="display:flex;flex-direction:column;gap:16px">
-    <div class="panel row" style="justify-content:space-between">
+  <section class="screen" id="sRoom" hidden>
+    <div class="panel row" id="roomPanel" style="justify-content:space-between">
       <div><div class="dim" style="font-size:13px">Lobby code</div><div class="code" id="roomCode"></div></div>
       <button class="ghost" id="copy">Copy link</button>
     </div>
-    <div class="panel"><h2>Players</h2><table><thead><tr><th>Name</th><th>Fighter</th><th>Ping</th><th>Game</th></tr></thead><tbody id="roster"></tbody></table></div>
-    <div class="panel"><h2>Your fighter</h2><div class="grid">
-      <label>Fighter<select id="fighter"></select></label>
-      <label>Colour<select id="costume"><option value="0">1</option><option value="1">2</option><option value="2">3</option><option value="3">4</option></select></label>
-    </div></div>
-    <div class="panel"><h2>Match <span id="hostOnly" class="dim"></span></h2><div class="grid">
-      <label>Stage<select id="stage_"></select></label>
+    <div class="panel"><h2>Players</h2><table style="width:100%"><tbody id="roster"></tbody></table></div>
+    <div class="split">
+      <div class="panel"><h2>Your fighter</h2>
+        <div id="fighters"></div>
+        <div class="costumes" id="costumes"><span class="dim" style="font-size:12px">Colour</span></div>
+        <select id="fighter" class="hidden-src" aria-hidden="true"></select>
+        <select id="costume" class="hidden-src" aria-hidden="true"><option value="0">1</option><option value="1">2</option><option value="2">3</option><option value="3">4</option></select>
+      </div>
+      <div class="panel"><h2>Stage <span id="hostOnly" class="dim" style="text-transform:none;letter-spacing:0;font-weight:500"></span></h2>
+        <div id="stages"></div>
+        <select id="stage_" class="hidden-src" aria-hidden="true"></select>
+      </div>
+    </div>
+    <div class="panel"><h2>Rules</h2><div class="rules">
       <label>Rules<select id="rules"><option value="1">Time</option><option value="2">Stock</option></select></label>
       <label>Minutes<select id="time"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>10</option></select></label>
       <label>Stocks<select id="stocks"><option value="0">1</option><option value="1">2</option><option value="2" selected>3</option><option value="3">4</option><option value="4">5</option></select></label>
@@ -66,7 +123,7 @@ table{width:100%;border-collapse:collapse}td,th{padding:6px 8px;text-align:left;
       <label>Fill with CPUs<select id="cpu"><option value="0">No CPUs</option><option value="4">Up to 4 fighters</option><option value="8">Up to 8 fighters</option></select></label>
       <label>CPU level<select id="level"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
     </div></div>
-    <div class="row"><button id="start">Start match</button><button class="ghost" id="leave">Leave</button><span class="dim" id="startNote"></span></div>
+    <div class="go"><button id="start">START</button><button class="ghost" id="sound" title="Lobby music and sounds">Sound on</button><button class="ghost" id="wide" title="Fill a wide screen, or keep the N64's 4:3 picture. Only on this screen.">Wide screen</button><button class="ghost" id="leave">Leave</button><span class="dim" id="startNote"></span></div>
     <div class="panel"><h2>Controls</h2><p class="dim" style="margin:0">Stick: arrow keys or WASD. Hold Shift for a walk. A: Z. B: X. Z: C. Start: Enter. L: Q. R: E. C buttons: IJKL. A gamepad works too.</p></div>
   </section>
 </div></div>

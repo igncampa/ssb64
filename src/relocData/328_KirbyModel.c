@@ -154,7 +154,7 @@ extern Vtx dKirbyModel_gap_0x31CC_sub_0x60C[];
 extern Vtx dKirbyModel_gap_0x31CC_sub_0x633C[];
 extern Vtx dKirbyModel_gap_0x31CC_sub_0x64BC[];
 extern Vtx dKirbyModel_gap_0x31CC_sub_0x664C[];
-extern u16 dKirbyModel_gap_0x31CC_sub_0x6CFC[];
+extern Gfx dKirbyModel_gap_0x31CC_sub_0x6CFC[];
 extern Gfx dKirbyModel_gap_0x31CC_sub_0x6D24[];
 extern Vtx dKirbyModel_gap_0x31CC_sub_0x72CC[];
 extern Vtx dKirbyModel_gap_0x31CC_sub_0x739C[];
@@ -3647,9 +3647,11 @@ Gfx dKirbyModel_gap_0x31CC_sub_0x6AEC[66] = {
 	#include <KirbyModel/gap_0x31CC_sub_0x6AEC.dl.inc.c>
 };
 
-/* gap sub-block @ 0x9EC8 (was gap+0x6CFC, 40 bytes) */
-u16 dKirbyModel_gap_0x31CC_sub_0x6CFC[20] = {
-	#include <KirbyModel/gap_0x31CC_sub_0x6CFC.palette.inc.c>
+/* gap sub-block @ 0x9EC8 (was gap+0x6CFC, 40 bytes): the last 5 commands of sub_0x6AEC (load sync, TLUT load,
+ * pipe sync, texture, tile size), which runs on into them. Was typed as a palette, so the port read them as no-ops. */
+/* @dl-prefix: no EndDL by design — the tail of sub_0x6AEC, which runs on into sub_0x6D24 */
+Gfx dKirbyModel_gap_0x31CC_sub_0x6CFC[5] = {
+	#include <KirbyModel/gap_0x31CC_sub_0x6CFC.dl.inc.c>
 };
 
 /* gap sub-block @ 0x9EF0 (was gap+0x6D24, 884 bytes) */

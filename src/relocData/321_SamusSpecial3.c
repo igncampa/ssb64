@@ -26,9 +26,15 @@ u8 dSamusSpecial3_Tex_0x0030[512] = {
 	#include <SamusSpecial3/Tex_0x0030.tex.inc.c>
 };
 
-/* Vtx: JointVerts @ 0x230 (7 vertices) */
-Vtx dSamusSpecial3_JointVerts_Vtx[7] = {
+/* Vtx: JointVerts @ 0x230 (4 vertices) */
+Vtx dSamusSpecial3_JointVerts_Vtx[4] = {
 	#include <SamusSpecial3/JointVerts.vtx.inc.c>
+};
+
+/* DisplayList: BombDL_head @ 0x270 (48 bytes). Was typed as the last 3 "vertices" of JointVerts:
+ * the bomb's list really starts here (SamusSpecial1 points at 0x270) and runs on into BombDL. */
+Gfx dSamusSpecial3_BombDL_head_DisplayList[6] = {
+	#include <SamusSpecial3/BombDL_head.dl.inc.c>
 };
 
 /* DisplayList: BombDL @ 0x2A0 (176 bytes) */

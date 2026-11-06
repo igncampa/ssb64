@@ -24,18 +24,19 @@ State when work stopped, 4 Nov 2026. The game is live at https://ssb64.guanavibe
 
 - **A real internet match, from players' own locations.** Required by phases 4, 6 and 7. All lag so far was simulated, or both pages were on one desktop.
 - **A playtest log** of what people found (phase 7).
-- **Sound by ear.** Nobody had judged it when this was written. Earlier measurements showed some clipping.
+- **Sound by ear.** Nobody had judged it when this was written. The clipping found earlier came from a DC offset in the reverb filter, fixed on 5 Nov.
 - **Feel of the controls and of rollback** in a real match.
 - **A physical gamepad.** Only a simulated one has been tested.
 
 ## Checks not done
 
 - **Comparison with the original game.** No emulator on this machine. Plan phase 2 asks for it. Screens were judged by eye only.
-- **Every fighter's attack, shield and KO visuals** were not checked one by one.
-- **Rainbow streaks** on some stage floors, such as Dream Land, are unexplained. They may or may not be in the original.
+- **Every fighter's attack, shield and KO visuals**: a sweep of every fighter's specials, smashes and taunt is in `proof/sweep/after/`, judged by eye from contact sheets. No emulator to compare with.
 - **Native Linux build** and its comparison with wasm: dropped, because only wasm ships.
 
 ## Known gaps in the game
+
+- **Widescreen quirks** (proof/widescreen-spec.md, section 5): a fighter in the side bands has no name tag; the magnifying glass, when it appears, sits at the 4:3 edge; Link's boomerang vanishes at the 4:3 edge plus a margin (the sim's own test, the same on every client). The camera still frames for 4:3.
 
 - Rumble is not implemented. The plan assumed it would be on where available.
 - Fighters 5 to 8 reuse the KO explosion particles of fighters 1 to 4, so those colours repeat.

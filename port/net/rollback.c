@@ -149,13 +149,15 @@ static void apply_cpu(int32_t f)
 static int step(int32_t f, int resim, int draw)
 {
     int s, r;
-    { extern void port_sfx_frame_begin(void); port_sfx_frame_begin(); }
+    extern void port_sfx_frame_begin(int32_t), port_sfx_frame_end(int32_t, int);
+    port_sfx_frame_begin(f);
     if (f > sTop) for (s = 0; s < NET_SLOTS; s++) if (sLocalMask & (1 << s)) sLocal[s][f & MASK] = sCur[s];
     for (s = 0; s < NET_SLOTS; s++) sApplied[s][f & MASK] = pad_for(s, f);
     apply_cpu(f);
     gPortResim = resim;
     port_set_sim_frame(f);
     r = port_step(draw);
+    port_sfx_frame_end(f, resim);
     gPortResim = 0;
     if (r) {
         if (port_snapshot_size() > SNAP_BYTES) port_fatal("snapshot larger than its ring slot");

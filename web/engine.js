@@ -3,12 +3,13 @@ import { DATA_HASH } from './build.js';
 import { readPad } from './input.js';
 const FRAME_MS = 1000 / 60;
 export class Engine {
+  static wide = (() => { try { return localStorage.getItem('ssb64.wide') !== '0'; } catch { return true; } })();
   static async load(onStatus = () => {}) {
     const { default: SSB64 } = await import('./ssb64.js');
     onStatus('engine'); 
     const m = await SSB64({ canvas: document.getElementById('game') });
     onStatus('game data');
-    const res = await fetch(`ssb64.data?${DATA_HASH}`);
+    const res = await fetch(`ssb64.data?v=${DATA_HASH}`);
     if (!res.ok) throw new Error(`game data: HTTP ${res.status}`);
     const buf = new Uint8Array(await res.arrayBuffer());
     const hex = [...new Uint8Array(await crypto.subtle.digest('SHA-256', buf))].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -16,10 +17,31 @@ export class Engine {
     const p = m._malloc(buf.length);
     m.HEAPU8.set(buf, p);
     m._PortBoot(p, buf.length);
+    m.dataPtr = p; // the lobby reads its pictures from the same image (art.js)
     onStatus('ready');
     return new Engine(m);
   }
-  constructor(m) { this.m = m; this.pads = [0, 0, 0, 0]; this.running = false; this.tail = 0; }
+  constructor(m) { this.m = m; this.pads = [0, 0, 0, 0]; this.running = false; this.tail = 0; this.fitCanvas(); }
+  // The picture fills the window from 4:3 to 21:9 (proof/widescreen-spec.md 2.7). Render only: every
+  // client simulates the same 4:3 game whatever its shape. A wider or taller window is letterboxed.
+  // wide = false keeps the N64's 4:3 picture.
+  fitCanvas(wide = Engine.wide) {
+    const c = document.getElementById('game'), box = document.getElementById('stage');
+    if (!c || !box) return;
+    const fit = () => {
+      const aw = box.clientWidth || 960, ah = box.clientHeight || 720;
+      const A = wide ? Math.min(21 / 9, Math.max(4 / 3, aw / ah)) : 4 / 3;
+      const cssH = Math.min(ah, aw / A), cssW = cssH * A;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1440 / Math.max(1, cssH));
+      const w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
+      c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+      if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+      if (this.m._PortSetCanvas) this.m._PortSetCanvas(w, h);
+    };
+    this.fit = fit;
+    if (!this.ro) { this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(box); }
+    fit();
+  }
   async startAudio() {
     if (this.ac) return;
     this.ac = new AudioContext({ sampleRate: 32000, latencyHint: 'interactive' });

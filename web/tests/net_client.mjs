@@ -14,9 +14,11 @@ const events = [];
 let done = false;
 const finish = why => {
   if (done) return; done = true;
-  const out = { name: a.name, slot: cl.slot, why, stats: cl.state === 'lobby' ? null : cl.stats(), hashes: cl.hashes.length, lastHash: cl.hashes.at(-1), hashCsv: cl.hashes.filter(h => h[0] % 300 === 0).map(h => h[0] + ':' + h[1].toString(16)).join(','), desync: cl.desync, events, fps: tickRate };
+  const sfx = []; { const n = m._SfxLogCount(), p = m._SfxLog() >> 2; for (let i = 0; i < n; i++) if (!m.HEAP32[p + i * 3 + 2]) sfx.push(m.HEAP32[p + i * 3] + ':' + m.HEAP32[p + i * 3 + 1]); }
+  const out = { sfx, name: a.name, slot: cl.slot, why, stats: cl.state === 'lobby' ? null : cl.stats(), hashes: cl.hashes.length, lastHash: cl.hashes.at(-1), hashCsv: cl.hashes.filter(h => h[0] % 300 === 0).map(h => h[0] + ':' + h[1].toString(16)).join(','), desync: cl.desync, events, fps: tickRate };
   fs.writeSync(1, JSON.stringify(out) + '\n'); process.exit(0);
 };
+if (a.oldsfx) m._SfxJournalOld(1);
 await cl.connect();
 let frames = 0, tickRate = 0, t0 = performance.now(), last = t0, acc = 0;
 const stopAt = +(a.stopframe ?? 0), leaveAt = +(a.leaveframe ?? 0), maxFrame = +(a.frames ?? 1200), busy = +(a.busy ?? 0);

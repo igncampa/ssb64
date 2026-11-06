@@ -8,7 +8,7 @@ float sqrtf(float);
 void *malloc(unsigned long);
 
 typedef struct { uint32_t w0, w1; } Cmd;
-typedef struct { float x, y, z, w, u, v; uint8_t r, g, b, a; } Vert;
+typedef struct { float x, y, z, w, u, v; uint8_t r, g, b, a; int16_t ob[3], tc[2]; float ls, lt; } Vert; // ob/tc/ls/lt: raw source, for the trace only
 typedef struct { int16_t ob[3]; uint16_t flag; int16_t tc[2]; uint8_t cn[4]; } N64Vtx;
 
 enum {
@@ -17,7 +17,7 @@ enum {
     OP_DL = 0xDE, OP_ENDDL = 0xDF, OP_RDPHALF_1 = 0xE1, OP_OTHERMODE_L = 0xE2, OP_OTHERMODE_H = 0xE3, OP_TEXRECT = 0xE4,
     OP_TEXRECTFLIP = 0xE5, OP_LOADTLUT = 0xF0, OP_RDPHALF_2 = 0xF1, OP_SETTILESIZE = 0xF2, OP_LOADBLOCK = 0xF3, OP_LOADTILE = 0xF4,
     OP_SETTILE = 0xF5, OP_FILLRECT = 0xF6, OP_FILLCOLOR = 0xF7, OP_FOGCOLOR = 0xF8, OP_BLENDCOLOR = 0xF9, OP_PRIMCOLOR = 0xFA,
-    OP_ENVCOLOR = 0xFB, OP_COMBINE = 0xFC, OP_SETTIMG = 0xFD, OP_SETZIMG = 0xFE, OP_SETCIMG = 0xFF, OP_PRIMDEPTH = 0xEE, OP_SCISSOR = 0xED,
+    OP_ENVCOLOR = 0xFB, OP_COMBINE = 0xFC, OP_SETTIMG = 0xFD, OP_SETZIMG = 0xFE, OP_SETCIMG = 0xFF, OP_PRIMDEPTH = 0xEE, OP_SCISSOR = 0xED, OP_SPECIAL_1 = 0xD5,
 };
 enum { G_ZBUFFER_ = 1, G_SHADE_ = 4, G_CULL_FRONT_ = 0x200, G_CULL_BACK_ = 0x400, G_FOG_ = 0x10000, G_LIGHTING_ = 0x20000, G_TEXGEN_ = 0x40000, G_TEXGENLIN_ = 0x80000, G_SMOOTH_ = 0x200000 };
 
@@ -26,6 +26,7 @@ typedef struct { const uint8_t *img; int stride; int siz; int fmt; int uls, ult;
 
 static struct {
     float mv[10][4][4], proj[4][4], mvp[4][4]; int mvtop;
+    int32_t mvpfix[16]; // the RSP's copy of the MVP in s15.16, which G_MW_MATRIX writes into
     Vert vtx[64];
     uint32_t geom, omh, oml;
     uint32_t seg[16];
@@ -46,6 +47,69 @@ static struct {
 
 static uint32_t sOps, sTris, sRects;
 #include <emscripten.h>
+// ---- widescreen (proof/widescreen-spec.md): render only, the sim never sees any of it ----
+// k = (4/3) / (canvas aspect), 1 at 4:3. 3D under a full-picture viewport has clip x scaled by k, so the
+// band in the middle is the N64 picture and the sides show more stage. Anything narrower stays in the band.
+static float sK = 1.0f;
+#define WIDE_SPAN 300
+EMSCRIPTEN_KEEPALIVE void PortSetCanvas(int w, int h)
+{
+    float k = (w > 0 && h > 0) ? (4.0f / 3.0f) / ((float)w / (float)h) : 1.0f;
+    if (k > 1.0f) k = 1.0f;
+    if (k < 4.0f / 7.0f) k = 4.0f / 7.0f;
+    sK = k;
+    port_set_canvas_size(w, h);
+}
+// The magnifying glass: a fighter in the side bands is on the screen. At k = 1 this is the game's own test.
+extern int gmCameraCheckTargetInBounds(float x, float y);
+int port_gfx_in_wide_frame(float x, float y) { return gmCameraCheckTargetInBounds(x * sK, y); }
+static uint32_t sBad[4]; // vertex loads past the buffer, too many lights: counted, then clamped
+#include <emscripten.h>
+// Debug trace: for the next N frames, one line per distinct draw state with its screen box. Render only.
+int printf(const char *, ...);
+static int sTrace;
+EMSCRIPTEN_KEEPALIVE void GfxTrace(int frames) { sTrace = frames; }
+// Coverage: every distinct draw state the game used, with a count. Dumped on request, render only.
+typedef struct { uint32_t hi, lo, oml, omh, geom; uint16_t tex; uint8_t rect, used; uint32_t n; } Cov;
+#define COVN 4096
+static int sCovOn;
+EMSCRIPTEN_KEEPALIVE void GfxCoverage(int on) { sCovOn = on; }
+static Cov sCov[COVN]; static uint32_t sCovLost, sMwHist[16], sDefault[256];
+static void cover(const RbState *st, int rect)
+{
+    uint32_t omh = S.omh & 0x00F03000u, geom = S.geom & (G_ZBUFFER_ | G_SHADE_ | G_FOG_ | G_LIGHTING_ | G_TEXGEN_);
+    uint16_t tex = st->tex[0].key ? (uint16_t)(0x100 | S.tile[S.textile].fmt << 4 | S.tile[S.textile].siz) : 0;
+    uint32_t h = (st->combine_hi * 31u + st->combine_lo) * 2654435761u ^ (S.oml * 40503u) ^ omh ^ geom ^ tex ^ (uint32_t)rect;
+    int i, k;
+    for (k = 0; k < 64; k++) {
+        Cov *c = &sCov[(h + k) & (COVN - 1)];
+        if (!c->used) { c->used = 1; c->hi = st->combine_hi; c->lo = st->combine_lo; c->oml = S.oml; c->omh = omh; c->geom = geom; c->tex = tex; c->rect = rect; c->n = 1; return; }
+        if (c->hi == st->combine_hi && c->lo == st->combine_lo && c->oml == S.oml && c->omh == omh && c->geom == geom && c->tex == tex && c->rect == rect) { c->n++; return; }
+    }
+    (void)i; sCovLost++;
+}
+EMSCRIPTEN_KEEPALIVE void GfxCoverageDump(void)
+{
+    int i;
+    for (i = 0; i < COVN; i++) if (sCov[i].used)
+        printf("COV %s cc=%06x:%08x oml=%08x omh=%08x geom=%06x tex=%03x n=%u\n", sCov[i].rect ? "rect" : "tri", sCov[i].hi & 0xFFFFFF, sCov[i].lo, sCov[i].oml, sCov[i].omh, sCov[i].geom, sCov[i].tex, sCov[i].n);
+    for (i = 0; i < 16; i++) if (sMwHist[i]) printf("COVMW %d %u\n", i, sMwHist[i]);
+    for (i = 0; i < 256; i++) if (sDefault[i]) printf("COVOP %02x %u\n", i, sDefault[i]);
+    printf("COVBAD vtx=%u lights=%u\n", sBad[0], sBad[1]);
+    printf("COVEND lost=%u\n", sCovLost);
+}
+static void trace_draw(const char *kind, const RbState *st, const RbVertex *v, int n)
+{
+    if (sCovOn) cover(st, kind[0] == 'r');
+    float x0 = 9, y0 = 9, x1 = -9, y1 = -9, u0 = 1e9, u1 = -1e9, t0 = 1e9, t1 = -1e9; int i;
+    if (!sTrace) return;
+    for (i = 0; i < n; i++) { if (v[i].u < u0) u0 = v[i].u; if (v[i].u > u1) u1 = v[i].u; if (v[i].v < t0) t0 = v[i].v; if (v[i].v > t1) t1 = v[i].v; }
+    { const Tile *T = &S.tile[S.textile]; printf("GTT texs=%.4f,%.4f tile=%d tmem=%d line=%d cms=%d cmt=%d masks=%d maskt=%d shifts=%d shiftt=%d uls=%d ult=%d lrs=%d lrt=%d clamp=%d,%d uv=%.1f..%.1f,%.1f..%.1f\n", S.texs, S.texT, S.textile, T->tmem, T->line, T->cms, T->cmt, T->masks, T->maskt, T->shifts, T->shiftt, T->uls, T->ult, T->lrs, T->lrt, st->tex[0].clamp_s, st->tex[0].clamp_t, u0, u1, t0, t1); }
+    for (i = 0; i < n; i++) { float w = v[i].w > 0 ? v[i].w : 1, x = v[i].x / w, y = v[i].y / w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    printf("GT %s cc=%06x:%08x oml=%08x omh=%08x geom=%06x t0=%d/%d %dx%d t1=%dx%d prim=%.2f,%.2f,%.2f,%.2f env=%.2f,%.2f,%.2f,%.2f ab=%d ac=%d fog=%d 2c=%d dt=%d dw=%d vca=%.2f box=%.2f,%.2f,%.2f,%.2f\n",
+        kind, st->combine_hi & 0xFFFFFF, st->combine_lo, S.oml, S.omh, S.geom, S.tile[S.textile].fmt, S.tile[S.textile].siz, st->tex[0].w, st->tex[0].h, st->tex[1].w, st->tex[1].h,
+        st->prim[0], st->prim[1], st->prim[2], st->prim[3], st->env[0], st->env[1], st->env[2], st->env[3], st->alpha_blend, st->alpha_compare, st->fog, st->two_cycle, st->depth_test, st->depth_write, v[0].a, x0, y0, x1, y1);
+}
 EMSCRIPTEN_KEEPALIVE uint32_t port_gfx_tris(void) { return sTris; }
 uint32_t port_gfx_rects(void) { return sRects; }
 uint32_t port_gfx_ops(void) { return sOps; }
@@ -80,7 +144,25 @@ static void mat_load(float o[4][4], const int32_t *m)
     }
 }
 
-static void recompute_mvp(void) { mat_mul(S.mvp, S.mv[S.mvtop], S.proj); }
+static void recompute_mvp(void)
+{
+    int i;
+    mat_mul(S.mvp, S.mv[S.mvtop], S.proj);
+    for (i = 0; i < 16; i++) S.mvpfix[i] = (int32_t)(S.mvp[i / 4][i % 4] * 65536.0f);
+}
+// G_MW_MATRIX: one word of the MVP, two s15.16 halves (integer parts from 0x00, fractions from 0x20).
+// The game's billboards (fireballs, sparks, most effects) build their rows this way after gSPMvpRecalc.
+static void mvp_word(int off, uint32_t w)
+{
+    int e = (off & 0x1F) / 2, k;
+    if (off < 0 || off > 0x3C || (off & 3)) return;
+    for (k = 0; k < 2; k++) {
+        uint32_t half = k ? (w & 0xFFFF) : (w >> 16), v = (uint32_t)S.mvpfix[e + k];
+        v = off < 0x20 ? ((half << 16) | (v & 0xFFFF)) : ((v & 0xFFFF0000u) | half);
+        S.mvpfix[e + k] = (int32_t)v;
+        S.mvp[(e + k) / 4][(e + k) % 4] = (int32_t)v / 65536.0f;
+    }
+}
 
 static void normalize3(float *v)
 {
@@ -144,6 +226,7 @@ static void do_vtx(const N64Vtx *in, int n, int dst)
             d->a = f < 0 ? 0 : f > 255 ? 255 : (uint8_t)f;
         }
         d->u = U; d->v = V;
+        d->ob[0] = v->ob[0]; d->ob[1] = v->ob[1]; d->ob[2] = v->ob[2]; d->tc[0] = v->tc[0]; d->tc[1] = v->tc[1]; d->ls = S.texs; d->lt = S.texT;
     }
 }
 
@@ -246,6 +329,7 @@ static void fill_state(RbState *st)
     memcpy(st->prim, S.prim, sizeof S.prim); memcpy(st->env, S.env, sizeof S.env); memcpy(st->fogcolor, S.fogc, sizeof S.fogc);
     st->blend_a = S.blenda; st->prim_lod = S.primlod;
     memcpy(st->scissor, S.sc, sizeof S.sc); memcpy(st->viewport, S.vp, sizeof S.vp);
+    st->wide_vp = S.vp[2] >= WIDE_SPAN; st->wide_sc = S.sc[2] - S.sc[0] >= WIDE_SPAN;
     st->rect = 0;
     for (t = 0; t < 2; t++) st->tex[t].key = 0;
 }
@@ -282,13 +366,16 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
         RbVertex *o = &rv[i];
         const Tile *T = &S.tile[S.textile];
         float u = v->u, w = v->v, sx = 1, sy = 1;
-        o->x = v->x; o->y = v->y; o->z = v->z; o->w = v->w;
+        o->x = st.wide_vp ? v->x * sK : v->x; o->y = v->y; o->z = v->z; o->w = v->w;
         u /= 32.0f; w /= 32.0f;
         if (T->shifts) sx = T->shifts <= 10 ? 1.0f / (1 << T->shifts) : (float)(1 << (16 - T->shifts));
         if (T->shiftt) sy = T->shiftt <= 10 ? 1.0f / (1 << T->shiftt) : (float)(1 << (16 - T->shiftt));
         o->u = u * sx - T->uls / 4.0f; o->v = w * sy - T->ult / 4.0f;
         o->r = cv->r / 255.0f; o->g = cv->g / 255.0f; o->b = cv->b / 255.0f; o->a = v->a / 255.0f;
     }
+    if (sTrace) printf("GTV %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f\n",
+        a->ob[0], a->ob[1], a->ob[2], a->tc[0], a->tc[1], a->ls, a->lt, b->ob[0], b->ob[1], b->ob[2], b->tc[0], b->tc[1], b->ls, b->lt, c->ob[0], c->ob[1], c->ob[2], c->tc[0], c->tc[1], c->ls, c->lt);
+    trace_draw("tri", &st, rv, 3);
     rb_draw(&st, rv, 3);
 }
 
@@ -302,12 +389,14 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     sRects++;
     fill_state(&st);
     st.rect = 1;
-    st.viewport[0] = 0; st.viewport[1] = 0; st.viewport[2] = 320; st.viewport[3] = 240;
+    st.viewport[0] = 0; st.viewport[1] = 0; st.viewport[2] = 320; st.viewport[3] = 240; st.wide_vp = 1;
     if (cyc >= 2) { x1 += 1; y1 += 1; st.alpha_blend = (cyc == 2) ? (S.oml & (1<<13)) != 0 : st.alpha_blend; }
     // Copy mode's alpha compare only rejects alpha 0, whatever the blend alpha says.
     if (cyc == 2) { ds /= 4; st.alpha_compare = (S.oml & 3) == 1 ? 1 : 0; st.blend_a = 0; }
     if (textured) use_textures(&st, tile);
     fx0 = x0 / 160.0f - 1; fx1 = x1 / 160.0f - 1; fy0 = 1 - y0 / 120.0f; fy1 = 1 - y1 / 120.0f;
+    // A rectangle as wide as the picture (backdrop strips, fills, flashes) covers the canvas; the HUD stays in the band.
+    if (x1 - x0 < WIDE_SPAN) { fx0 *= sK; fx1 *= sK; }
     { const Tile *T = &S.tile[tile];
       u0 = s - T->uls / 4.0f; v0 = t - T->ult / 4.0f; }
     if (flip) { u1 = u0 + ds * (y1 - y0); v1 = v0 + dt * (x1 - x0); }
@@ -324,24 +413,41 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     rv[2].x = fx1; rv[2].y = fy1; rv[2].u = u1; rv[2].v = v1;
     rv[3] = rv[0]; rv[4] = rv[2];
     rv[5].x = fx0; rv[5].y = fy1; rv[5].u = flip ? u1 : u0; rv[5].v = flip ? v0 : v1; rv[5].z = z; rv[5].w = 1; rv[5].r = c[0]; rv[5].g = c[1]; rv[5].b = c[2]; rv[5].a = c[3];
+    trace_draw("rect", &st, rv, 6);
     rb_draw(&st, rv, 6);
 }
 
 static void run(const Cmd *c, int depth)
 {
+    const Cmd *start = c;
     if (depth > 18) return;
     for (;; c++) {
         uint32_t w0 = c->w0, w1 = c->w1;
         int op = w0 >> 24;
         sOps++; sOpHist[op]++;
         switch (op) {
-        case OP_VTX: { int n = (w0 >> 12) & 0xFF; int end = (w0 >> 1) & 0x7F; do_vtx(seg(w1), n, end - n); break; }
+        case OP_VTX: {
+            int n = (w0 >> 12) & 0xFF; int end = (w0 >> 1) & 0x7F, dst = end - n;
+            // The RSP has 64 vertex slots. A load past them would write over this interpreter's own state.
+            if (dst < 0 || n <= 0 || end > 64) { sBad[0]++; if (dst < 0) dst = 0; if (dst + n > 64) n = 64 - dst; if (n <= 0) break; }
+            do_vtx(seg(w1), n, dst); break; }
         case OP_TRI1: emit_tri(&S.vtx[((w0 >> 16) & 0xFF) / 2], &S.vtx[((w0 >> 8) & 0xFF) / 2], &S.vtx[(w0 & 0xFF) / 2]); break;
         case OP_TRI2: case OP_QUAD:
             emit_tri(&S.vtx[((w0 >> 16) & 0xFF) / 2], &S.vtx[((w0 >> 8) & 0xFF) / 2], &S.vtx[(w0 & 0xFF) / 2]);
             emit_tri(&S.vtx[((w1 >> 16) & 0xFF) / 2], &S.vtx[((w1 >> 8) & 0xFF) / 2], &S.vtx[(w1 & 0xFF) / 2]);
             break;
-        case OP_CULLDL: case OP_MODIFYVTX: break;
+        case OP_CULLDL: break;
+        case OP_MODIFYVTX: {
+            // gSPModifyVertex patches one loaded vertex in place. The game's data uses it for texture
+            // coordinates only (G_MWO_POINT_ST, s10.5 texels as the RDP sees them, no texture scale):
+            // Dream Land's flower strips, fighter eyes and the like share their base vertices between
+            // display lists and rewrite s/t here. Screen-space patches are not used by this game.
+            int where = (w0 >> 16) & 0xFF;
+            Vert *d = &S.vtx[((w0 & 0xFFFF) / 2) & 63];
+            if (where == 0x14) { d->u = (int16_t)(w1 >> 16); d->v = (int16_t)(w1 & 0xFFFF); d->ls = d->lt = -1; }
+            else if (where == 0x10) { d->r = w1 >> 24; d->g = w1 >> 16; d->b = w1 >> 8; d->a = w1; }
+            break; }
+        case OP_SPECIAL_1: if ((w0 & 0xFF) == 1) recompute_mvp(); break; // gSPMvpRecalc
         case OP_BRANCH_Z: break;
         case OP_TEXTURE:
             S.texon = w0 & 2 ? 1 : 0; S.textile = (w0 >> 8) & 7; S.texlevel = (w0 >> 11) & 7;
@@ -364,8 +470,10 @@ static void run(const Cmd *c, int depth)
             break; }
         case OP_MOVEWORD: {
             int idx = (w0 >> 16) & 0xFF, off = w0 & 0xFFFF;
+            if (sCovOn) sMwHist[idx & 15]++;
             switch (idx) {
-            case 0x02: S.numlights = w1 / 24; break;
+            case 0x00: mvp_word(off, w1); break;
+            case 0x02: S.numlights = w1 / 24; if (S.numlights > 7) { sBad[1]++; S.numlights = 7; } break;
             case 0x06: S.seg[(off / 4) & 15] = w1 & 0xFFFFFF; if (off / 4 == 0) S.seg[0] = 0; break;
             case 0x08: S.fogm = (int16_t)(w1 >> 16); S.fogo = (int16_t)(w1 & 0xFFFF); break;
             case 0x0A: { int l = off / 24; if (l < 8 && !(off % 24)) { S.lightcol[l][0] = w1 >> 24; S.lightcol[l][1] = w1 >> 16; S.lightcol[l][2] = w1 >> 8; } break; }
@@ -463,7 +571,12 @@ static void run(const Cmd *c, int depth)
         case OP_SCISSOR:
             S.sc[0] = ((w0 >> 12) & 0xFFF) / 4; S.sc[1] = (w0 & 0xFFF) / 4; S.sc[2] = ((w1 >> 12) & 0xFFF) / 4; S.sc[3] = (w1 & 0xFFF) / 4;
             break;
-        default: break;
+        default: if (sCovOn) sDefault[op]++;
+            // Trace and coverage runs only: the first unknown non-sync opcodes, with the list they sit in.
+            { static int seen; if ((sTrace || sCovOn) && seen < 24 && (op < 0xE6 || op > 0xE9)) { seen++; printf("GTOP op=%02x w0=%08x w1=%08x depth=%d at=%d start=%p first=%08x:%08x %08x:%08x %08x:%08x %08x:%08x prev=%08x:%08x %08x:%08x %08x:%08x %08x:%08x\n", op, w0, w1, depth, (int)(c - start), (void *)start,
+                start[0].w0, start[0].w1, start[1].w0, start[1].w1, start[2].w0, start[2].w1, start[3].w0, start[3].w1,
+                c[-4].w0, c[-4].w1, c[-3].w0, c[-3].w1, c[-2].w0, c[-2].w1, c[-1].w0, c[-1].w1); } }
+            break;
         }
     }
 }
@@ -477,5 +590,7 @@ void port_gfx_run(void *dl)
     }
     S.mvtop = 0; S.cimg_main = 1; S.cimg_depth = 0;
     rb_begin_frame();
+    if (sTrace) printf("GT frame\n");
     run((const Cmd *)dl, 0);
+    if (sTrace > 0) sTrace--;
 }

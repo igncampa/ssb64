@@ -133,7 +133,11 @@ void rb_clear_depth(void)
 void rb_draw(const RbState *st, const RbVertex *v, int n)
 {
     int flags = 0;
-    float sx = sCanvasW / 320.0f, sy = sCanvasH / 240.0f;
+    // N64 pixels to canvas pixels: a span of the whole picture stretches to the canvas, anything else sits in
+    // the centred 4:3 band. At 4:3 both are the same mapping.
+    float sy = sCanvasH / 240.0f, band = sCanvasH * 4.0f / 3.0f, off = (sCanvasW - band) * 0.5f;
+    float vsx = st->wide_vp ? sCanvasW / 320.0f : sy, vox = st->wide_vp ? 0 : off;
+    float ssx = st->wide_sc ? sCanvasW / 320.0f : sy, sox = st->wide_sc ? 0 : off;
     Prog *p;
     if (st->fog) flags |= F_FOG;
     if (st->alpha_compare == 1) flags |= F_ATEST;
@@ -153,8 +157,8 @@ void rb_draw(const RbState *st, const RbVertex *v, int n)
     if (st->depth_test) { glEnable(GL_DEPTH_TEST); glDepthFunc(st->decal ? GL_LEQUAL : GL_LESS); } else if (st->depth_write) { glEnable(GL_DEPTH_TEST); glDepthFunc(GL_ALWAYS); } else glDisable(GL_DEPTH_TEST);
     glDepthMask(st->depth_write ? GL_TRUE : GL_FALSE);
     if (st->decal) { glEnable(GL_POLYGON_OFFSET_FILL); glPolygonOffset(-2, -2); } else glDisable(GL_POLYGON_OFFSET_FILL);
-    glViewport((GLint)(st->viewport[0] * sx), (GLint)((240 - st->viewport[1] - st->viewport[3]) * sy), (GLsizei)(st->viewport[2] * sx), (GLsizei)(st->viewport[3] * sy));
-    glScissor((GLint)(st->scissor[0] * sx), (GLint)((240 - st->scissor[3]) * sy), (GLsizei)((st->scissor[2] - st->scissor[0]) * sx), (GLsizei)((st->scissor[3] - st->scissor[1]) * sy));
+    glViewport((GLint)(vox + st->viewport[0] * vsx), (GLint)((240 - st->viewport[1] - st->viewport[3]) * sy), (GLsizei)(st->viewport[2] * vsx), (GLsizei)(st->viewport[3] * sy));
+    glScissor((GLint)(sox + st->scissor[0] * ssx), (GLint)((240 - st->scissor[3]) * sy), (GLsizei)((st->scissor[2] - st->scissor[0]) * ssx), (GLsizei)((st->scissor[3] - st->scissor[1]) * sy));
     glBufferData(GL_ARRAY_BUFFER, n * sizeof(RbVertex), v, GL_STREAM_DRAW);
     glDrawArrays(GL_TRIANGLES, 0, n);
 }

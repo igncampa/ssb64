@@ -25,10 +25,13 @@ typedef struct RbState {
     int scissor[4];          // x0, y0, x1, y1 in N64 pixels
     int viewport[4];         // x, y, w, h in N64 pixels, y down
     int rect;                // screen-space quad, positions already in NDC
+    int wide_vp, wide_sc;    // widescreen: the viewport / scissor spans the picture (>= 300 px) and is stretched
+                             // to the canvas; otherwise it sits in the centred 4:3 band (proof/widescreen-spec.md)
     RbTexture tex[2];
 } RbState;
 
 void rb_begin_frame(void);
 void rb_clear_depth(void);
 void rb_draw(const RbState *st, const RbVertex *v, int n);
+void port_set_canvas_size(int w, int h);
 #endif

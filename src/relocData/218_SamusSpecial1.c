@@ -17,9 +17,10 @@
 
 /* Cross-file references resolved by fixRelocChain.py — see .reloc */
 extern Vtx dSamusSpecial3_JointVerts_Vtx[];  /* file 321 */
+extern Gfx dSamusSpecial3_BombDL_head_DisplayList[];  /* file 321 */
 
 WPAttributes dSamusSpecial1_ChargeShot_WeaponAttributes = {
-    (void *)&dSamusSpecial3_JointVerts_Vtx[4],  /* data (321+0x270) */
+    (void *)dSamusSpecial3_BombDL_head_DisplayList,  /* data (321+0x270) */
     NULL,  /* p_mobjsubs */
     NULL,  /* anim_joints */
     NULL,  /* p_matanim_joints */

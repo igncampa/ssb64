@@ -21,10 +21,11 @@
 /* Forward decls auto-added/hoisted by hoistExterns.py */
 extern MObjSub **dMarioSpecial3_mobjsubs_ptr_0x00D8[];
 extern Vtx dMarioSpecial3_JointVerts_Vtx[];  /* file 297 */
+extern Gfx dMarioSpecial3_SuperJumpPunchDL_head_DisplayList[];  /* file 297 */
 extern u8  dMarioSpecial3_Tex_0x0058[];      /* file 297 */
 
 WPAttributes dLuigiSpecial1_Fireball_WeaponAttributes = {
-    (void *)&dMarioSpecial3_JointVerts_Vtx[4],                   /* data (297+0x1A8) */
+    (void *)dMarioSpecial3_SuperJumpPunchDL_head_DisplayList,                         /* data (297+0x1A8) */
     (MObjSub ***)dMarioSpecial3_mobjsubs_ptr_0x00D8,       /* p_mobjsubs (297+0xD8) */
     NULL,  /* anim_joints */
     NULL,  /* p_matanim_joints */

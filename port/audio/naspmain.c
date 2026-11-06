@@ -128,18 +128,29 @@ static void envmix(int flags, int16_t cvolr, int32_t state)
     memcpy((void *)(uintptr_t)state, st, sizeof st);
 }
 
+// The two-pole filter as the RSP runs it: blocks of 8, the book's first row on the last two outputs,
+// the second row scaled by the gain and applied both to those outputs and across the block itself.
+// (The earlier version used one tap of each row with the wrong scale, so the reverb's filter could hold
+// a constant forever: a DC offset under all the game's sound, and clipping on loud hits.)
 static void polef(int flags, int gain, int buf, int32_t state)
 {
     int16_t st[4], *b = S16(buf);
-    int i;
+    const int16_t *h1 = sBook;
+    int16_t h2[8], h2b[8], frame[8];
+    int i, j, blk;
     int16_t l1, l2;
     if (flags & 1) { l1 = l2 = 0; } else { memcpy(st, (void *)(uintptr_t)state, 8); l1 = st[2]; l2 = st[3]; }
-    for (i = 0; i < N_SAMP; i++) {
-        int32_t a = (b[i] * gain) >> 15;
-        a += (sBook[0] * l1 + sBook[8] * l2) >> 11;
-        l2 = l1; l1 = clamp16(a); b[i] = l1;
+    for (i = 0; i < 8; i++) { h2b[i] = sBook[8 + i]; h2[i] = (int16_t)(((int32_t)sBook[8 + i] * gain) >> 14); }
+    for (blk = 0; blk < N_SAMP; blk += 8) {
+        for (i = 0; i < 8; i++) frame[i] = b[blk + i];
+        for (i = 0; i < 8; i++) {
+            int32_t acc = (int32_t)frame[i] * gain + (int32_t)h1[i] * l1 + (int32_t)h2b[i] * l2;
+            for (j = 0; j < i; j++) acc += (int32_t)h2[j] * frame[i - 1 - j];
+            b[blk + i] = clamp16(acc >> 14);
+        }
+        l1 = b[blk + 6]; l2 = b[blk + 7];
     }
-    st[0] = st[1] = 0; st[2] = l1; st[3] = l2;
+    st[0] = b[N_SAMP - 4]; st[1] = b[N_SAMP - 3]; st[2] = l1; st[3] = l2;
     memcpy((void *)(uintptr_t)state, st, 8);
 }
 
