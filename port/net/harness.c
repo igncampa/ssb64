@@ -260,10 +260,10 @@ void port_audio_fields_unstash(void)
 }
 
 // ---- match setup ----
-static int sMatchOn;
 // For proofs: which item kinds have been on the stage this match (bit = 1 << ITKind, kinds 0 to 31).
-// Outside the sim: read only, never part of a snapshot or a hash.
-static uint32_t sItemsSeen;
+// Outside the sim: read only, never part of a snapshot or a hash. Netplay counts a frame only once it is
+// final (rollback.c), so a page that predicted a crate open that never opened does not count its item.
+extern void port_net_items(uint32_t kinds), port_net_items_reset(void); extern uint32_t port_net_items_seen(void);
 static int sPoison = 0;
 EXPORT void SetPoison(int v) { sPoison = v; }
 EXPORT void SetFlipFrame(int f) { sFlipFrame = f; }
@@ -276,7 +276,7 @@ static void port_match_reset(void)
     extern void port_sfx_reset(void);
     port_sfx_reset();
     sNanReported = 0;
-    sItemsSeen = 0;
+    port_net_items_reset();
 }
 
 // Slot arrays are 4 entries. kinds: 0 human, 1 CPU, 2 none.
@@ -341,15 +341,15 @@ EXPORT void StartMatch(const int32_t *kinds, const int32_t *fkinds, const int32_
     gSCManagerSceneData.scene_curr = nSCKindVSBattle;
 
     syUtilsSetRandomSeed(seed);
-    sMatchOn = 1;
     port_match_reset();
     port_event(1, seed);
     port_match_begin();
 }
 
-EXPORT void Park(void) { port_match_park(); sMatchOn = 0; port_event(12, 0); }
+// Parked, the rollback core is off too (NetInit turns it on): nothing reads a finished match as live.
+EXPORT void Park(void) { extern void NetOff(void); port_match_park(); NetOff(); port_event(12, 0); }
 
-EXPORT uint32_t PortItemsSeen(void) { return sItemsSeen; }
+EXPORT uint32_t PortItemsSeen(void) { return port_net_items_seen(); }
 // For proofs: what StartMatch handed the sim. 0 stage, 1 item mask, 2 a slot's FTKind, 3 a slot's player kind,
 // 4 frames to the next random item, 5 items on the stage now, 6 the stage music playing, 7 a slot's pad as
 // its fighter reads it (buttons << 16 | x << 8 | y).
@@ -374,11 +374,13 @@ void port_net_frame_begin(void) {}
 void port_net_frame_end(void)
 {
     GObj *g;
+    uint32_t kinds = 0;
     for (g = gGCCommonLinks[nGCCommonLinkIDItem]; g != NULL; g = g->link_next)
     {
         s32 k = itGetStruct(g)->kind;
-        if (k >= 0 && k < 32) sItemsSeen |= 1u << k;
+        if (k >= 0 && k < 32) kinds |= 1u << k;
     }
+    port_net_items(kinds);
     if (sNanReported) return;
     for (g = gGCCommonLinks[nGCCommonLinkIDFighter]; g != NULL; g = g->link_next)
     {

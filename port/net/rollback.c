@@ -50,6 +50,13 @@ static int32_t sHashOutNext;
 static struct { uint32_t rollbacks, resim_frames, max_depth, replaced, stalls, ms_max; } sStats;
 static uint32_t sDepthHist[MAX_W + 2];
 int gPortResim;
+// For proofs: item kinds seen on final frames only (harness.c PortItemsSeen). Each stepped frame notes its
+// kinds; a frame's note counts once that frame is confirmed, by then its last run was the true one.
+static int32_t sStepF = -1;
+static uint32_t sItemsAt[R], sItemsSeen;
+void port_net_items(uint32_t kinds) { if (!sOn || sStepF < 0) sItemsSeen |= kinds; else sItemsAt[sStepF & MASK] |= kinds; }
+void port_net_items_reset(void) { sItemsSeen = 0; memset(sItemsAt, 0, sizeof sItemsAt); }
+uint32_t port_net_items_seen(void) { return sItemsSeen; }
 
 static inline char *snap_for(int32_t f) { return sSnaps[(f - sBase + SNAPS * 4) % SNAPS]; }
 
@@ -148,8 +155,10 @@ static int step(int32_t f, int resim, int draw)
     if (f > sCapTop) for (s = 0; s < NET_SLOTS; s++) if (sLocalMask & (1 << s)) sLocal[s][f & MASK] = sCur[s];
     for (s = 0; s < NET_SLOTS; s++) sApplied[s][f & MASK] = pad_for(s, f);
     gPortResim = resim;
+    sItemsAt[f & MASK] = 0; sStepF = f;
     port_set_sim_frame(f);
     r = port_step(draw);
+    sStepF = -1;
     port_sfx_frame_end(f, resim);
     gPortResim = 0;
     if (r) {
@@ -163,6 +172,12 @@ static int step(int32_t f, int resim, int draw)
     return r;
 }
 
+// The held finish, in one place. The game asks to end its scene on frame f (taskman: load scene). If f is
+// not final yet (beyond C, or beyond the truth), the request is refused and remembered here as sEndFrame:
+// the scene keeps running in the game's eyes, but NetTick steps no further. A correction at or before f
+// rolls back and forgets it (rollback_to); once C reaches it, the finish is final and
+// port_force_scene_end(f) runs the tail on memory as it was at f. States: none (sEndFrame < 0), held
+// (sEndFrame >= 0, not final), final (handled at once in advance()).
 // The match may end only on a final frame: a finish cannot be taken back.
 int port_net_can_end(void)
 {
@@ -209,6 +224,7 @@ static int advance(int steps, int draw, int truth_only)
         }
         if (bad) { rollback_to(f, 0); did_roll = 1; if (sEnded) return -1; }
         sC = f;
+        sItemsSeen |= sItemsAt[f & MASK];
     }
     // confirmed hashes go out
     // a held finish is final once its frame is

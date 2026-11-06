@@ -23,7 +23,9 @@ extern void port_net_scene_ready(int32_t first);
 extern void syTaskmanPortForceEnd(void), gcEjectAll(void);
 extern void port_net_frame_begin(void), port_net_frame_end(void), port_event(int kind, int arg);
 
-enum { PARKED, MATCH, MATCH_END_WAIT, BOOTED_MATCH_LOAD };
+// PARKED: no scene. MATCH: the VS scene steps (the match, then sudden death). MATCH_END_WAIT: offline only,
+// the scene is over and the tail waits for the music to stop; netplay runs the tail at once.
+enum { PARKED, MATCH, MATCH_END_WAIT };
 static int sState = PARKED;
 static int sWait;
 static uint32_t sFrame;
@@ -31,7 +33,6 @@ static uint32_t sFrame;
 uint32_t port_sim_frame(void) { return sFrame; }
 void port_set_sim_frame(uint32_t f) { sFrame = f; }
 extern int port_net_on(void);
-int port_in_match(void) { return sState == MATCH || sState == MATCH_END_WAIT; }
 
 void port_boot(void)
 {
@@ -62,14 +63,10 @@ void port_match_begin(void)
     port_net_scene_ready(0);
 }
 
-// A finish held by rollback is now final: run the tail of the match. Returns 1 if another scene follows.
-int port_force_scene_end(uint32_t end_frame)
+// The tail of scVSBattleStartScene after its frame loop, for both paths: sudden death or parked.
+// Returns 1 if another scene follows.
+static int match_end_tail(void)
 {
-    syTaskmanPortForceEnd();
-    gcEjectAll();
-    sFrame = end_frame + 1;
-    syTaskmanPortEnd();
-    scVSBattlePortStopAudio();
     scVSBattlePortAudioStopped();
     port_gfx_reset();
     if (scVSBattlePortCheckSuddenDeath()) { sState = MATCH; port_event(10, 0); port_net_scene_ready((int32_t)sFrame); return 1; }
@@ -78,8 +75,22 @@ int port_force_scene_end(uint32_t end_frame)
     return 0;
 }
 
+// A finish held by rollback is now final: end the scene as it ended at end_frame, then the tail.
+int port_force_scene_end(uint32_t end_frame)
+{
+    syTaskmanPortForceEnd();
+    gcEjectAll();
+    sFrame = end_frame + 1;
+    syTaskmanPortEnd();
+    scVSBattlePortStopAudio();
+    return match_end_tail();
+}
+
+// Stop whatever runs (a desync, a page that left its match). A scene still running is ended the way a
+// forced end ends it, so the parked state is the same whichever way it was reached.
 void port_match_park(void)
 {
+    if (sState == MATCH) { syTaskmanPortForceEnd(); gcEjectAll(); }
     if (sState != PARKED) syTaskmanPortEnd();
     sState = PARKED;
     scVSBattlePortStopAudio();
@@ -113,13 +124,7 @@ int port_step(int draw)
     case MATCH_END_WAIT:
     end_wait:
         // The tail of scVSBattleStartScene, which busy-waited on the audio thread.
-        if (port_net_on() || syAudioCheckBGMPlaying(0) == FALSE || ++sWait > 120)
-        {
-            scVSBattlePortAudioStopped();
-            port_gfx_reset();
-            if (scVSBattlePortCheckSuddenDeath()) { sState = MATCH; port_event(10, 0); port_net_scene_ready((int32_t)sFrame); }
-            else { sState = PARKED; port_event(11, 0); }
-        }
+        if (port_net_on() || syAudioCheckBGMPlaying(0) == FALSE || ++sWait > 120) match_end_tail();
         break;
 
     default:

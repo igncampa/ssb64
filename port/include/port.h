@@ -14,7 +14,6 @@ void port_boot(void);
 int  port_step(int draw);   // one sim frame. Returns 1 while a match runs.
 void port_match_begin(void);
 void port_match_park(void);
-int  port_in_match(void);
 uint32_t port_sim_frame(void);
 
 // sched.c, os.c
