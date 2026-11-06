@@ -339,7 +339,8 @@ EXPORT void StartMatch(const int32_t *kinds, const int32_t *fkinds, const int32_
 EXPORT void Park(void) { port_match_park(); sMatchOn = 0; port_event(12, 0); }
 
 EXPORT uint32_t PortItemsSeen(void) { return sItemsSeen; }
-// For proofs: what StartMatch handed the sim. 0 stage, 1 item mask, 2 a slot's FTKind, 3 a slot's player kind.
+// For proofs: what StartMatch handed the sim. 0 stage, 1 item mask, 2 a slot's FTKind, 3 a slot's player kind,
+// 4 frames to the next random item, 5 items on the stage now, 6 the stage music playing.
 EXPORT int PortMatchInfo(int what, int slot)
 {
     if (gSCManagerBattleState == NULL) return -1;
@@ -348,6 +349,9 @@ EXPORT int PortMatchInfo(int what, int slot)
     case 1: return (int)gSCManagerBattleState->item_toggles;
     case 2: return gSCManagerBattleState->players[slot].fkind;
     case 3: return gSCManagerBattleState->players[slot].pkind;
+    case 4: return (int)gITManagerAppearActor.spawn_wait;
+    case 6: return (int)gMPCollisionBGMCurrent;
+    case 5: { int n = 0; GObj *g; for (g = gGCCommonLinks[nGCCommonLinkIDItem]; g != NULL; g = g->link_next) n++; return n; }
     default: return -1;
     }
 }
