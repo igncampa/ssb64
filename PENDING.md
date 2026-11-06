@@ -44,6 +44,12 @@ State when work stopped, 4 Nov 2026. The game is live at https://ssb64.guanavibe
 - The stock icon that flies during a steal stays full size in the small 8-player row. A stock count above 6 also uses full-size icons there.
 - Debug page flags are off inside a real lobby, but the wasm test functions are not locked.
 
+## VS extras, built on branch `extras`, not deployed (6 Nov)
+
+Meta Crystal, Duel Zone, Final Destination; Metal Mario, Giant DK, the Fighting Polygons; the item switch as a
+checklist. Also fixes random items always coming out as one kind. Proofs and what is left: `proof/extras/README.md`.
+Deploying means merging the branch, building the page into `web/` and staging it.
+
 ## Phase 8 extras, not built, waiting for the owner's go
 
 - Couch play: two people sharing one page. The plan calls this the cheap one.

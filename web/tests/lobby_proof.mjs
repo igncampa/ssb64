@@ -32,10 +32,10 @@ try {
   await a.waitForFunction(() => document.querySelectorAll('#roster tr').length === 2, null, { timeout: 15000 });
   check('both players on the roster', true);
   check('friend cannot start', await b.isHidden('#start'));
-  await a.selectOption('#fighter', '5'); await b.selectOption('#fighter', '9');
-  await a.selectOption('#stage_', '6'); await a.selectOption('#time', '1');
+  await a.selectOption('#fighter', '5', { force: true }); await b.selectOption('#fighter', '9', { force: true });
+  await a.selectOption('#stage_', '6', { force: true }); await a.selectOption('#time', '1', { force: true });
   // two idle humans would tie, and a sudden death nobody plays never ends; CPUs guarantee a result
-  await a.selectOption('#cpu', '4'); await a.selectOption('#level', '9');
+  await a.selectOption('#cpu', '4', { force: true }); await a.selectOption('#level', '9', { force: true });
   await b.waitForFunction(() => document.getElementById('stage_').value === '6', null, { timeout: 5000 });
   check('friend sees the host settings', true);
   await a.screenshot({ path: out + '/lobby.png' });
@@ -73,7 +73,7 @@ try {
   const fa = await a.evaluate(() => window.sb.net.stats()), fb = await b.evaluate(() => window.sb.net.stats());
   check('match ended on the same frame', fa.now === fb.now, `${fa.now} ${fb.now}`);
   await a.waitForFunction(() => !document.getElementById('start').disabled && !document.getElementById('start').hidden, null, { timeout: 10000 });
-  await a.selectOption('#stage_', '2'); await a.click('#start');
+  await a.selectOption('#stage_', '2', { force: true }); await a.click('#start');
   await a.waitForFunction(() => document.getElementById('lobby').hidden && window.sb.net.m._NetConfirmed() > 200, null, { timeout: 90000 });
   await a.waitForTimeout(2000); await a.screenshot({ path: out + '/rematch.png' });
   const r1 = await a.evaluate(() => window.sb.net.hashes.at(-1)), d1 = await a.evaluate(() => window.sb.net.desync);

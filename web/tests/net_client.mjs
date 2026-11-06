@@ -11,15 +11,18 @@ const cl = new NetClient({ m, url: `ws://127.0.0.1:${a.port}/ws/${a.code}?name=$
   lagUp: +(a.lagup ?? 0), lagDown: +(a.lagdown ?? 0), jitter: +(a.jitter ?? 0), window: +(a.window ?? 18), lockstep: a.lockstep === '1',
   onEvent: e => { if (['ended', 'cpu', 'desync', 'closed', 'error'].includes(e.t)) events.push(e); if (e.t === 'error') finish(e.reason); } });
 const events = [];
+// What the sim was handed (port/net/harness.c PortMatchInfo): stage, item mask, each slot's FTKind and player kind.
+const matchInfo = () => m._PortMatchInfo ? { stage: m._PortMatchInfo(0, 0), mask: m._PortMatchInfo(1, 0) >>> 0, fkind: [...Array(8)].map((_, i) => m._PortMatchInfo(2, i)), pkind: [...Array(8)].map((_, i) => m._PortMatchInfo(3, i)), bgm: m._PortMatchInfo(6, 0) } : null;
 let done = false;
 const finish = why => {
   if (done) return; done = true;
   const sfx = []; { const n = m._SfxLogCount(), p = m._SfxLog() >> 2; for (let i = 0; i < n; i++) if (!m.HEAP32[p + i * 3 + 2]) sfx.push(m.HEAP32[p + i * 3] + ':' + m.HEAP32[p + i * 3 + 1]); }
-  const out = { sfx, name: a.name, slot: cl.slot, why, stats: cl.state === 'lobby' ? null : cl.stats(), hashes: cl.hashes.length, lastHash: cl.hashes.at(-1), hashCsv: cl.hashes.filter(h => h[0] % 300 === 0).map(h => h[0] + ':' + h[1].toString(16)).join(','), desync: cl.desync, events, fps: tickRate };
+  const out = { sfx, name: a.name, slot: cl.slot, why, stats: cl.state === 'lobby' ? null : cl.stats(), hashes: cl.hashes.length, lastHash: cl.hashes.at(-1), hashCsv: cl.hashes.filter(h => h[0] % 300 === 0).map(h => h[0] + ':' + h[1].toString(16)).join(','), desync: cl.desync, events, fps: tickRate, info: matchInfo(), itemsSeen: m._PortItemsSeen ? m._PortItemsSeen() >>> 0 : null };
   fs.writeSync(1, JSON.stringify(out) + '\n'); process.exit(0);
 };
 if (a.oldsfx) m._SfxJournalOld(1);
 await cl.connect();
+if (a.fighter !== undefined) cl.json({ t: 'pick', pick: { fighter: +a.fighter, costume: +(a.costume ?? 0) } });
 let frames = 0, tickRate = 0, t0 = performance.now(), last = t0, acc = 0;
 const stopAt = +(a.stopframe ?? 0), leaveAt = +(a.leaveframe ?? 0), maxFrame = +(a.frames ?? 1200), busy = +(a.busy ?? 0);
 const loop = () => {

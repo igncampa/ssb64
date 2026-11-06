@@ -1,0 +1,29 @@
+ok   stage 13 Meta Crystal: people Metal Mario + Giant DK, CPUs Polygon Mario + Polygon Ness   | stage 13 fkind 13,26,14,25,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xffffffff seen 0x00004004 frames 1807 rollbacks 98/99
+ok   stage 14 Duel Zone: people Giant DK + Polygon Samus, CPUs Metal Mario + Polygon Falcon   | stage 14 fkind 26,17,13,21,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xffffffff seen 0x00080000 frames 1807 rollbacks 98/99
+ok   stage 16 Final Destination: people Polygon Link + Metal Mario, CPUs Giant DK + Polygon Kirby   | stage 16 fkind 19,13,26,22,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 1807 rollbacks 98/99
+ok   eight different extra fighters at once on Duel Zone   | stage 14 fkind 13,26,14,16,18,20,22,25 pkind 0,0,1,1,1,1,1,1 mask 0xffffffff seen 0x00000000 frames 1507 rollbacks 82/80
+ok   picks Metal Mario + Giant DK on Meta Crystal   | stage 13 fkind 13,26,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 907 rollbacks 48/51
+ok   picks Polygon Mario + Polygon Fox on Duel Zone   | stage 14 fkind 14,15,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 907 rollbacks 49/51
+ok   picks Polygon DK + Polygon Samus on Final Destination   | stage 16 fkind 16,17,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 907 rollbacks 49/51
+ok   picks Polygon Luigi + Polygon Link on Peach's Castle   | stage 0 fkind 18,19,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00800000 frames 907 rollbacks 49/51
+ok   picks Polygon Yoshi + Polygon Falcon on Meta Crystal   | stage 13 fkind 20,21,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 907 rollbacks 49/51
+ok   picks Polygon Kirby + Polygon Pikachu on Duel Zone   | stage 14 fkind 22,23,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 907 rollbacks 49/51
+ok   picks Polygon Jigglypuff + Polygon Ness on Final Destination   | stage 16 fkind 24,25,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 907 rollbacks 49/51
+ok   a pick of 12 (Master Hand) falls back to the slot default   | stage 16 fkind 0,13,28,28,28,28,28,28 pkind 0,0,2,2,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 307 rollbacks 16/20
+ok   default checklist (all on) is 0xffffffff, as the lobby sent before  0xffffffff
+ok   checklist all off is 0
+ok   the shell switch clears both shells
+ok   one item on keeps the 4 containers on  0xfff0008f
+ok   items all on, Medium on Peach's Castle (rate 3)   | stage 0 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xffffffff seen 0x00803041 frames 5407 rollbacks 295/292
+ok   items all on on Meta Crystal (rate 5)   | stage 13 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xffffffff seen 0x000a1407 frames 5407 rollbacks 294/290
+ok   items all on (none expected, as in the game) on Final Destination (rate 5)   | stage 16 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xffffffff seen 0x00000000 frames 5408 rollbacks 294/291
+ok   items only Hammer on Peach's Castle (rate 5)   | stage 0 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xfff0200f seen 0x00802007 frames 5407 rollbacks 295/292
+ok   items only Beam Sword on Duel Zone (rate 5)   | stage 14 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xfff0008f seen 0x00000087 frames 5407 rollbacks 295/291
+ok   items only Maxim Tomato on Meta Crystal (rate 5)   | stage 13 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0xfff0001f seen 0x00000017 frames 5407 rollbacks 295/292
+ok   items all off on Peach's Castle (rate 5)   | stage 0 fkind 0,1,2,3,28,28,28,28 pkind 0,0,1,1,2,2,2,2 mask 0x00000000 seen 0x00800000 frames 5407 rollbacks 294/291
+fails=0
+
+real	14m54.500s
+user	1m40.070s
+sys	0m14.731s
+exit=0
