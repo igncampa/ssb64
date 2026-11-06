@@ -9,7 +9,10 @@ export function startMatch(m, cfg, go, localSlot, { window: W = 18, lockstep = f
   const kinds = slots8(null, i => present.has(i) ? 0 : (cfg.cpu?.[i] ? 1 : 2));
   // each racer's own pick wins over the host's defaults
   const fighters = slots8(cfg.fighters, i => i), costumes = slots8(cfg.costumes, () => 0), teams = slots8(cfg.teams, i => i);
-  for (const s of go.slots) if (s.pick) { fighters[s.slot] = s.pick.fighter ?? fighters[s.slot]; costumes[s.slot] = s.pick.costume ?? costumes[s.slot]; teams[s.slot] = s.pick.team ?? teams[s.slot]; }
+  // A pick is an FTKind: 0 to 11, 13 Metal Mario, 14 to 25 the polygons, 26 Giant DK. Anything else
+  // (12 is Master Hand) keeps the slot's default. Every page applies the same rule to the same picks.
+  const playable = k => Number.isInteger(k) && k >= 0 && k <= 26 && k !== 12;
+  for (const s of go.slots) if (s.pick) { fighters[s.slot] = playable(s.pick.fighter) ? s.pick.fighter : fighters[s.slot]; costumes[s.slot] = s.pick.costume ?? costumes[s.slot]; teams[s.slot] = s.pick.team ?? teams[s.slot]; }
   m._NetInit(W, 1 << localSlot, lockstep ? 1 : 0);
   m._StartMatch(arr(kinds), arr(fighters), arr(costumes), arr(slots8(cfg.levels, () => 5)),
     arr(teams), arr(slots8(cfg.handicaps, () => 9)), cfg.stage, cfg.rules ?? 1, cfg.time ?? 3, cfg.stocks ?? 2,

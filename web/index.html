@@ -43,7 +43,16 @@ img.px{image-rendering:pixelated;display:block}
 #roster .st{font-size:12px;color:var(--dim)}
 #roster .host{color:var(--acc2);font-size:11px;font-weight:700;margin-left:4px}
 #roster tr.off{opacity:.5}
-#fighters{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+#fighters,#extras{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.sub{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:12px 0 6px}
+#extras{grid-template-columns:repeat(7,1fr)}
+.ft .lbl{position:absolute;right:0;left:0;top:0;padding:1px 3px;font-size:9px;font-weight:700;text-align:center;background:#000a;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft.giant img{transform:scale(1.25);transform-origin:50% 35%}
+.costumes button:disabled{opacity:.25}
+#itemList{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 12px}
+label.it{flex-direction:row;align-items:center;gap:6px;font-size:13px;color:var(--fg);cursor:pointer}
+label.it input{width:16px;height:16px;margin:0;accent-color:var(--acc2)}
+#itemPanel .row button{padding:4px 10px;font-size:12px}
 .ft{position:relative;padding:0;background:var(--panel2);border:3px solid transparent;border-radius:10px;overflow:hidden;aspect-ratio:1;transition:transform .08s}
 .ft img{width:100%;height:100%}
 .ft:hover:not(:disabled){transform:translateY(-2px);border-color:#fff4}
@@ -106,6 +115,8 @@ body.n64 #copy,body.n64 #leave,body.n64 h1,body.n64 #roomPanel{display:none!impo
     <div class="split">
       <div class="panel"><h2>Your fighter</h2>
         <div id="fighters"></div>
+        <div class="sub">Extras</div>
+        <div id="extras"></div>
         <div class="costumes" id="costumes"><span class="dim" style="font-size:12px">Colour</span></div>
         <select id="fighter" class="hidden-src" aria-hidden="true"></select>
         <select id="costume" class="hidden-src" aria-hidden="true"><option value="0">1</option><option value="1">2</option><option value="2">3</option><option value="3">4</option></select>
@@ -123,6 +134,10 @@ body.n64 #copy,body.n64 #leave,body.n64 h1,body.n64 #roomPanel{display:none!impo
       <label>Fill with CPUs<select id="cpu"><option value="0">No CPUs</option><option value="4">Up to 4 fighters</option><option value="8">Up to 8 fighters</option></select></label>
       <label>CPU level<select id="level"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>9</option></select></label>
     </div></div>
+    <div class="panel" id="itemPanel"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Item switch</h2><div class="row"><button class="ghost" id="itemsAll">All on</button><button class="ghost" id="itemsNone">All off</button></div></div>
+      <div id="itemList"></div>
+      <p class="dim" style="margin:8px 0 0;font-size:12px">As in the game: while any item is on, crates, barrels, capsules and eggs appear too. How often they appear is the Items setting above.</p>
+    </div>
     <div class="go"><button id="start">START</button><button class="ghost" id="sound" title="Lobby music and sounds">Sound on</button><button class="ghost" id="wide" title="Fill a wide screen, or keep the N64's 4:3 picture. Only on this screen.">Wide screen</button><button class="ghost" id="leave">Leave</button><span class="dim" id="startNote"></span></div>
     <div class="panel"><h2>Controls</h2><p class="dim" style="margin:0">Stick: arrow keys or WASD. Hold Shift for a walk. A: Z. B: X. Z: C. Start: Enter. L: Q. R: E. C buttons: IJKL. A gamepad works too.</p></div>
   </section>

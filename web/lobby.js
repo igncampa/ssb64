@@ -4,10 +4,25 @@ import { NetClient } from './net.js';
 import { BUILD_ID } from './build.js';
 import { readPad } from './input.js';
 import { Art } from './art.js';
+import { ITEMS, itemMask, itemsFromMask } from './items.js';
 
 const $ = id => document.getElementById(id);
-const FIGHTERS = ['Mario', 'Fox', 'Donkey Kong', 'Samus', 'Luigi', 'Link', 'Yoshi', 'Captain Falcon', 'Kirby', 'Pikachu', 'Jigglypuff', 'Ness'];
-const STAGES = ["Peach's Castle", 'Sector Z', 'Kongo Jungle', 'Planet Zebes', 'Hyrule Castle', "Yoshi's Island", 'Dream Land', 'Saffron City', 'Mushroom Kingdom'];
+// Fighters by FTKind (src/ft/ftdef.h): a pick sends the kind, and StartMatch takes it as is.
+// pic: the portrait it is drawn from (art.js). 12 is Master Hand and is never offered.
+const BASE = ['Mario', 'Fox', 'Donkey Kong', 'Samus', 'Luigi', 'Link', 'Yoshi', 'Captain Falcon', 'Kirby', 'Pikachu', 'Jigglypuff', 'Ness'];
+const FIGHTERS = [
+  ...BASE.map((name, i) => ({ kind: i, name, pic: i })),
+  { kind: 13, name: 'Metal Mario', pic: 0, look: 'metal', extra: true },
+  { kind: 26, name: 'Giant DK', pic: 2, look: 'giant', extra: true },
+  ...BASE.map((n, i) => ({ kind: 14 + i, name: 'Polygon ' + n, pic: i, look: 'poly', extra: true })),
+];
+const FIGHTER = new Map(FIGHTERS.map(f => [f.kind, f]));
+const nameOf = k => FIGHTER.get(k)?.name ?? '?';
+// Metal Mario and the polygons have one look only (dFTParamCostumeIDs in src/ft/ftparam.c).
+const oneLook = k => FIGHTER.get(k)?.look === 'metal' || FIGHTER.get(k)?.look === 'poly';
+// Stages by GRKind (src/gr/grdef.h): the 9 VS stages, then Meta Crystal, Duel Zone, Final Destination.
+const STAGES = [["Peach's Castle", 0], ['Sector Z', 1], ['Kongo Jungle', 2], ['Planet Zebes', 3], ['Hyrule Castle', 4], ["Yoshi's Island", 5], ['Dream Land', 6], ['Saffron City', 7], ['Mushroom Kingdom', 8],
+  ['Meta Crystal', 13], ['Duel Zone', 14], ['Final Destination', 16]].map(([name, kind]) => ({ name, kind }));
 const q = new URLSearchParams(location.search);
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
 const embed = window.N64 || null;
@@ -17,13 +32,16 @@ if (embed) document.body.classList.add('n64');
 
 const err = m => { $('err').textContent = m || ''; };
 const show = id => { for (const s of ['sJoin', 'sHost', 'sRoom']) $(s).hidden = s !== id; };
-const fill = (el, names) => { el.innerHTML = names.map((n, i) => `<option value="${i}">${n}</option>`).join(''); };
+const fill = (el, list) => { el.innerHTML = list.map(o => `<option value="${o.kind}">${o.name}</option>`).join(''); };
 fill($('fighter'), FIGHTERS); fill($('stage_'), STAGES);
+$('itemList').innerHTML = ITEMS.map((it, i) => `<label class="it"><input type="checkbox" data-i="${i}" checked><span>${it.name}</span></label>`).join('');
+const itemBoxes = () => [...document.querySelectorAll('#itemList input')];
+const itemsOn = () => itemBoxes().map(b => b.checked);
 // Player colours of the game's own HUD, for the little dots on a fighter's tile.
 const PCOL = ['var(--p1)', 'var(--p2)', 'var(--p3)', 'var(--p4)', '#b05cf0', '#f07ab8', '#40c8d8', '#f08a3c'];
 const COSTUME = [['#d23a2c', '#2d4fd0'], ['#3a8a3c', '#e8e8f0'], ['#f0c030', '#7a3ad0'], ['#30a0e0', '#e05a2c']];
 let art = null;
-const pics = { fighter: [], stage: [] };
+const pics = { fighter: {}, stage: {} };
 $('name').value = $('hostName').value = (embed ? q.get('name') : store.get('ssb64.name')) || '';
 $('code').value = (q.get('room') || '').toUpperCase();
 $('secret').value = store.get('ssb64.secret') || '';
@@ -42,7 +60,8 @@ Engine.load(m => { $('load').textContent = `Loading: ${m}`; net?.json({ t: 'engi
   eng = e; engineReady = true;
   try {
     art = new Art(e.m.HEAPU8, e.m.dataPtr);
-    pics.fighter = FIGHTERS.map((_, i) => art.portrait(i)); pics.stage = STAGES.map((_, i) => art.stage(i));
+    for (const f of FIGHTERS) pics.fighter[f.kind] = art.portrait(f.pic, f.look);
+    for (const g of STAGES) pics.stage[g.kind] = art.stage(g.kind);
     buildTiles(); renderRoster();
   } catch (x) { console.warn('[lobby] pictures', x); art = null; } $('load').textContent = 'Game loaded.'; window.eng = e;
   net?.json({ t: 'engine', state: 'ready' }); updateStart();
@@ -71,10 +90,10 @@ async function join(code) {
   lobbySound(true); cue('choose');
 }
 
-function sendPick() { net?.json({ t: 'pick', pick: { fighter: +$('fighter').value, costume: +$('costume').value } }); }
+function sendPick() { const f = +$('fighter').value; net?.json({ t: 'pick', pick: { fighter: f, costume: oneLook(f) ? 0 : +$('costume').value } }); }
 function config() {
   return { stage: +$('stage_').value, rules: +$('rules').value, time: +$('time').value, stocks: +$('stocks').value, itemRate: +$('items').value,
-    itemToggles: +$('items').value ? 0xFFFFFFFF : 0, cpu: [0, 1, 2, 3, 4, 5, 6, 7].map(i => i < +$('cpu').value ? 1 : 0), levels: Array(8).fill(+$('level').value), fighters: [0, 1, 2, 3, 4, 5, 6, 7], cpuFill: +$('cpu').value };
+    itemToggles: itemMask(itemsOn()), cpu: [0, 1, 2, 3, 4, 5, 6, 7].map(i => i < +$('cpu').value ? 1 : 0), levels: Array(8).fill(+$('level').value), fighters: [0, 1, 2, 3, 4, 5, 6, 7], cpuFill: +$('cpu').value };
 }
 const isHost = () => net && net.id === hostId;
 
@@ -111,13 +130,13 @@ addEventListener('pointerdown', unlock, true); addEventListener('keydown', unloc
 // ---- the pictures: the game's own portraits and stage previews (art.js) ----
 function buildTiles() {
   if (!art) return;
-  $('fighters').innerHTML = '';
-  FIGHTERS.forEach((n, i) => {
-    const b = document.createElement('button');
-    b.className = 'ft'; b.dataset.f = i; b.title = n; b.setAttribute('aria-label', n);
-    b.innerHTML = `<img class="px" alt="" src="${pics.fighter[i]}"><div class="tags"></div>`;
+  $('fighters').innerHTML = ''; $('extras').innerHTML = '';
+  FIGHTERS.forEach(f => {
+    const i = f.kind, b = document.createElement('button');
+    b.className = 'ft' + (f.look ? ' ' + f.look : ''); b.dataset.f = i; b.title = f.name; b.setAttribute('aria-label', f.name);
+    b.innerHTML = `<img class="px" alt="" src="${pics.fighter[i]}"><div class="tags"></div>${f.extra ? `<div class="lbl">${f.look === 'poly' ? 'Polygon' : f.name}</div>` : ''}`;
     b.onclick = () => { if (+$('fighter').value === i) return; $('fighter').value = i; cue('fighter', i); sendPick(); renderPicks(); };
-    $('fighters').append(b);
+    $(f.extra ? 'extras' : 'fighters').append(b);
   });
   $('costumes').querySelectorAll('button').forEach(b => b.remove());
   COSTUME.forEach((c, i) => {
@@ -127,7 +146,7 @@ function buildTiles() {
     $('costumes').append(b);
   });
   $('stages').innerHTML = '';
-  STAGES.forEach((n, i) => {
+  STAGES.forEach(({ name: n, kind: i }) => {
     const b = document.createElement('button');
     b.className = 'sg'; b.dataset.s = i;
     b.innerHTML = `<img class="px" alt="" src="${pics.stage[i]}"><span>${n}</span>`;
@@ -144,7 +163,7 @@ function renderPicks() {
     const tags = b.querySelector('.tags'); tags.innerHTML = '';
     roster.forEach((m, k) => { if (m.pick?.fighter === f) { const d = document.createElement('span'); d.style.background = PCOL[k % 8]; d.title = m.name; tags.append(d); } });
   });
-  document.querySelectorAll('.costumes button').forEach(b => b.classList.toggle('on', +b.dataset.c === col));
+  document.querySelectorAll('.costumes button').forEach(b => { b.classList.toggle('on', !oneLook(me) && +b.dataset.c === col); b.disabled = oneLook(me); });
   document.querySelectorAll('.sg').forEach(b => { b.classList.toggle('on', +b.dataset.s === st); b.disabled = !isHost(); });
 }
 function updateStart() {
@@ -152,7 +171,8 @@ function updateStart() {
   const others = roster.filter(m => m.engine !== 'ready').concat((embed?.notReady ?? []).filter(n => !roster.some(m => m.name === n)).map(name => ({ name })));
   $('start').disabled = !isHost() || others.length > 0;
   $('hostOnly').textContent = isHost() ? '' : '(the host chooses)';
-  for (const id of ['stage_', 'rules', 'time', 'stocks', 'items', 'cpu', 'level']) $(id).disabled = !isHost();
+  for (const id of ['stage_', 'rules', 'time', 'stocks', 'items', 'cpu', 'level', 'itemsAll', 'itemsNone']) $(id).disabled = !isHost();
+  for (const b of itemBoxes()) b.disabled = !isHost();
   $('start').hidden = !isHost();
   $('startNote').textContent = !isHost() ? 'Waiting for the host to start.' : others.length ? `Waiting for ${others.map(m => m.name).join(', ')} to load.` : '';
 }
@@ -168,7 +188,7 @@ function renderRoster() {
     tr.innerHTML = `<td class="pic" style="box-shadow:inset 0 -3px 0 ${PCOL[k % 8]}">${pic}</td><td class="who"></td>`;
     const who = tr.querySelector('.who'); who.append(name);
     if (m.id === hostId) { const h = document.createElement('span'); h.className = 'host'; h.textContent = 'HOST'; name.append(h); }
-    const sub = document.createElement('div'); sub.className = 'st'; sub.textContent = (m.pick ? FIGHTERS[m.pick.fighter] + ' · ' : '') + state; who.append(sub);
+    const sub = document.createElement('div'); sub.className = 'st'; sub.textContent = (m.pick ? nameOf(m.pick.fighter) + ' · ' : '') + state; who.append(sub);
     $('roster').append(tr);
   });
   if (art) renderPicks();
@@ -182,6 +202,7 @@ function onEvent(v) {
       if (!isHost() && v.config?.stage !== undefined) {
         $('stage_').value = v.config.stage; $('rules').value = v.config.rules; $('time').value = v.config.time; $('stocks').value = v.config.stocks; $('items').value = v.config.itemRate;
         $('cpu').value = v.config.cpuFill ?? 0; $('level').value = v.config.levels?.[0] ?? 5;
+        itemsFromMask(v.config.itemToggles ?? 0xFFFFFFFF).forEach((on, i) => { itemBoxes()[i].checked = on; });
       }
       { const st = +$('stage_').value; renderRoster(); updateStart(); if (!isHost() && lobbySt !== null && st !== lobbySt) cue('scroll'); lobbySt = st; }
       break;
@@ -240,7 +261,11 @@ $('start').onclick = () => { net.json({ t: 'config', config: config() }); net.js
 $('leave').onclick = () => { net.gaveUp = true; net.json({ t: 'leave' }); net.ws.close(); history.replaceState(null, '', location.pathname); show(q.has('host') ? 'sHost' : 'sJoin'); };
 $('copy').onclick = async () => { const u = `${location.origin}${location.pathname}?room=${$('roomCode').textContent}`; try { await navigator.clipboard.writeText(u); $('copy').textContent = 'Copied'; } catch { prompt('Copy this link', u); } };
 $('fighter').onchange = $('costume').onchange = sendPick;
-for (const id of ['stage_', 'rules', 'time', 'stocks', 'items', 'cpu', 'level']) $(id).onchange = () => { if (isHost()) net.json({ t: 'config', config: config() }); };
+const sendConfig = () => { if (isHost()) net.json({ t: 'config', config: config() }); };
+for (const id of ['stage_', 'rules', 'time', 'stocks', 'items', 'cpu', 'level']) $(id).onchange = sendConfig;
+for (const b of itemBoxes()) b.onchange = () => { cue('select'); sendConfig(); };
+$('itemsAll').onclick = () => { for (const b of itemBoxes()) b.checked = true; cue('select'); sendConfig(); };
+$('itemsNone').onclick = () => { for (const b of itemBoxes()) b.checked = false; cue('select'); sendConfig(); };
 
 if (embed) {
   // The portal already asked for a name and a click. This page is one cart.

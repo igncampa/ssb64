@@ -77,9 +77,30 @@ export class Art {
     c.getContext('2d').putImageData(new ImageData(img.data, img.width, img.height), 0, 0);
     return c.toDataURL();
   }
-  portrait(i) { return this.url(this.sprite(FILES.portraits, PORTRAIT[i])); }
-  stage(i) { return this.url(this.sprite(FILES.maps, STAGE_OFFSETS[i])); }
+  // A fighter's portrait. The game has none for its 1P-only fighters, so those are drawn from the
+  // fighter they copy: Metal Mario in steel, a Fighting Polygon in the polygons' violet, Giant DK as DK.
+  portrait(i, look = null) {
+    const src = this.sprite(FILES.portraits, PORTRAIT[i]);
+    if (!look || look === 'giant') return this.url(src);
+    const data = new Uint8ClampedArray(src.data);
+    for (let p = 0; p < data.length; p += 4) {
+      const l = (data[p] * 0.3 + data[p + 1] * 0.59 + data[p + 2] * 0.11) / 255;
+      if (look === 'metal') { const v = Math.min(1, Math.pow(l, 0.8) * 1.15); data[p] = 70 + v * 175; data[p + 1] = 78 + v * 172; data[p + 2] = 92 + v * 163; }
+      else { const v = Math.round(l * 4) / 4; data[p] = 40 + v * 150; data[p + 1] = 20 + v * 80; data[p + 2] = 90 + v * 165; }
+    }
+    return this.url({ width: src.width, height: src.height, data });
+  }
+  // A stage's preview by GRKind. The 9 VS stages have the select screen's own; Meta Crystal, Duel Zone
+  // and Final Destination have none there, so they show the stage's own wallpaper.
+  stage(kind) {
+    if (STAGE_OFFSETS[kind] !== undefined) return this.url(this.sprite(FILES.maps, STAGE_OFFSETS[kind]));
+    const w = WALLPAPER[kind];
+    return w ? this.url(this.sprite(w, 0x26c88)) : '';
+  }
 }
-// Stage preview sprite offsets (llMNMaps<Name>Sprite), same order as STAGE_NAMES.
+// Stage preview sprite offsets (llMNMaps<Name>Sprite), by GRKind 0 to 8.
 const STAGE_OFFSETS = [0x4d88, 0x5b68, 0x6948, 0x7728, 0x8508, 0x92e8, 0xbc88, 0xa0c8, 0xaea8];
+// Wallpaper files (llStage<Name>BackgroundFileID, sprite at 0x26c88), by GRKind: the map files
+// src/relocData/269_GRMetalMap.c, 268_GRZakoMap.c and 266_GRLastMap.c name these as their wallpaper.
+const WALLPAPER = { 13: 0x62, 14: 0x61, 16: 0x60 };
 void STAGE_NAMES;
