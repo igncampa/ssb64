@@ -5,7 +5,7 @@ const P = ['IN', 'MEM', 'BL', 'FOG'], A = ['A_IN', 'A_FOG', 'SHADE', '0'], B = [
 const F = ['1-SRC_ALPHA', 'ONE', 'ONE', 'ZERO'];
 const rows = new Map();
 for (const l of fs.readFileSync(process.argv[2], 'utf8').split('\n')) {
-  const r = l.match(/^(\S+) cc=\S+ oml=(\S+) omh=(\S+) geom=\S+ tex=\S+ n=(\d+)/); if (!r) continue;
+  const r = l.match(/^(\S+) cc=\S+ oml=(\S+) omh=(\S+) geom=\S+ tex=\S+(?: tx=\S+)? n=(\d+)/); if (!r) continue;
   const cyc = (parseInt(r[3], 16) >> 20) & 3, k = `${r[1]} ${r[2]} ${cyc}`;
   rows.set(k, (rows.get(k) || 0) + +r[4]);
 }

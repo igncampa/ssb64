@@ -72,21 +72,34 @@ int printf(const char *, ...);
 static int sTrace;
 EMSCRIPTEN_KEEPALIVE void GfxTrace(int frames) { sTrace = frames; }
 // Coverage: every distinct draw state the game used, with a count. Dumped on request, render only.
-typedef struct { uint32_t hi, lo, oml, omh, geom; uint16_t tex; uint8_t rect, used; uint32_t n; } Cov;
+typedef struct { uint32_t hi, lo, oml, omh, geom; uint16_t tex; uint8_t rect, used, tx; uint32_t n; } Cov;
 #define COVN 4096
 static int sCovOn;
 EMSCRIPTEN_KEEPALIVE void GfxCoverage(int on) { sCovOn = on; }
 static Cov sCov[COVN]; static uint32_t sCovLost, sMwHist[16], sDefault[256];
-static void cover(const RbState *st, int rect)
+// Texture addressing cases the renderer approximates (fast3d-lessons 2.5/2.6), per draw: bit 0/1 clamp with
+// mirror (s/t), 2/3 clamp on a tile larger than its mask, 4/5 mask 0 with wrap, 6/7 coordinates outside the
+// tile (s/t) so wrap or clamp matters at all.
+static uint8_t tex_case(const RbVertex *v, int n)
+{
+    const Tile *T = &S.tile[S.textile]; uint8_t f = 0; int i;
+    int w = ((T->lrs - T->uls) >> 2) + 1, h = ((T->lrt - T->ult) >> 2) + 1;
+    if ((T->cms & 3) == 3) f |= 1; if ((T->cmt & 3) == 3) f |= 2;
+    if ((T->cms & 2) && T->masks && w > (1 << T->masks)) f |= 4; if ((T->cmt & 2) && T->maskt && h > (1 << T->maskt)) f |= 8;
+    if (!(T->cms & 2) && !T->masks) f |= 16; if (!(T->cmt & 2) && !T->maskt) f |= 32;
+    for (i = 0; i < n; i++) { if (v[i].u < -0.01f || v[i].u > w + 0.01f) f |= 64; if (v[i].v < -0.01f || v[i].v > h + 0.01f) f |= 128; }
+    return f;
+}
+static void cover(const RbState *st, int rect, uint8_t tx)
 {
     uint32_t omh = S.omh & 0x00F03000u, geom = S.geom & (G_ZBUFFER_ | G_SHADE_ | G_FOG_ | G_LIGHTING_ | G_TEXGEN_);
     uint16_t tex = st->tex[0].key ? (uint16_t)(0x100 | S.tile[S.textile].fmt << 4 | S.tile[S.textile].siz) : 0;
-    uint32_t h = (st->combine_hi * 31u + st->combine_lo) * 2654435761u ^ (S.oml * 40503u) ^ omh ^ geom ^ tex ^ (uint32_t)rect;
+    uint32_t h = (st->combine_hi * 31u + st->combine_lo) * 2654435761u ^ (S.oml * 40503u) ^ omh ^ geom ^ tex ^ (uint32_t)rect ^ ((uint32_t)tx << 20);
     int i, k;
     for (k = 0; k < 64; k++) {
         Cov *c = &sCov[(h + k) & (COVN - 1)];
-        if (!c->used) { c->used = 1; c->hi = st->combine_hi; c->lo = st->combine_lo; c->oml = S.oml; c->omh = omh; c->geom = geom; c->tex = tex; c->rect = rect; c->n = 1; return; }
-        if (c->hi == st->combine_hi && c->lo == st->combine_lo && c->oml == S.oml && c->omh == omh && c->geom == geom && c->tex == tex && c->rect == rect) { c->n++; return; }
+        if (!c->used) { c->used = 1; c->hi = st->combine_hi; c->lo = st->combine_lo; c->oml = S.oml; c->omh = omh; c->geom = geom; c->tex = tex; c->rect = rect; c->tx = tx; c->n = 1; return; }
+        if (c->hi == st->combine_hi && c->lo == st->combine_lo && c->oml == S.oml && c->omh == omh && c->geom == geom && c->tex == tex && c->rect == rect && c->tx == tx) { c->n++; return; }
     }
     (void)i; sCovLost++;
 }
@@ -94,7 +107,7 @@ EMSCRIPTEN_KEEPALIVE void GfxCoverageDump(void)
 {
     int i;
     for (i = 0; i < COVN; i++) if (sCov[i].used)
-        printf("COV %s cc=%06x:%08x oml=%08x omh=%08x geom=%06x tex=%03x n=%u\n", sCov[i].rect ? "rect" : "tri", sCov[i].hi & 0xFFFFFF, sCov[i].lo, sCov[i].oml, sCov[i].omh, sCov[i].geom, sCov[i].tex, sCov[i].n);
+        printf("COV %s cc=%06x:%08x oml=%08x omh=%08x geom=%06x tex=%03x tx=%02x n=%u\n", sCov[i].rect ? "rect" : "tri", sCov[i].hi & 0xFFFFFF, sCov[i].lo, sCov[i].oml, sCov[i].omh, sCov[i].geom, sCov[i].tex, sCov[i].tx, sCov[i].n);
     for (i = 0; i < 16; i++) if (sMwHist[i]) printf("COVMW %d %u\n", i, sMwHist[i]);
     for (i = 0; i < 256; i++) if (sDefault[i]) printf("COVOP %02x %u\n", i, sDefault[i]);
     printf("COVBAD vtx=%u lights=%u\n", sBad[0], sBad[1]);
@@ -102,7 +115,7 @@ EMSCRIPTEN_KEEPALIVE void GfxCoverageDump(void)
 }
 static void trace_draw(const char *kind, const RbState *st, const RbVertex *v, int n)
 {
-    if (sCovOn) cover(st, kind[0] == 'r');
+    if (sCovOn) cover(st, kind[0] == 'r', st->tex[0].key ? tex_case(v, n) : 0);
     float x0 = 9, y0 = 9, x1 = -9, y1 = -9, u0 = 1e9, u1 = -1e9, t0 = 1e9, t1 = -1e9; int i;
     if (!sTrace) return;
     for (i = 0; i < n; i++) { if (v[i].u < u0) u0 = v[i].u; if (v[i].u > u1) u1 = v[i].u; if (v[i].v < t0) t0 = v[i].v; if (v[i].v > t1) t1 = v[i].v; }
@@ -488,6 +501,10 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
     #define st sSt
     {   const Tile *T = &S.tile[S.textile];
         float sx = 1, sy = 1, ou = T->uls / 4.0f, ov = T->ult / 4.0f;
+        // The RDP's bilinear filter takes texel i at coordinate i and blends towards i+1 with the fraction;
+        // GL's texel centres are at i + 0.5. Filtered triangles move by half a texel so both sample the
+        // same lattice (Fast3D does the same, interpreter.cpp:2049; rectangles keep the copy's coordinates).
+        if ((S.omh >> 12) & 3) { ou -= 0.5f; ov -= 0.5f; }
         if (T->shifts) sx = T->shifts <= 10 ? 1.0f / (1 << T->shifts) : (float)(1 << (16 - T->shifts));
         if (T->shiftt) sy = T->shiftt <= 10 ? 1.0f / (1 << T->shiftt) : (float)(1 << (16 - T->shiftt));
         sx /= 32.0f; sy /= 32.0f;

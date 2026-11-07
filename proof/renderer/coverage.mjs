@@ -16,7 +16,7 @@ async function one(stage) {
   await pg.evaluate(() => window.eng.m._GfxCoverageDump());
   await pg.waitForFunction(() => true); await new Promise(r => setTimeout(r, 2000));
   for (const l of lines) {
-    const m = l.match(/^COV (\S+ cc=\S+ oml=\S+ omh=\S+ geom=\S+ tex=\S+) n=(\d+)/);
+    const m = l.match(/^COV (\S+ cc=\S+ oml=\S+ omh=\S+ geom=\S+ tex=\S+(?: tx=\S+)?) n=(\d+)/);
     if (m) { const r = rows.get(m[1]) || { n: 0, stages: new Set() }; r.n += +m[2]; r.stages.add(stage); rows.set(m[1], r); }
     else if (!l.startsWith('COVEND')) { const [k, a, b] = l.split(' '); extra.set(k + ' ' + a, (extra.get(k + ' ' + a) || 0) + +b); }
     else console.log('stage', stage, l);

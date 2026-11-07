@@ -1,160 +1,440 @@
-tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 n=1516667 stages=20153468713
-tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 n=1332650 stages=20153468713
-tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 n=819171 stages=2015387161413
-tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 n=388640 stages=201534687161413
-tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 n=257812 stages=20153468713
-rect cc=ffffff:fffcf279 oml=0f0a4001 omh=00002000 geom=020005 tex=102 n=244897 stages=20134687161413
-tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 n=151835 stages=20154687
-rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020005 tex=131 n=112343 stages=201534687161413
-tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 n=104394 stages=201534687161413
-tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 n=102167 stages=2015468713
-tri cc=119623:ff2fffff oml=005041c9 omh=00002000 geom=000000 tex=140 n=100470 stages=201534687161413
-tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 n=88663 stages=2034713
-tri cc=327e05:ff17f7ff oml=c4112078 omh=00102000 geom=020005 tex=120 n=86344 stages=20153468713
-tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=121 n=84984 stages=13
-tri cc=309661:552eff7f oml=005041c9 omh=00002000 geom=000004 tex=131 n=78360 stages=16
-tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 n=78168 stages=156871614
-rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020005 tex=140 n=58656 stages=201534687161413
-tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=060004 tex=120 n=47110 stages=13
-tri cc=121605:ff17ffff oml=c4112078 omh=00102000 geom=020005 tex=120 n=46864 stages=153468
-rect cc=ffffff:fffcf279 oml=00504241 omh=00002000 geom=020005 tex=120 n=45672 stages=20153468713
-tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 n=36074 stages=205687
-tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 n=33388 stages=201534687161413
-tri cc=121824:ff33ffff oml=00553049 omh=00002000 geom=000004 tex=120 n=28798 stages=25467
-rect cc=fffffe:fffffffe oml=0f0a4001 omh=00202000 geom=020005 tex=102 n=28468 stages=5
-tri cc=327e64:fffff7fb oml=00552078 omh=00002000 geom=020005 tex=102 n=25890 stages=015368
-tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 n=24136 stages=20153468713
-rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=140 n=23660 stages=201534687161413
-tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 n=23067 stages=015368
-tri cc=121624:ff2fffff oml=005049d9 omh=00002000 geom=020005 tex=120 n=19780 stages=2015387
-tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=000001 tex=131 n=12488 stages=015368
-tri cc=309604:5ffefff8 oml=005049d9 omh=00102000 geom=000005 tex=140 n=11646 stages=5
-tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=000005 tex=120 n=11444 stages=205348713
-rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=141 n=9880 stages=201534687161413
-tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=000004 tex=120 n=9228 stages=687
-rect cc=ffffff:fffcf279 oml=00504341 omh=00002000 geom=020005 tex=103 n=8918 stages=201534687161413
-tri cc=309661:552eff7f oml=005049d9 omh=00002000 geom=000005 tex=120 n=8848 stages=2053871613
-tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=020001 tex=132 n=8520 stages=205467
-tri cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=000000 tex=140 n=7764 stages=5
-tri cc=272c04:1f0c93ff oml=0c193049 omh=00102000 geom=000004 tex=120 n=7344 stages=6
-tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=103 n=7117 stages=5
-tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=000001 tex=132 n=7044 stages=1
-tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=102 n=6694 stages=015368
-tri cc=ffffff:fffe7c38 oml=0c192078 omh=00102000 geom=000005 tex=120 n=6065 stages=214687
-tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=060005 tex=120 n=5850 stages=13
-tri cc=121624:ff2fffff oml=005049d9 omh=00002000 geom=020005 tex=102 n=5704 stages=015368
-tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000000 tex=131 n=5698 stages=56871614
-tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=120 n=5433 stages=47
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=131 n=5426 stages=13471614
-tri cc=ffffff:fffdf2f9 oml=005049d8 omh=00002000 geom=000001 tex=140 n=5316 stages=56871614
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=131 n=5301 stages=20568713
-rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020004 tex=131 n=4569 stages=5368714
-tri cc=272c04:1f1093ff oml=0c1849d9 omh=00102000 geom=000005 tex=120 n=4536 stages=3
-tri cc=121824:ff33ffff oml=00504341 omh=00002000 geom=000004 tex=120 n=4510 stages=201534687161413
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=120 n=4362 stages=205468713
-tri cc=309661:552eff7f oml=005049d8 omh=00002000 geom=000001 tex=131 n=4336 stages=213468
-tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=120 n=4067 stages=20546871614
-tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=120 n=3968 stages=37
-tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=120 n=3890 stages=2053413
-tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=140 n=3646 stages=0547
-tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=132 n=3522 stages=1
-tri cc=30fe61:55fef379 oml=005041c8 omh=00002000 geom=000000 tex=132 n=3522 stages=1
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=132 n=3251 stages=13471614
-tri cc=121824:ff33ffff oml=005049d9 omh=00002000 geom=000005 tex=120 n=3240 stages=3
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=132 n=3179 stages=205468713
-tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=000005 tex=120 n=2790 stages=54713
-tri cc=ffffff:fffe793c oml=00552048 omh=00002000 geom=000004 tex=120 n=2588 stages=5
-tri cc=127e24:fffff3f9 oml=005049d9 omh=00002000 geom=000005 tex=131 n=2448 stages=7
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=102 n=2427 stages=258713
-tri cc=127fff:fffff238 oml=0c192078 omh=00102000 geom=000005 tex=120 n=2375 stages=214687
-tri cc=327e64:fffff9fc oml=00552078 omh=00002000 geom=000005 tex=120 n=2348 stages=1
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=120 n=1858 stages=131614
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=141 n=1669 stages=05687
-tri cc=127e24:fffff3f9 oml=005049d8 omh=00002000 geom=000005 tex=120 n=1654 stages=0153687
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=103 n=1398 stages=1347
-tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=020005 tex=120 n=1279 stages=0153467
-rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020004 tex=140 n=1272 stages=5368714
-rect cc=ffffff:fffcf279 oml=00504241 omh=00002000 geom=020004 tex=120 n=1192 stages=53687
-tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=131 n=1122 stages=247
-tri cc=121824:ff33ffff oml=00504341 omh=00002000 geom=000004 tex=132 n=1090 stages=1368713
-tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=131 n=1060 stages=7
-tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=000005 tex=120 n=1023 stages=7
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=102 n=1021 stages=1
-tri cc=121624:ff2fffff oml=00504341 omh=00002000 geom=000004 tex=120 n=928 stages=213816
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=103 n=832 stages=256813
-rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=130 n=811 stages=56871614
-rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=120 n=796 stages=56871614
-tri cc=ffffff:fffe793c oml=005049d8 omh=00002000 geom=000005 tex=120 n=746 stages=2038
-tri cc=127e24:fffff3f9 oml=005049d9 omh=00002000 geom=000005 tex=103 n=710 stages=153468
-tri cc=ff97ff:ff2dfeff oml=00504341 omh=00002000 geom=000000 tex=140 n=588 stages=215346713
-rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020005 tex=131 n=517 stages=201534687161413
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=131 n=509 stages=2056813
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=131 n=453 stages=13471614
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=141 n=447 stages=13
-tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000004 tex=131 n=438 stages=2153467161413
-tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=140 n=424 stages=7
-tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=000005 tex=120 n=419 stages=015713
-tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=131 n=402 stages=87
-tri cc=327e05:ff17f9ff oml=c4112078 omh=00102000 geom=000005 tex=120 n=384 stages=3
-rect cc=ffffff:fffdf6fb oml=005041c8 omh=00002000 geom=020005 tex=000 n=336 stages=56871614
-tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=102 n=332 stages=7
-rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=130 n=331 stages=56871614
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=120 n=324 stages=254
-tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=141 n=284 stages=7
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=103 n=246 stages=1
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=102 n=244 stages=7
-tri cc=ffffff:fffdf8fc oml=00552048 omh=00002000 geom=000004 tex=120 n=227 stages=5368714
-rect cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=020004 tex=131 n=227 stages=5368714
-tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000005 tex=120 n=218 stages=37
-tri cc=121624:ff2fffff oml=00504341 omh=00002000 geom=000004 tex=102 n=210 stages=6
-rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020004 tex=130 n=205 stages=58
-tri cc=327e05:ff17f7ff oml=c4112078 omh=00102000 geom=000005 tex=102 n=196 stages=3
-tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=131 n=192 stages=7
-tri cc=121824:ff33ffff oml=00553048 omh=00002000 geom=000004 tex=120 n=190 stages=58
-rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=120 n=178 stages=5814
-tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=140 n=173 stages=4
-tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=102 n=172 stages=3
-tri cc=30fe61:55fef379 oml=00504341 omh=00002000 geom=000000 tex=131 n=170 stages=4713
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=140 n=144 stages=2468713
-tri cc=ffffff:fffe7d3e oml=00552048 omh=00002000 geom=000004 tex=120 n=142 stages=8
-rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=130 n=138 stages=8
-tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=000004 tex=131 n=130 stages=25
-rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=131 n=98 stages=56871614
-tri cc=ffffff:fffe793c oml=005049d8 omh=00002000 geom=000005 tex=132 n=66 stages=1
-tri cc=ffffff:fffe7d3e oml=00553048 omh=00002000 geom=000004 tex=120 n=66 stages=7
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=130 n=60 stages=468
-rect cc=ffffff:fffdf6fb oml=00504340 omh=00002000 geom=020005 tex=000 n=54 stages=201534687161413
-tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=132 n=52 stages=7
-rect cc=ffffff:fffdf6fb oml=005041c8 omh=00002000 geom=020004 tex=000 n=50 stages=5814
-rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=120 n=38 stages=13
-tri cc=121624:ff2fffff oml=005041c9 omh=00002000 geom=000004 tex=120 n=32 stages=8
-tri cc=40fe81:55fff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 n=30 stages=57
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=140 n=28 stages=1314
-rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020004 tex=131 n=25 stages=8
-tri cc=ffffff:fffdf6fb oml=005041c9 omh=00002000 geom=000004 tex=132 n=24 stages=314
-tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=020004 tex=131 n=24 stages=4
-tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=020004 tex=132 n=22 stages=14
-tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=000004 tex=132 n=20 stages=5
-tri cc=121824:ff33ffff oml=00504340 omh=00002000 geom=000004 tex=120 n=20 stages=5713
-tri cc=ffffff:fffe7d3e oml=005041c8 omh=00002000 geom=000004 tex=120 n=18 stages=25
-rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=130 n=16 stages=3
-tri cc=ffffff:fffe773b oml=005041c9 omh=00002000 geom=000004 tex=120 n=16 stages=8
-rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020004 tex=140 n=15 stages=68
-tri cc=30fe61:55fef379 oml=00504341 omh=00002000 geom=000004 tex=141 n=8 stages=5
-rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020004 tex=131 n=8 stages=387
-rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020004 tex=141 n=6 stages=68
-tri cc=ffffff:fffdf6fb oml=005041c9 omh=00002000 geom=000004 tex=120 n=4 stages=3
-tri cc=ffffff:fffe773b oml=00504341 omh=00002000 geom=000004 tex=103 n=4 stages=8
-tri cc=ffffff:fffdf6fb oml=005041c9 omh=00002000 geom=000004 tex=131 n=3 stages=5
-tri cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=000004 tex=131 n=2 stages=3
-COVMW 0 607992
-COVMW 2 51234
-COVMW 4 29964
-COVMW 6 437144
-COVMW 10 2788384
-COVMW 14 10103
-COVOP e6 2197438
-COVOP e7 6044265
-COVOP e8 600449
-COVOP e9 7491
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 tx=00 n=679986 stages=0213587161413
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c0 n=552812 stages=021354867
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=00 n=198617 stages=02135486713
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c5 n=164334 stages=02135486713
+rect cc=ffffff:fffcf279 oml=0f0a4001 omh=00002000 geom=020005 tex=102 tx=00 n=159238 stages=02134867161413
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=05 n=156473 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=80 n=122880 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c0 n=120919 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=85 n=107868 stages=02135486713
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=00 n=107235 stages=213487161413
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c5 n=102487 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c5 n=99317 stages=02135486713
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=00 n=80695 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=0c n=80257 stages=0254713
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c1 n=71058 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=121 tx=00 n=70557 stages=13
+tri cc=309661:552eff7f oml=005041c9 omh=00002000 geom=000004 tex=131 tx=00 n=69480 stages=16
+tri cc=119623:ff2fffff oml=005041c9 omh=00002000 geom=000000 tex=140 tx=c0 n=64722 stages=021354867161413
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=04 n=57068 stages=0213548671614
+tri cc=327e05:ff17f7ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c5 n=53158 stages=021546713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=40 n=51377 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=08 n=45492 stages=02135486713
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=0c n=44454 stages=013548714
+rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020005 tex=140 tx=c0 n=42827 stages=021354867161413
+rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020005 tex=131 tx=00 n=41289 stages=021354867161413
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=0c n=40160 stages=054867
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c0 n=40049 stages=0135867
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c1 n=39467 stages=02135486713
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=00 n=37067 stages=86716
+rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020005 tex=131 tx=c0 n=36074 stages=021354867161413
+rect cc=ffffff:fffcf279 oml=00504241 omh=00002000 geom=020005 tex=120 tx=40 n=34316 stages=02135486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=45 n=32904 stages=02135486713
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=00 n=32541 stages=215486
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=80 n=29826 stages=214867
+rect cc=ffffff:fffcf279 oml=0f0a4001 omh=00002000 geom=020005 tex=102 tx=80 n=29445 stages=02134867161413
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=05 n=27778 stages=021354867
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=060004 tex=120 tx=0c n=22420 stages=13
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c4 n=21273 stages=0254713
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=00 n=21085 stages=021354867161413
+rect cc=fffffe:fffffffe oml=0f0a4001 omh=00202000 geom=020005 tex=102 tx=00 n=20944 stages=5
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=41 n=19665 stages=02135486713
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=00 n=19162 stages=2347
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=04 n=17390 stages=024867
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=060004 tex=120 tx=0d n=16845 stages=13
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=40 n=16452 stages=6
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c1 n=16360 stages=02135486713
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=05 n=15776 stages=25486
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=04 n=15119 stages=237
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=0c n=14574 stages=0254713
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=140 tx=00 n=13910 stages=021354867161413
+tri cc=327e64:fffff7fb oml=00552078 omh=00002000 geom=020005 tex=102 tx=01 n=13618 stages=013586
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=80 n=13094 stages=02135486713
+tri cc=121605:ff17ffff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=80 n=12863 stages=135486
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=08 n=12717 stages=015416
+tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 tx=00 n=12677 stages=021354867161413
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=00 n=12258 stages=2157
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=08 n=12206 stages=0248
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 tx=04 n=10752 stages=26
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=04 n=10532 stages=267
+tri cc=119623:ff2fffff oml=005041c9 omh=00002000 geom=000000 tex=140 tx=40 n=9872 stages=0213548671413
+tri cc=121624:ff2fffff oml=005049d9 omh=00002000 geom=020005 tex=120 tx=04 n=9520 stages=0213587
+tri cc=121605:ff17ffff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c0 n=9125 stages=135486
+tri cc=327e05:ff17f7ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c1 n=8900 stages=023587
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=84 n=8841 stages=1514
+tri cc=121824:ff33ffff oml=00553049 omh=00002000 geom=000004 tex=120 tx=04 n=8649 stages=67
+tri cc=309604:5ffefff8 oml=005049d9 omh=00102000 geom=000005 tex=140 tx=0f n=8568 stages=5
+tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 tx=04 n=8456 stages=028
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=4d n=8408 stages=313
+tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=000005 tex=120 tx=00 n=8264 stages=023548713
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=05 n=7872 stages=3
+tri cc=121824:ff33ffff oml=00553049 omh=00002000 geom=000004 tex=120 tx=00 n=7304 stages=254
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 tx=05 n=7275 stages=1614
+tri cc=121605:ff17ffff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=00 n=7027 stages=135486
+rect cc=ffffff:fffcf279 oml=00504341 omh=00002000 geom=020005 tex=103 tx=00 n=6357 stages=021354867161413
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=40 n=6348 stages=13486
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 tx=00 n=6294 stages=0867
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=80 n=6139 stages=1416
+tri cc=309661:552eff7f oml=005049d9 omh=00002000 geom=000005 tex=120 tx=04 n=5776 stages=02358713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=8c n=5649 stages=0254713
+rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020005 tex=131 tx=80 n=5454 stages=021354867161413
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=103 tx=00 n=5236 stages=5
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=05 n=5112 stages=05
+tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 tx=00 n=5010 stages=0215867
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=48 n=4775 stages=01716
+tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=000001 tex=132 tx=0f n=4628 stages=1
+tri cc=121624:ff2fffff oml=005049d9 omh=00002000 geom=020005 tex=120 tx=00 n=4604 stages=0213587
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=48 n=4546 stages=017
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=000004 tex=120 tx=00 n=4500 stages=67
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=c5 n=4472 stages=13
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=07 n=4472 stages=13
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=140 tx=80 n=4417 stages=021354867161413
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=0d n=4412 stages=47
+tri cc=121824:ff33ffff oml=00553049 omh=00002000 geom=000004 tex=120 tx=05 n=4350 stages=2
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=060005 tex=120 tx=0c n=4202 stages=13
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=80 n=4168 stages=8
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=141 tx=00 n=4161 stages=021354867161413
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=0a n=4159 stages=1
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=8a n=4081 stages=1
+tri cc=ffffff:fffe7c38 oml=0c192078 omh=00102000 geom=000005 tex=120 tx=05 n=3957 stages=214867
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=c4 n=3935 stages=1514
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=8d n=3928 stages=0213587
+tri cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=000000 tex=140 tx=cb n=3808 stages=5
+tri cc=121605:ff17ffff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=40 n=3756 stages=135486
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=80 n=3622 stages=86
+tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=102 tx=01 n=3590 stages=013586
+tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 tx=05 n=3584 stages=26
+tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 tx=8d n=3488 stages=0
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=c0 n=3482 stages=023546713
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=0f n=3470 stages=087
+tri cc=121624:ff2fffff oml=005049d9 omh=00002000 geom=020005 tex=102 tx=00 n=3460 stages=013586
+tri cc=272c04:1f1093ff oml=0c1849d9 omh=00102000 geom=000005 tex=120 tx=0c n=3444 stages=3
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=85 n=3440 stages=08
+tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=000001 tex=131 tx=0b n=3360 stages=013586
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=0f n=3354 stages=13
+tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=000001 tex=131 tx=0f n=3352 stages=013586
+tri cc=121824:ff33ffff oml=00504341 omh=00002000 geom=000004 tex=120 tx=00 n=3332 stages=021354867161413
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=c0 n=3332 stages=114
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=84 n=3295 stages=0254713
+tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=020001 tex=132 tx=0f n=3240 stages=025467
+tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=120 tx=0c n=3224 stages=47
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=141 tx=80 n=3204 stages=021354867161413
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=40 n=3140 stages=013586
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=40 n=3135 stages=11614
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=44 n=3080 stages=114
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=0f n=2858 stages=213
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=48 n=2821 stages=0254713
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 tx=05 n=2782 stages=57
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 tx=c5 n=2766 stages=6
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=05 n=2706 stages=013
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=140 tx=00 n=2704 stages=0547
+rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020005 tex=140 tx=40 n=2693 stages=013586
+tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=132 tx=0f n=2688 stages=1
+tri cc=30fe61:55fef379 oml=005041c8 omh=00002000 geom=000000 tex=132 tx=4f n=2688 stages=1
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=01 n=2654 stages=0213587
+tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 tx=0d n=2616 stages=0
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=86 n=2616 stages=0
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 tx=84 n=2614 stages=02
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=88 n=2603 stages=01
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=c4 n=2495 stages=025467
+tri cc=121824:ff33ffff oml=005049d9 omh=00002000 geom=000005 tex=120 tx=05 n=2460 stages=3
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=45 n=2460 stages=3
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=04 n=2362 stages=02548671614
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=84 n=2352 stages=15
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=48 n=2340 stages=013586
+tri cc=272c04:1f0c93ff oml=0c193049 omh=00102000 geom=000004 tex=120 tx=0d n=2302 stages=6
+tri cc=309661:552eff7f oml=005049d8 omh=00002000 geom=000001 tex=131 tx=00 n=2295 stages=213486
+tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=120 tx=00 n=2284 stages=025413
+tri cc=272c04:1f0c93ff oml=0c193049 omh=00102000 geom=000004 tex=120 tx=08 n=2174 stages=6
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=00 n=2017 stages=01356
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=c8 n=1952 stages=01356
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=8f n=1950 stages=02135486713
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=0f n=1950 stages=02135486713
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=85 n=1904 stages=5
+tri cc=ffffff:fffe793c oml=00552048 omh=00002000 geom=000004 tex=120 tx=05 n=1904 stages=5
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=0c n=1904 stages=5
+tri cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=000000 tex=140 tx=07 n=1904 stages=5
+tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000000 tex=131 tx=00 n=1864 stages=58671614
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=c0 n=1844 stages=6
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=4a n=1843 stages=1
+tri cc=327e64:fffff9fc oml=00552078 omh=00002000 geom=000005 tex=120 tx=00 n=1792 stages=1
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=80 n=1785 stages=0
+tri cc=127e24:fffff3f9 oml=005049d9 omh=00002000 geom=000005 tex=131 tx=00 n=1748 stages=7
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=88 n=1744 stages=0
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=c6 n=1744 stages=0
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=0a n=1744 stages=0
+tri cc=127e24:fffff3f9 oml=005041c9 omh=00002000 geom=000004 tex=120 tx=c4 n=1740 stages=2
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=44 n=1722 stages=7
+tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 tx=45 n=1712 stages=8
+tri cc=ffffff:fffdf2f9 oml=005049d8 omh=00002000 geom=000001 tex=140 tx=00 n=1692 stages=58671614
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=000004 tex=120 tx=c0 n=1692 stages=8
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=44 n=1690 stages=28
+tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 tx=0f n=1666 stages=8
+tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=000005 tex=120 tx=00 n=1614 stages=5713
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=c0 n=1482 stages=07
+tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=120 tx=05 n=1476 stages=3
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 tx=08 n=1462 stages=1614
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=c0 n=1438 stages=013586
+rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020004 tex=131 tx=c0 n=1419 stages=386714
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=8c n=1395 stages=4
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=c4 n=1318 stages=21
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=131 tx=c0 n=1317 stages=02586713
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=44 n=1261 stages=025467
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=131 tx=c0 n=1227 stages=13471614
+tri cc=127e24:fffff3f9 oml=005049d8 omh=00002000 geom=000005 tex=120 tx=00 n=1172 stages=0135867
+tri cc=127fff:fffff238 oml=0c192078 omh=00102000 geom=000005 tex=120 tx=85 n=1161 stages=214867
+tri cc=121824:ff33ffff oml=00553079 omh=00002000 geom=000005 tex=120 tx=cd n=1118 stages=13
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=120 tx=00 n=1100 stages=025486713
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=131 tx=00 n=1094 stages=02586713
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=0d n=1093 stages=013586
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=40 n=1083 stages=023546713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 tx=80 n=1065 stages=161413
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=131 tx=00 n=1044 stages=13471614
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=4f n=1006 stages=0
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=132 tx=00 n=998 stages=13471614
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=120 tx=c0 n=958 stages=025486713
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 tx=40 n=953 stages=161413
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=060004 tex=120 tx=4c n=953 stages=13
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=47 n=950 stages=5
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=07 n=950 stages=5
+tri cc=121824:ff33ffff oml=00553049 omh=00002000 geom=000004 tex=120 tx=c0 n=930 stages=4
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=0d n=930 stages=4
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=0f n=922 stages=6
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=132 tx=00 n=920 stages=025486713
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=4e n=896 stages=1
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=ca n=896 stages=1
+tri cc=127e24:fffff3f9 oml=00553079 omh=00002000 geom=000005 tex=120 tx=05 n=878 stages=7
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=89 n=872 stages=0
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=8f n=872 stages=0
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=4d n=868 stages=0
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=c0 n=866 stages=8
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=c8 n=861 stages=01
+tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=120 tx=00 n=860 stages=7
+tri cc=121824:ff33ffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=88 n=856 stages=8
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=0f n=846 stages=58671614
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=40 n=845 stages=7
+rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020004 tex=131 tx=00 n=841 stages=386714
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=060005 tex=120 tx=8c n=829 stages=13
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=4c n=813 stages=87
+tri cc=121824:ff33ffff oml=00552048 omh=00002000 geom=000004 tex=120 tx=cc n=801 stages=7
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=4c n=800 stages=8
+tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 tx=0f n=794 stages=034613
+tri cc=30fe61:55fef379 oml=005049d8 omh=00002000 geom=000001 tex=131 tx=05 n=790 stages=1
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=c5 n=772 stages=025467
+tri cc=121824:ff33ffff oml=00504341 omh=00002000 geom=000004 tex=132 tx=00 n=768 stages=136713
+tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=131 tx=00 n=760 stages=7
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=04 n=737 stages=013586
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=121 tx=40 n=700 stages=13
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=41 n=692 stages=01356
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=0f n=670 stages=7
+tri cc=309661:552eff7f oml=005049d8 omh=00002000 geom=000001 tex=131 tx=80 n=649 stages=213486
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=102 tx=00 n=637 stages=258713
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=132 tx=c0 n=634 stages=13471614
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=132 tx=c0 n=601 stages=025486713
+tri cc=272c04:1f0c93ff oml=0c193049 omh=00102000 geom=000004 tex=120 tx=48 n=592 stages=6
+tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=020005 tex=120 tx=00 n=591 stages=013546
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=120 tx=40 n=565 stages=025486713
+rect cc=ffffff:fffcf279 oml=00504241 omh=00002000 geom=020004 tex=120 tx=40 n=560 stages=3867
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=85 n=559 stages=13
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=45 n=559 stages=13
+rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020004 tex=140 tx=c0 n=544 stages=386714
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=102 tx=c0 n=538 stages=258713
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=120 tx=80 n=533 stages=025486713
+tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=131 tx=00 n=530 stages=7
+tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=120 tx=05 n=510 stages=3
+tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=120 tx=0c n=492 stages=025467
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=131 tx=40 n=485 stages=02586713
+tri cc=127e24:fffff3f9 oml=005049d9 omh=00002000 geom=000005 tex=103 tx=05 n=482 stages=135486
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=120 tx=c0 n=476 stages=131614
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=120 tx=00 n=468 stages=131614
+tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000000 tex=131 tx=05 n=466 stages=58671614
+tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000000 tex=131 tx=40 n=466 stages=58671614
+tri cc=272c04:1f0c93ff oml=0c193049 omh=00102000 geom=000004 tex=120 tx=4d n=464 stages=6
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=131 tx=80 n=463 stages=13471614
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=000004 tex=120 tx=80 n=461 stages=6
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=131 tx=40 n=451 stages=13471614
+tri cc=121824:ff33ffff oml=00552078 omh=00002000 geom=000005 tex=120 tx=c8 n=450 stages=1
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=131 tx=80 n=443 stages=02586713
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=c3 n=433 stages=013586
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=141 tx=00 n=432 stages=05867
+tri cc=ff97ff:ff2dfeff oml=00504341 omh=00002000 geom=000000 tex=140 tx=00 n=424 stages=213546713
+tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=120 tx=00 n=421 stages=561614
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=120 tx=00 n=409 stages=58671614
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=132 tx=80 n=389 stages=13471614
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=132 tx=40 n=387 stages=025486713
+tri cc=127fff:fffff238 oml=0c192078 omh=00102000 geom=000005 tex=120 tx=05 n=386 stages=214867
+tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=140 tx=00 n=384 stages=7
+rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020005 tex=131 tx=c0 n=365 stages=021354867161413
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=132 tx=40 n=365 stages=13471614
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=141 tx=c0 n=357 stages=05867
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=132 tx=80 n=356 stages=025486713
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=103 tx=00 n=355 stages=1347
+tri cc=121624:ff2fffff oml=00504341 omh=00002000 geom=000004 tex=120 tx=05 n=338 stages=21316
+tri cc=121624:ff2fffff oml=00504341 omh=00002000 geom=000004 tex=120 tx=01 n=338 stages=21316
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=103 tx=c0 n=334 stages=1347
+tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=120 tx=c0 n=328 stages=7
+tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000004 tex=131 tx=05 n=318 stages=2135467161413
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=c8 n=307 stages=0254713
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=102 tx=80 n=305 stages=258713
+tri cc=ffffff:fffe793c oml=005049d8 omh=00002000 geom=000005 tex=120 tx=00 n=298 stages=02
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=141 tx=c0 n=290 stages=021354867161413
+tri cc=127e24:fffff3f9 oml=00552048 omh=00002000 geom=060004 tex=120 tx=8c n=288 stages=13
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=102 tx=40 n=285 stages=258713
+tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=131 tx=c0 n=282 stages=24
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=08 n=277 stages=5
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=102 tx=00 n=272 stages=1
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=103 tx=c0 n=255 stages=258613
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=131 tx=00 n=252 stages=87
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=45 n=238 stages=025467
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=103 tx=00 n=237 stages=258613
+tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=102 tx=00 n=236 stages=7
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=102 tx=c0 n=232 stages=1
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=120 tx=40 n=231 stages=131614
+tri cc=ffffff:fffe7d3e oml=00552078 omh=00002000 geom=020005 tex=120 tx=c0 n=225 stages=587
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=c0 n=222 stages=017
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=120 tx=80 n=217 stages=131614
+rect cc=ffffff:fffdf6fb oml=005041c8 omh=00002000 geom=020005 tex=000 tx=00 n=206 stages=58671614
+tri cc=327e05:ff17f9ff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=00 n=192 stages=3
+tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=141 tx=00 n=192 stages=7
+rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=130 tx=00 n=191 stages=58671614
+tri cc=ffffff:fffe793c oml=005049d9 omh=00002000 geom=000005 tex=120 tx=0f n=184 stages=7
+tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=020005 tex=120 tx=40 n=181 stages=1354
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=141 tx=80 n=179 stages=05867
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=0d n=177 stages=7
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=141 tx=40 n=171 stages=05867
+tri cc=ffffff:fffe793c oml=005049d8 omh=00002000 geom=000005 tex=120 tx=05 n=156 stages=3
+tri cc=ffffff:fffe773b oml=005049d9 omh=00002000 geom=020005 tex=120 tx=0f n=150 stages=25
+tri cc=327e05:ff17f7ff oml=c4112078 omh=00102000 geom=000005 tex=102 tx=00 n=147 stages=3
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=121 tx=80 n=147 stages=13
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=131 tx=00 n=146 stages=0258613
+tri cc=121624:ff2fffff oml=00504341 omh=00002000 geom=000004 tex=102 tx=00 n=144 stages=6
+tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000005 tex=120 tx=00 n=144 stages=7
+tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=020005 tex=120 tx=80 n=143 stages=1354
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=88 n=142 stages=025467
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=03 n=142 stages=58
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=103 tx=80 n=139 stages=1347
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=102 tx=80 n=137 stages=1
+rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=130 tx=c0 n=134 stages=58671614
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=102 tx=40 n=131 stages=1
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=140 tx=00 n=131 stages=4
+tri cc=327e05:ff17fdff oml=c4112078 omh=00102000 geom=020005 tex=102 tx=00 n=129 stages=3
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=103 tx=40 n=128 stages=1347
+tri cc=121824:ff33ffff oml=00553048 omh=00002000 geom=000004 tex=120 tx=00 n=128 stages=58
+tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=131 tx=00 n=128 stages=7
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=141 tx=00 n=126 stages=13
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=131 tx=00 n=123 stages=13471614
+tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=000005 tex=120 tx=02 n=106 stages=713
+tri cc=30fe61:55fef379 oml=00504341 omh=00002000 geom=000000 tex=131 tx=0f n=106 stages=713
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=131 tx=c0 n=101 stages=0258613
+rect cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=020004 tex=131 tx=c0 n=98 stages=386714
+tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=000004 tex=131 tx=00 n=94 stages=25
+rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=130 tx=80 n=93 stages=58671614
+rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=130 tx=40 n=93 stages=58671614
+tri cc=ffffff:fffe7d3e oml=00552048 omh=00002000 geom=000004 tex=120 tx=04 n=90 stages=8
+tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=120 tx=00 n=88 stages=7
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=130 tx=00 n=85 stages=58671614
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=020005 tex=120 tx=48 n=82 stages=254
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=141 tx=c0 n=82 stages=13
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=120 tx=00 n=80 stages=4
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=131 tx=c0 n=77 stages=13471614
+tri cc=ffffff:fffe793c oml=005049d8 omh=00002000 geom=000005 tex=120 tx=c5 n=74 stages=8
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=102 tx=00 n=70 stages=7
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=103 tx=40 n=68 stages=258613
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=120 tx=c0 n=67 stages=254
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=48 n=65 stages=02467
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=08 n=65 stages=025467
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=103 tx=00 n=65 stages=1
+rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=131 tx=00 n=65 stages=58671614
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=130 tx=c0 n=62 stages=58671614
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=103 tx=80 n=60 stages=258613
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=103 tx=c0 n=58 stages=1
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=131 tx=80 n=54 stages=13471614
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=131 tx=40 n=54 stages=13471614
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=131 tx=80 n=49 stages=0258613
+tri cc=fffe05:ff167dff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=00 n=49 stages=7
+rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020004 tex=140 tx=40 n=48 stages=386
+tri cc=309661:552eff7f oml=00504341 omh=00002000 geom=000000 tex=131 tx=0f n=48 stages=6
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=141 tx=80 n=47 stages=13
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=102 tx=c0 n=47 stages=7
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=131 tx=40 n=46 stages=0258613
+rect cc=ffffff:fffdf6fb oml=00504340 omh=00002000 geom=020005 tex=000 tx=00 n=45 stages=021354867161413
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=0c n=45 stages=025467
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=140 tx=c0 n=45 stages=2486713
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=120 tx=80 n=43 stages=254
+rect cc=ffffff:fffcf279 oml=0f0a4001 omh=00002000 geom=020005 tex=102 tx=40 n=43 stages=16
+tri cc=ffffff:fffdf8fc oml=00552048 omh=00002000 geom=000004 tex=120 tx=80 n=42 stages=87
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=103 tx=40 n=41 stages=1
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=141 tx=40 n=41 stages=13
+tri cc=ffffff:fffe793c oml=005049d8 omh=00002000 geom=000005 tex=132 tx=0f n=40 stages=1
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020004 tex=120 tx=40 n=40 stages=4
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=0d n=37 stages=7
+tri cc=ffffff:fffdf8fc oml=00552048 omh=00002000 geom=000004 tex=120 tx=c0 n=35 stages=386
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=102 tx=80 n=33 stages=7
+tri cc=ffffff:fffe7d3e oml=00553048 omh=00002000 geom=000004 tex=120 tx=00 n=30 stages=7
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=102 tx=40 n=28 stages=7
+rect cc=119623:ff2fffff oml=00504345 omh=00002000 geom=020005 tex=120 tx=c0 n=25 stages=13
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=130 tx=c0 n=25 stages=486
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=103 tx=80 n=24 stages=1
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=130 tx=80 n=24 stages=5861614
+tri cc=121624:ff2fffff oml=005041c9 omh=00002000 geom=000004 tex=120 tx=49 n=22 stages=8
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=120 tx=00 n=21 stages=814
+tri cc=ffffff:fffdf8fc oml=00552048 omh=00002000 geom=000004 tex=120 tx=00 n=21 stages=8614
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020005 tex=141 tx=40 n=19 stages=0213548671613
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=140 tx=00 n=18 stages=2486
+tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=020004 tex=131 tx=00 n=18 stages=4
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=130 tx=40 n=17 stages=486
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=130 tx=40 n=17 stages=861614
+tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=020004 tex=132 tx=00 n=16 stages=14
+tri cc=40fe81:55fff3f9 oml=00553049 omh=00002000 geom=000004 tex=120 tx=00 n=16 stages=57
+tri cc=127e05:ff17f3ff oml=c4113079 omh=00102000 geom=000005 tex=120 tx=05 n=16 stages=5
+tri cc=ffffff:fffe793c oml=005041c9 omh=00002000 geom=000004 tex=132 tx=00 n=16 stages=7
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=140 tx=40 n=15 stages=486
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020004 tex=140 tx=80 n=15 stages=4867
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020004 tex=140 tx=80 n=15 stages=86
+tri cc=ffffff:fffe7d3e oml=005041c9 omh=00002000 geom=000004 tex=132 tx=00 n=14 stages=5
+tri cc=121824:ff33ffff oml=00504340 omh=00002000 geom=000004 tex=120 tx=00 n=14 stages=713
+tri cc=ffffff:fffdf6fb oml=005041c9 omh=00002000 geom=000004 tex=132 tx=00 n=13 stages=314
+tri cc=ffffff:fffe7d3e oml=005041c8 omh=00002000 geom=000004 tex=120 tx=00 n=12 stages=2
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=140 tx=c0 n=12 stages=314
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=00 n=12 stages=57
+tri cc=ffffff:fffe773b oml=005041c9 omh=00002000 geom=000004 tex=120 tx=09 n=11 stages=8
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=120 tx=84 n=10 stages=0546
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=130 tx=c0 n=10 stages=3
+rect cc=309661:552eff7f oml=00504241 omh=00002000 geom=020004 tex=131 tx=80 n=9 stages=86
+tri cc=127e24:fffff3f9 oml=00553049 omh=00002000 geom=000005 tex=120 tx=05 n=8 stages=3
+rect cc=ffffff:fffdf6fb oml=005041c8 omh=00002000 geom=020004 tex=000 tx=00 n=7 stages=814
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=4f n=7 stages=7
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=000005 tex=120 tx=cf n=7 stages=7
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=80 n=6 stages=01356
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=130 tx=00 n=6 stages=8
+rect cc=ffffff:fffdf2f9 oml=00504341 omh=00002000 geom=020004 tex=141 tx=80 n=6 stages=86
+tri cc=121624:ff2fffff oml=00504341 omh=00002000 geom=000004 tex=120 tx=40 n=6 stages=8
+rect cc=30b261:5566db6d oml=00504245 omh=00002000 geom=020005 tex=131 tx=40 n=5 stages=586714
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=140 tx=00 n=4 stages=1
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020005 tex=120 tx=40 n=4 stages=14
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=140 tx=80 n=3 stages=1
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=130 tx=40 n=3 stages=3
+rect cc=ffffff:fffdf2f9 oml=00504241 omh=00002000 geom=020004 tex=131 tx=c0 n=3 stages=3
+tri cc=ffffff:fffe773b oml=00504341 omh=00002000 geom=000004 tex=103 tx=00 n=3 stages=8
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=000005 tex=120 tx=04 n=2 stages=1
+tri cc=ffffff:fffdf6fb oml=005041c9 omh=00002000 geom=000004 tex=120 tx=00 n=2 stages=3
+tri cc=ffffff:fffe7d3e oml=005041c8 omh=00002000 geom=000004 tex=120 tx=0c n=2 stages=5
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=130 tx=c0 n=2 stages=8
+rect cc=30b261:5566db6d oml=00504345 omh=00002000 geom=020005 tex=140 tx=40 n=1 stages=1
+tri cc=127e24:fffff3f9 oml=00552078 omh=00002000 geom=020005 tex=102 tx=08 n=1 stages=3
+tri cc=30fe61:55fef379 oml=005041c9 omh=00002000 geom=000004 tex=131 tx=c0 n=1 stages=3
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=130 tx=80 n=1 stages=8
+rect cc=119623:ff2fffff oml=00504245 omh=00002000 geom=020004 tex=130 tx=40 n=1 stages=8
+tri cc=127e05:ff17f3ff oml=c4112078 omh=00102000 geom=060005 tex=120 tx=85 n=1 stages=16
+rect cc=ffffff:fffcf279 oml=0f0a4001 omh=00002000 geom=020005 tex=102 tx=c0 n=1 stages=16
+COVMW 0 448764
+COVMW 2 38276
+COVMW 4 23056
+COVMW 6 317117
+COVMW 10 2061732
+COVMW 14 8080
+COVOP e6 1648245
+COVOP e7 4520942
+COVOP e8 450340
+COVOP e9 5764
 COVBAD vtx=0 NaN
