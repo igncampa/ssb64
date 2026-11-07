@@ -577,6 +577,30 @@ fn rdp_block_names<'a>(masters: impl Iterator<Item = &'a str>) -> std::collectio
             let end = rest.find(|c: char| !(c.is_ascii_alphanumeric() || c == '_')).unwrap_or(rest.len());
             if rest[..end].contains("_lut") { out.insert(rest[..end].to_string()); }
         }
+        // Material animations name their palettes (and texture frames) in `void *` tables (MObjSub
+        // palette lists, e.g. Final Destination's platform seams): gcDrawMObj hands them to gDPLoadTLUT /
+        // gDPSetTextureImage, so the RDP reads them. `void *` tables also hold sub-structures the CPU
+        // reads, so only names declared in this file as palette or texture blocks are taken.
+        let mut rest = text;
+        while let Some(i) = rest.find("void *d") {
+            rest = &rest[i + 7..];
+            let Some(open) = rest.find('{') else { break };
+            let semi = rest.find(';').unwrap_or(rest.len());
+            if open > semi { continue; }
+            let Some(close) = rest[open..].find('}') else { break };
+            for t in idents(&rest[open..open + close]) {
+                // the definition: `u16 dSym[N] = {` then its #include on the next line
+                let key = format!(" {t}[");
+                for (d, _) in text.match_indices(&key) {
+                    let mut e = text.len().min(d + key.len() + 200); while !text.is_char_boundary(e) { e -= 1; }
+                    let tail = &text[d + key.len()..e];
+                    let Some(eq) = tail.find(']') else { continue };
+                    if !tail[eq..].starts_with("] = {") { continue; }
+                    let line = tail[eq..].lines().nth(1).unwrap_or("");
+                    if line.contains("#include") && (line.contains(".palette.inc.c") || line.contains(".tex.inc.c")) { if std::env::var_os("RDPNAMES").is_some() { eprintln!("matanim table: {t}"); } out.insert(t.to_string()); }
+                }
+            }
+        }
         for prefix in ["u16 *d", "u8 *d", "u16 * d", "u8 * d"] {
             let mut rest = text;
             while let Some(i) = rest.find(prefix) {
