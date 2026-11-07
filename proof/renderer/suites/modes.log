@@ -1,0 +1,10 @@
+ok   Leave: back to the Join screen and the lobby music stops heads 33672 53544 54648 54648
+ok   the game fails to load: a message, Join disabled, no hanging join The game could not load: game data failed its hash check. Reload the page to try again.
+ok   auto-join, default policy: sound runs after one press before running (button "Sound on") after running ("Sound on")
+ok   auto-join, press required: sound runs after one press before suspended (button "Click for sound") after running ("Sound on")
+ok   the relay stops answering: "Your connection stopped.", then it clears saw "Your connection stopped." after "" 4/234/up/false/racing 4/745/up/false/racing 4/1256/up/false/racing 4/1764/up/false/racing 4/2275/up/false/racing 4/2787/up/false/racing
+ok   a refusal while racing: the match stops, the lobby shows why mode join err "The game was updated. Reload the page to join."
+ok   the relay is gone after the end: the Join screen with a message, not the last frame "Connection lost. Check your connection and join again."
+ok   portal, relay down for 20 s: a few reconnects, not dozens 7 sockets
+ok   portal: a 22-character name still loading, then joined: START is enabled note was "Waiting for Bartholomew-the- to load."
+fails=0

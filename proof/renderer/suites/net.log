@@ -1,0 +1,98 @@
+ok   lockstep two pages
+     c0 slot 0 frames frame 1201 conf 1200 rtt 0 rb 0 resim 0 depth 0 repl 0 stalls 1 hashes 81 desync null ev go,clock 
+     c1 slot 1 frames frame 1201 conf 1200 rtt 1 rb 0 resim 0 depth 0 repl 0 stalls 1 hashes 81 desync null ev go,clock 
+     corrections by frames rewound {}
+ok   rollback two pages, no lag
+     c0 slot 0 frames frame 1805 conf 1801 rtt 0 rb 257 resim 1033 depth 9 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1804 conf 1800 rtt 0 rb 256 resim 1030 depth 10 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"4":511,"9":1,"10":1}
+ok   rollback four pages, 40 ms each way
+     c0 slot 0 frames frame 1808 conf 1800 rtt 80 rb 161 resim 1293 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1809 conf 1801 rtt 81 rb 161 resim 1268 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c2 slot 2 frames frame 1808 conf 1800 rtt 80 rb 167 resim 1342 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c3 slot 3 frames frame 1808 conf 1800 rtt 81 rb 170 resim 1366 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"7":27,"8":628,"14":4}
+ok   rollback eight pages, 40 ms each way
+     c0 slot 0 frames frame 1808 conf 1800 rtt 81 rb 209 resim 1678 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1808 conf 1800 rtt 81 rb 212 resim 1702 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c2 slot 2 frames frame 1808 conf 1800 rtt 80 rb 212 resim 1702 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c3 slot 3 frames frame 1808 conf 1800 rtt 80 rb 211 resim 1694 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c4 slot 4 frames frame 1808 conf 1800 rtt 80 rb 211 resim 1694 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c5 slot 5 frames frame 1808 conf 1800 rtt 80 rb 208 resim 1670 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c6 slot 6 frames frame 1808 conf 1800 rtt 81 rb 189 resim 1480 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c7 slot 7 frames frame 1808 conf 1800 rtt 81 rb 212 resim 1702 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"7":38,"8":1618,"14":8}
+ok   eight pages, mixed lag 5 to 120 ms and jitter
+     c0 slot 0 frames frame 1805 conf 1800 rtt 19 rb 256 resim 1231 depth 18 repl 0 stalls 7 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1807 conf 1801 rtt 48 rb 266 resim 1782 depth 18 repl 0 stalls 6 hashes 121 desync null ev go,clock 
+     c2 slot 2 frames frame 1809 conf 1800 rtt 85 rb 257 resim 2273 depth 18 repl 0 stalls 6 hashes 121 desync null ev go,clock 
+     c3 slot 3 frames frame 1811 conf 1800 rtt 118 rb 252 resim 2656 depth 18 repl 0 stalls 6 hashes 121 desync null ev go,clock 
+     c4 slot 4 frames frame 1813 conf 1801 rtt 147 rb 261 resim 3225 depth 18 repl 0 stalls 7 hashes 121 desync null ev go,clock 
+     c5 slot 5 frames frame 1815 conf 1800 rtt 184 rb 244 resim 3484 depth 18 repl 0 stalls 6 hashes 121 desync null ev go,clock 
+     c6 slot 6 frames frame 1818 conf 1801 rtt 223 rb 269 resim 4311 depth 18 repl 0 stalls 7 hashes 121 desync null ev go,clock 
+     c7 slot 7 frames frame 1818 conf 1800 rtt 239 rb 275 resim 4919 depth 18 repl 0 stalls 191 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"3":5,"4":55,"5":200,"6":78,"7":184,"8":45,"9":221,"10":99,"11":153,"12":147,"13":123,"14":134,"15":112,"16":211,"17":61,"18":252}
+ok   eight pages, two go away, their fighters stand, nobody plays them
+     c0 slot 0 frames frame 1504 conf 1500 rtt 1 rb 160 resim 643 depth 9 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":40},"back":{"n":0,"moved":0}} 
+     c1 slot 1 frames frame 1504 conf 1500 rtt 1 rb 163 resim 655 depth 9 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":40},"back":{"n":0,"moved":0}} 
+     c2 slot 2 frames frame 1504 conf 1500 rtt 1 rb 164 resim 659 depth 9 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":40},"back":{"n":0,"moved":0}} 
+     c3 slot 3 frames frame 1504 conf 1500 rtt 1 rb 161 resim 644 depth 10 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":40},"back":{"n":0,"moved":0}} 
+     c4 slot 4 frames frame 1504 conf 1500 rtt 1 rb 158 resim 631 depth 10 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":40},"back":{"n":0,"moved":0}} 
+     c5 slot 5 frames frame 1504 conf 1500 rtt 1 rb 157 resim 631 depth 9 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":40},"back":{"n":0,"moved":0}} 
+     c6 slot 6 frames frame 1504 conf 1500 rtt 1 rb 179 resim 719 depth 9 repl 110 stalls 0 hashes 101 desync null ev go,clock,away7,away6 idle {"away":{"n":959,"moved":0},"here":{"n":550,"moved":10},"back":{"n":0,"moved":0}} 
+     c7 slot 7 gone:left frame 500 conf 496 rtt 0 rb 57 resim 233 depth 9 repl 97 stalls 0 hashes 34 desync null ev go,clock,gone idle {"away":{"n":0,"moved":0},"here":{"n":511,"moved":40},"back":{"n":0,"moved":0}} 
+     corrections by frames rewound {"2":7,"3":9,"4":1175,"9":6,"10":2}
+     ninth page: lobby full
+ok   a ninth page is refused
+     c0 slot 0 frames frame 304 conf 300 rtt 1 rb 65 resim 266 depth 10 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c1 slot 1 frames frame 304 conf 300 rtt 0 rb 55 resim 219 depth 10 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c2 slot 2 frames frame 304 conf 300 rtt 1 rb 65 resim 265 depth 9 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c3 slot 3 frames frame 304 conf 300 rtt 1 rb 65 resim 265 depth 9 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c4 slot 4 frames frame 304 conf 300 rtt 1 rb 65 resim 265 depth 9 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c5 slot 5 frames frame 304 conf 300 rtt 1 rb 65 resim 265 depth 9 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c6 slot 6 frames frame 304 conf 300 rtt 0 rb 64 resim 261 depth 9 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     c7 slot 7 frames frame 305 conf 301 rtt 0 rb 50 resim 196 depth 9 repl 0 stalls 0 hashes 21 desync null ev go,clock 
+     corrections by frames rewound {"3":16,"4":470,"9":6,"10":2}
+ok   five pages and CPUs up to eight fighters
+     c0 slot 0 frames frame 1806 conf 1800 rtt 40 rb 180 resim 1085 depth 11 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1806 conf 1800 rtt 41 rb 178 resim 1060 depth 12 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c2 slot 2 frames frame 1806 conf 1800 rtt 41 rb 182 resim 1098 depth 12 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c3 slot 3 frames frame 1806 conf 1800 rtt 40 rb 190 resim 1146 depth 12 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c4 slot 4 frames frame 1806 conf 1800 rtt 41 rb 184 resim 1103 depth 12 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"5":21,"6":888,"11":1,"12":4}
+ok   rollback lopsided lag 100 and 10 ms, wrong predictions
+     c0 slot 0 frames frame 1805 conf 1800 rtt 21 rb 257 resim 1297 depth 18 repl 0 stalls 3 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1816 conf 1800 rtt 201 rb 256 resim 4098 depth 18 repl 0 stalls 3 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"4":1,"5":255,"16":255,"18":2}
+ok   jitter 30 ms
+     c0 slot 0 frames frame 1807 conf 1801 rtt 48 rb 319 resim 2195 depth 14 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1807 conf 1800 rtt 53 rb 311 resim 2073 depth 15 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     c2 slot 2 frames frame 1807 conf 1800 rtt 61 rb 325 resim 2185 depth 15 repl 0 stalls 0 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"4":2,"5":52,"6":242,"7":559,"8":97,"14":1,"15":2}
+ok   a very laggy page does not hold the others
+     c0 slot 0 frames frame 1804 conf 1800 rtt 11 rb 97 resim 405 depth 18 repl 1765 stalls 12 hashes 121 desync null ev go,clock 
+     c1 slot 1 frames frame 1818 conf 1800 rtt 361 rb 425 resim 7649 depth 18 repl 1765 stalls 1808 hashes 121 desync null ev go,clock 
+     corrections by frames rewound {"4":95,"7":1,"17":1,"18":425}
+ok   a slow page costs the others nothing
+     c0 slot 0 frames frame 1504 conf 1500 rtt 0 rb 81 resim 341 depth 18 repl 1484 stalls 12 hashes 101 desync null ev go,clock 
+     c1 slot 1 frames frame 1502 conf 1500 rtt 61 rb 83 resim 357 depth 12 repl 1486 stalls 0 hashes 101 desync null ev go,clock,away0 
+     corrections by frames rewound {"1":14,"2":5,"3":11,"4":98,"5":8,"6":3,"7":23,"12":1,"18":1}
+ok   a page that stops goes away, its fighter stands, the others play on
+     c0 slot 0 frames frame 1504 conf 1500 rtt 0 rb 91 resim 367 depth 9 repl 111 stalls 0 hashes 101 desync null ev go,clock,away2 idle {"away":{"n":958,"moved":0},"here":{"n":551,"moved":40},"back":{"n":0,"moved":0}} 
+     c1 slot 1 frames frame 1504 conf 1500 rtt 0 rb 91 resim 369 depth 9 repl 111 stalls 0 hashes 101 desync null ev go,clock,away2 idle {"away":{"n":958,"moved":0},"here":{"n":551,"moved":40},"back":{"n":0,"moved":0}} 
+     c2 slot 2 frames frame 1504 conf 1500 rtt 1 rb 133 resim 535 depth 9 repl 111 stalls 0 hashes 101 desync null ev go,clock,away2 idle {"away":{"n":958,"moved":0},"here":{"n":551,"moved":10},"back":{"n":0,"moved":0}} 
+     corrections by frames rewound {"2":2,"4":310,"9":3}
+ok   a page that leaves: its fighter stands
+     c0 slot 0 frames frame 1504 conf 1500 rtt 0 rb 91 resim 370 depth 10 repl 0 stalls 0 hashes 101 desync null ev go,clock,away2 idle {"away":{"n":1072,"moved":0},"here":{"n":437,"moved":11},"back":{"n":0,"moved":0}} 
+     c1 slot 1 frames frame 1504 conf 1500 rtt 0 rb 91 resim 370 depth 10 repl 0 stalls 0 hashes 101 desync null ev go,clock,away2 idle {"away":{"n":1072,"moved":0},"here":{"n":437,"moved":11},"back":{"n":0,"moved":0}} 
+     c2 slot 2 gone:left frame 400 conf 396 rtt 0 rb 35 resim 146 depth 10 repl 0 stalls 0 hashes 27 desync null ev go,clock,gone idle {"away":{"n":0,"moved":0},"here":{"n":406,"moved":10},"back":{"n":0,"moved":0}} 
+     corrections by frames rewound {"4":214,"10":3}
+ok   a whole match to its end
+     c0 slot 0 ended frame 4086 conf 4086 rtt 60 rb 219 resim 1513 depth 13 repl 0 stalls 0 hashes 273 desync null ev go,clock,ended 
+     c1 slot 1 ended frame 4086 conf 4086 rtt 61 rb 222 resim 1558 depth 13 repl 0 stalls 0 hashes 273 desync null ev go,clock,ended 
+     corrections by frames rewound {"6":28,"7":411,"13":2}
+ok   a stock match to its end with a CPU
+     c0 slot 0 ended frame 2546 conf 2546 rtt 40 rb 136 resim 822 depth 12 repl 0 stalls 0 hashes 170 desync null ev go,clock,ended 
+     c1 slot 1 ended frame 2546 conf 2546 rtt 41 rb 139 resim 839 depth 11 repl 0 stalls 0 hashes 170 desync null ev go,clock,ended 
+     corrections by frames rewound {"6":273,"11":1,"12":1}
+fails=0

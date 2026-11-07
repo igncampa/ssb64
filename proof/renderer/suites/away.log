@@ -1,0 +1,29 @@
+ok   away (hidden tab, 6 s): the fighter stands, comes back, plays again, hashes equal
+     c0 slot 0 frames frame 2406 rb 170 hashes 161 overAfterEnd null idle {"away":{"n":334,"moved":0},"here":{"n":441,"moved":14},"back":{"n":1637,"moved":1576}} ev go,clock,away2,back2 
+     c1 slot 1 frames frame 2406 rb 183 hashes 161 overAfterEnd null idle {"away":{"n":334,"moved":0},"here":{"n":440,"moved":14},"back":{"n":1637,"moved":1576}} ev go,clock,away2,back2 
+     c2 slot 2 frames frame 2406 rb 157 hashes 161 overAfterEnd null idle {"away":{"n":8,"moved":6},"here":{"n":406,"moved":10},"back":{"n":1637,"moved":1577}} ev go,clock,paused,away2,back2 
+ok   away by silence (no hidden message, 5 s): stands, comes back, hashes equal
+     c0 slot 0 frames frame 2404 rb 115 hashes 161 overAfterEnd null idle {"away":{"n":158,"moved":0},"here":{"n":551,"moved":40},"back":{"n":1700,"moved":1651}} ev go,clock,away1,back1 
+     c1 slot 1 frames frame 2404 rb 117 hashes 161 overAfterEnd null idle {"away":{"n":2,"moved":1},"here":{"n":406,"moved":10},"back":{"n":1700,"moved":1652}} ev go,clock,paused,away1,back1 
+ok   a background page does not hold up the end of the match
+     c0 slot 0 ended frame 4086 rb 56 hashes 273 overAfterEnd 1 idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,away1,ended,over:finished 
+     c1 slot 1 over:finished frame 1000 rb 54 hashes 67 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,paused,away1,over:finished 
+ok   a page whose match fails to start does not hold anyone
+     c0 slot 0 ended frame 4086 rb 0 hashes 273 overAfterEnd 1 idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,away1,ended,over:finished 
+     c1 slot 1 over:finished frame -1 rb 0 hashes 0 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev failed,clock,away1,over:finished 
+ok   a desync ends the race, then the room starts again and stays in sync
+     c0 slot 0 ended frame 4086 rb 218 hashes 273 overAfterEnd 0 idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,desync,over:desync,go,clock,ended,over:finished 
+     c1 slot 1 ended frame 4086 rb 222 hashes 273 overAfterEnd 14 idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,desync,over:desync,go,clock,ended,over:finished 
+ok   a socket gone for 2 s comes back and plays on
+     c0 slot 0 frames frame 2404 rb 118 hashes 161 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,away1,back1 
+     c1 slot 1 frames frame 2404 rb 122 hashes 161 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,dropped,closed,rejoined,resumed,back1 
+ok   a socket gone for 20 s (past the old 15 s history) catches up and plays on
+     c0 slot 0 frames frame 3004 rb 83 hashes 201 overAfterEnd null idle {"away":{"n":1391,"moved":0},"here":{"n":537,"moved":111},"back":{"n":1081,"moved":1080}} ev go,clock,away1,back1 
+     c1 slot 1 frames frame 3004 rb 95 hashes 201 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":3009,"moved":2603},"back":{"n":0,"moved":0}} ev go,clock,dropped,closed,rejoined,resumed,back1 
+ok   a socket gone for 40 s gives up with a message, the others play on
+     c0 slot 0 frames frame 3605 rb 26 hashes 241 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,away1 
+     c1 slot 1 gone:lost frame 501 rb 31 hashes 34 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,dropped,closed,gone:lost 
+ok   a page reloaded mid-match rejoins it from the start and agrees
+     c0 slot 0 frames frame 2404 rb 114 hashes 161 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,away1,back1,away1 
+     c1 slot 1 frames frame 2404 rb 70 hashes 161 overAfterEnd null idle {"away":{"n":0,"moved":0},"here":{"n":0,"moved":0},"back":{"n":0,"moved":0}} ev go,clock,reload,go,resumed,back1 
+fails=0
