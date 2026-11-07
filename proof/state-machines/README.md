@@ -1,6 +1,6 @@
 # State machines: what changed, what was proven
 
-Branch `state-machines` (worktree `~/sb64/ssb64-spec`), on top of the spec commit `4fd4b80ee`. Not deployed, not
+Branch `state-machines` (worktree `~/sb64/ssb64-spec`), on top of the spec commit `4fd4b80ee`. Deployed 6 Nov 2026 as build 9c0809ae7ff8d638 (superseded by 47c1ade4, then 49c2190f). Not
 pushed. Every proof ran on this machine against private relays on ports 18100-18199, serving the worktree's own
 `web/`. The live site and its relay were not touched. Final build id `9c0809ae7ff8d638`, data `940006dec6a536a7`.
 

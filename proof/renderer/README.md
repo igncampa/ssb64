@@ -1,6 +1,6 @@
 # Renderer: spec/renderer.md phases 0-5
 
-Branch `renderer` (worktree `~/sb64/ssb64-render`) on top of `3d049486d`. Not pushed, not deployed. Every
+Branch `renderer` (worktree `~/sb64/ssb64-render`) on top of `3d049486d`. Pushed as 2a8103974; deployed 6 Nov 2026 as build 49c2190f7b082d3f. Every
 run here used this worktree's own `web/` and relay, test ports 18400-18499; the live site was not touched.
 
 ## Commits

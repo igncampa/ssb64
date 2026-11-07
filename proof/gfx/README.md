@@ -1,6 +1,6 @@
 # Meta Crystal, Metal Mario, and the "slightly laggy" match
 
-Branch `gfx-metal-crystal` (worktree `~/sb64/ssb64-gfx`) on top of `101a89370`. Not deployed, not pushed.
+Branch `gfx-metal-crystal` (worktree `~/sb64/ssb64-gfx`) on top of `101a89370`. Pushed as 3d049486d; deployed 6 Nov 2026 as build 47c1ade42215a22e (superseded by 49c2190f).
 Everything here ran against a private static server on a random port with the worktree's own
 `build/us/port/devweb`; the live site was not touched.
 

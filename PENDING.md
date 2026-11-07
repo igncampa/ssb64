@@ -1,6 +1,8 @@
 # ssb64: pending items
 
-State when work stopped, 4 Nov 2026. The game is live at https://ssb64.guanavibes.com. Every automated proof passes. No group of people has played it yet.
+Written 4 Nov 2026, updated 7 Nov 2026. The game is live at https://ssb64.guanavibes.com.
+
+**Live now (7 Nov):** build `49c2190f7b082d3f`, data `16ffa10ab963edb9`, from `2a8103974`. It holds the VS extras, the state machines, the Meta Crystal / Metal Mario palette fix and the new renderer. The relay runs from `~/sb64/ssb64` without tmux (`setsid`, log `~/.cache/ssb64-deploy/relay-live.log`): `PORT=8080 SITE=web BUILD_ID=49c2190f7b082d3f RELAY_SECRET= relay/target/release/ssb64-relay`. Earlier sites: `~/.cache/ssb64-deploy/prev-*` (70046cd0, 9c0809ae, 47c1ade4). Every automated proof passes. No group of people has played it yet.
 
 What each spec implemented, skipped or left open: `SPECS.md`.
 
@@ -46,19 +48,16 @@ What each spec implemented, skipped or left open: `SPECS.md`.
 - The stock icon that flies during a steal stays full size in the small 8-player row. A stock count above 6 also uses full-size icons there.
 - Debug page flags are off inside a real lobby, but the wasm test functions are not locked.
 
-## VS extras, built on branch `extras`, not deployed (6 Nov)
+## VS extras (6 Nov), live since 6 Nov (build 70046cd0, now in 49c2190f)
 
 Meta Crystal, Duel Zone, Final Destination; Metal Mario, Giant DK, the Fighting Polygons; the item switch as a
 checklist. Also fixes random items always coming out as one kind. Proofs and what is left: `proof/extras/README.md`.
-Deploying means merging the branch, building the page into `web/` and staging it.
 
-## State machines, built on branch `state-machines`, not deployed (6 Nov)
+## State machines (6 Nov), live since 6 Nov (build 9c0809ae, now in 49c2190f)
 
 The owner's rules from `spec/state-machines.md`: no CPU takes an away player's fighter (it stands on the zero pad and
 plays again when they are back), away pages never hold up the end, a desync ends the race. Proofs and what is left:
-`proof/state-machines/README.md`. Deploying means building the page into `web/`, staging page and relay together
-(the build id now covers the page code) and restarting the relay, which drops matches in progress. The n64 portal
-carries a copy of the relay (`~/n64/crates/ssb64-lobby`) and pins the page: it needs the same relay changes.
+`proof/state-machines/README.md`. The n64 portal's relay copy (`~/n64/crates/ssb64-lobby`) has the same changes.
 
 - **A player who pauses and then goes away** leaves the match paused: only the pausing player can unpause, and
   their pad is now the zero pad. The same was true with the old CPU takeover (a CPU never presses Start).

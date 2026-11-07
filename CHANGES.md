@@ -30,7 +30,7 @@ What the owner noticed, and what was found under it. Proofs in `proof/changes2/`
 
 ## Third pass, 6 Nov 2026: the state machines (`spec/state-machines.md`), branch `state-machines`
 
-Not deployed. Page and relay change together (the build id now covers the page code too). Proofs: `proof/state-machines/`.
+Deployed 6 Nov 2026 (build `9c0809ae7ff8d638`). Page and relay change together (the build id now covers the page code too). Proofs: `proof/state-machines/`.
 
 - **No CPU ever takes a fighter (owner).** A player who is away (hidden tab, socket gone, silent 3 s, or whose
   match failed to start) gets the zero pad from the relay for every frame: the fighter stands. When their pads
