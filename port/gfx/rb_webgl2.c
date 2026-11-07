@@ -7,7 +7,7 @@
 #include "gfx.h"
 #include "port_prof.h"
 
-typedef struct { uint32_t hi, lo; int flags; GLuint prog; GLint uPrim, uEnv, uFog, uBlendA, uLod, uS0, uS1, uScale0, uScale1; uint32_t used; int next; } Prog;
+typedef struct { uint32_t hi, lo, bl; int flags; GLuint prog; GLint uPrim, uEnv, uFog, uBlendC, uBlendA, uLod, uS0, uS1, uScale0, uScale1; uint32_t used; int next; } Prog;
 // Programs: a hash on (combine words, flags) and, when the table is full, the least recently used one goes.
 #define MAXP 512
 #define PHASH 1024
@@ -41,28 +41,46 @@ static GLuint compile(GLenum ty, const char *src)
     return s;
 }
 
-enum { F_FOG = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32 };
+enum { F_DITHER = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32 };
+
+// Blender inputs in the shader (gfx.h codes). MEM is never read here: GL blending supplies it.
+static const char *bl_col(int i) { static const char *n[] = { "cin", "cin", "uBlendC", "uFog.rgb" }; return n[i & 3]; }
+static const char *bl_a(int i) { static const char *n[] = { "ain", "uFog.a", "vc.a", "0.0" }; return n[i & 3]; }
+static const char *bl_b(int i) { static const char *n[] = { "(1.0-a)", "1.0", "1.0", "0.0" }; return n[i & 3]; }
+static int blender_glsl(char *o, uint32_t bl)
+{
+    int n = 0, fin = (bl >> 9) & 0xFF, P = fin >> 6, A = (fin >> 4) & 3, M = (fin >> 2) & 3, B = fin & 3;
+    n += sprintf(o + n, "vec3 cin=cmb.rgb; float ain=%s; float a;\n", (bl & BL_AIN1) ? "1.0" : "cmb.a");
+    if (bl & 0x100) { int c = bl & 0xFF; // first cycle of two
+        n += sprintf(o + n, "a=%s; cin=%s*a+%s*%s;\n", bl_a(c >> 4), bl_col(c >> 6), bl_col(c >> 2), bl_b(c)); }
+    n += sprintf(o + n, "a=%s;\n", bl_a(A));
+    if (!(bl & BL_FORCE)) n += sprintf(o + n, "o=vec4(%s,1.0);\n", bl_col(P));
+    else if (P != 1 && M != 1) n += sprintf(o + n, "o=vec4(%s*a+%s*%s,1.0);\n", bl_col(P), bl_col(M), bl_b(B));
+    else if (P != 1) n += sprintf(o + n, "o=vec4(%s,a);\n", bl_col(P));
+    else n += sprintf(o + n, "o=vec4(%s,a);\n", bl_col(M));
+    return n;
+}
 
 static Prog *lp; // the program GL has bound
-static Prog *program(uint32_t hi, uint32_t lo, int flags)
+static Prog *program(uint32_t hi, uint32_t lo, uint32_t bl, int flags)
 {
     static char fs[8192];
     int i, n;
     GLuint p;
     Prog *pr;
-    uint32_t hb = ((hi * 2654435761u) ^ (lo * 40503u) ^ ((uint32_t)flags * 97u)) & (PHASH - 1);
-    for (i = sPHead[hb] - 1; i >= 0; i = sP[i].next - 1) if (sP[i].hi == hi && sP[i].lo == lo && sP[i].flags == flags) { sP[i].used = sFrame; return &sP[i]; }
+    uint32_t hb = ((hi * 2654435761u) ^ (lo * 40503u) ^ (bl * 2246822519u) ^ ((uint32_t)flags * 97u)) & (PHASH - 1);
+    for (i = sPHead[hb] - 1; i >= 0; i = sP[i].next - 1) if (sP[i].hi == hi && sP[i].lo == lo && sP[i].bl == bl && sP[i].flags == flags) { sP[i].used = sFrame; return &sP[i]; }
     if (sNP < MAXP) i = sNP++;
     else { // full: drop the least recently used program
         int j, *pp; uint32_t ob;
         for (i = 0, j = 1; j < MAXP; j++) if (sFrame - sP[j].used > sFrame - sP[i].used) i = j;
-        ob = ((sP[i].hi * 2654435761u) ^ (sP[i].lo * 40503u) ^ ((uint32_t)sP[i].flags * 97u)) & (PHASH - 1);
+        ob = ((sP[i].hi * 2654435761u) ^ (sP[i].lo * 40503u) ^ (sP[i].bl * 2246822519u) ^ ((uint32_t)sP[i].flags * 97u)) & (PHASH - 1);
         for (pp = &sPHead[ob]; *pp; pp = &sP[*pp - 1].next) if (*pp - 1 == i) { *pp = sP[i].next; break; }
         if (lp == &sP[i]) lp = NULL;
         glDeleteProgram(sP[i].prog); gPortCount[COUNT_PROGLIVE]--;
     }
     n = sprintf(fs, "#version 300 es\nprecision highp float; in vec2 vt; in vec4 vc; out vec4 o;\n"
-        "uniform vec4 uPrim,uEnv; uniform vec3 uFog; uniform float uBlendA,uLod; uniform sampler2D uS0,uS1; uniform vec2 uScale0,uScale1;\n"
+        "uniform vec4 uPrim,uEnv,uFog; uniform vec3 uBlendC; uniform float uBlendA,uLod; uniform sampler2D uS0,uS1; uniform vec2 uScale0,uScale1;\n"
         "float noise(){ return fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); }\n"
         "void main(){ vec4 t0=%s; vec4 t1=%s; vec4 cmb=vec4(0.0);\n",
         (flags & F_TEX0) ? "texture(uS0,vt*uScale0)" : "vec4(1.0)", (flags & F_TEX1) ? "texture(uS1,vt*uScale1)" : "t0");
@@ -75,18 +93,20 @@ static Prog *program(uint32_t hi, uint32_t lo, int flags)
         n += sprintf(fs + n, "cmb.rgb=(%s-%s)*%s+%s; cmb.a=(%s-%s)*%s+%s;\n", rgb_a(a0), rgb_b(b0), rgb_c(c0), rgb_d(d0), a_abd(Aa0), a_abd(Ab0), a_c(Ac0), a_abd(Ad0));
         if (flags & F_2CYC) n += sprintf(fs + n, "{ vec4 prev=cmb; cmb.rgb=(%s-%s)*%s+%s; cmb.a=(%s-%s)*%s+%s; }\n", rgb_a(a1), rgb_b(b1), rgb_c(c1), rgb_d(d1), a_abd(Aa1), a_abd(Ab1), a_c(Ac1), a_abd(Ad1));
     }
-    if (flags & F_FOG) n += sprintf(fs + n, "cmb.rgb=mix(cmb.rgb,uFog,vc.a);\n");
+    n += sprintf(fs + n, "cmb=clamp(cmb,0.0,1.0);\n");
     if (flags & F_ATEST) n += sprintf(fs + n, "if(cmb.a<=uBlendA) discard;\n");
+    if (flags & F_DITHER) n += sprintf(fs + n, "if(cmb.a<noise()) discard;\n");
     if (flags & F_EDGE) n += sprintf(fs + n, "if(cmb.a<0.125) discard;\n");
-    sprintf(fs + n, "o=clamp(cmb,0.0,1.0); }\n");
+    n += blender_glsl(fs + n, bl);
+    sprintf(fs + n, "o=clamp(o,0.0,1.0); }\n");
     p = glCreateProgram();
     { static GLuint vs; GLuint f = compile(GL_FRAGMENT_SHADER, fs);
       if (!vs) vs = compile(GL_VERTEX_SHADER, VS);
       glAttachShader(p, vs); glAttachShader(p, f); glLinkProgram(p); glDetachShader(p, f); glDeleteShader(f); }
     pr = &sP[i];
-    pr->hi = hi; pr->lo = lo; pr->flags = flags; pr->prog = p; pr->used = sFrame;
+    pr->hi = hi; pr->lo = lo; pr->bl = bl; pr->flags = flags; pr->prog = p; pr->used = sFrame;
     pr->next = sPHead[hb]; sPHead[hb] = i + 1; gPortCount[COUNT_PROGLIVE]++;
-    pr->uPrim = glGetUniformLocation(p, "uPrim"); pr->uEnv = glGetUniformLocation(p, "uEnv"); pr->uFog = glGetUniformLocation(p, "uFog");
+    pr->uPrim = glGetUniformLocation(p, "uPrim"); pr->uEnv = glGetUniformLocation(p, "uEnv"); pr->uFog = glGetUniformLocation(p, "uFog"); pr->uBlendC = glGetUniformLocation(p, "uBlendC");
     pr->uBlendA = glGetUniformLocation(p, "uBlendA"); pr->uLod = glGetUniformLocation(p, "uLod");
     pr->uS0 = glGetUniformLocation(p, "uS0"); pr->uS1 = glGetUniformLocation(p, "uS1");
     pr->uScale0 = glGetUniformLocation(p, "uScale0"); pr->uScale1 = glGetUniformLocation(p, "uScale1");
@@ -159,12 +179,15 @@ static void init(void)
 }
 
 static void flush(void);
+static void state_forget_depth(void);
+static int lcm = -1; // colour mask GL holds: 1 off, 0 on
 void rb_begin_frame(void)
 {
     if (!sCtx) init();
     flush();
     if (++sFrame % 60 == 0) tx_evict();
-    glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE); state_forget_depth();
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); lcm = 0;
     glDisable(GL_SCISSOR_TEST);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -188,7 +211,7 @@ static Prog *sProg;
 
 // What GL holds now, so a batch only sets what differs from the batch before it.
 static int lb = -1, ld = -1, ldecal = -1; static GLint lvp[4] = {-1,-1,-1,-1}, lsc[4] = {-1,-1,-1,-1};
-static float lprim[4], lenv[4], lfog[3], lblend, llod, lscale[2][2];
+static float lprim[4], lenv[4], lfog[4], lblc[3], lblend, llod, lscale[2][2];
 static void state_forget_depth(void) { ld = -1; }
 
 // Apply a draw state to GL. Called once per batch, and skips what the previous batch already set.
@@ -203,30 +226,36 @@ static void apply(const RbState *st)
     GLint vp[4], sc[4];
     Prog *p;
     int b, d;
-    if (st->fog) flags |= F_FOG;
     if (st->alpha_compare == 1) flags |= F_ATEST;
-    if (st->alpha_compare == 2) flags |= F_EDGE;
+    if (st->alpha_compare == 2) flags |= F_DITHER;
+    if (st->tex_edge) flags |= F_EDGE;
     if (st->two_cycle) flags |= F_2CYC;
     if (st->tex[0].key) flags |= F_TEX0;
     if (st->tex[1].key) flags |= F_TEX1;
-    p = program(st->combine_hi, st->combine_lo, flags);
+    p = program(st->combine_hi, st->combine_lo, st->blender, flags);
     if (p != lp) {
         glUseProgram(p->prog); glUniform1i(p->uS0, 0); glUniform1i(p->uS1, 1);
         gPortCount[COUNT_PROGSWITCH]++; lp = p;
         // uniforms live per program: forget what was set
-        memset(lprim, 0x7f, sizeof lprim); memset(lenv, 0x7f, sizeof lenv); memset(lfog, 0x7f, sizeof lfog); memset(lscale, 0x7f, sizeof lscale); lblend = llod = -1;
+        memset(lprim, 0x7f, sizeof lprim); memset(lenv, 0x7f, sizeof lenv); memset(lfog, 0x7f, sizeof lfog); memset(lblc, 0x7f, sizeof lblc); memset(lscale, 0x7f, sizeof lscale); lblend = llod = -1;
     }
     if (memcmp(lprim, st->prim, sizeof lprim)) { glUniform4fv(p->uPrim, 1, st->prim); memcpy(lprim, st->prim, sizeof lprim); }
     if (memcmp(lenv, st->env, sizeof lenv)) { glUniform4fv(p->uEnv, 1, st->env); memcpy(lenv, st->env, sizeof lenv); }
-    if (memcmp(lfog, st->fogcolor, sizeof lfog)) { glUniform3fv(p->uFog, 1, st->fogcolor); memcpy(lfog, st->fogcolor, sizeof lfog); }
+    if (memcmp(lfog, st->fogcolor, sizeof lfog)) { glUniform4fv(p->uFog, 1, st->fogcolor); memcpy(lfog, st->fogcolor, sizeof lfog); }
+    if (memcmp(lblc, st->blendcolor, sizeof lblc)) { glUniform3fv(p->uBlendC, 1, st->blendcolor); memcpy(lblc, st->blendcolor, sizeof lblc); }
     if (lblend != st->blend_a) { glUniform1f(p->uBlendA, st->blend_a); lblend = st->blend_a; }
     if (llod != st->prim_lod) { glUniform1f(p->uLod, st->prim_lod); llod = st->prim_lod; }
     bind_tex(0, &st->tex[0]); bind_tex(1, &st->tex[1]);
     { float s0[2] = { st->tex[0].w ? 1.0f / st->tex[0].w : 1, st->tex[0].h ? 1.0f / st->tex[0].h : 1 }, s1[2] = { st->tex[1].w ? 1.0f / st->tex[1].w : 1, st->tex[1].h ? 1.0f / st->tex[1].h : 1 };
       if (memcmp(lscale[0], s0, sizeof s0)) { glUniform2f(p->uScale0, s0[0], s0[1]); memcpy(lscale[0], s0, sizeof s0); }
       if (memcmp(lscale[1], s1, sizeof s1)) { glUniform2f(p->uScale1, s1[0], s1[1]); memcpy(lscale[1], s1, sizeof s1); } }
-    b = st->alpha_blend != 0;
-    if (b != lb) { if (b) { glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); } else glDisable(GL_BLEND); lb = b; gPortCount[COUNT_STATE_BLEND]++; }
+    b = st->blend ? 1 | st->bsrc << 1 | st->bdst << 3 : 0;
+    if (b != lb) {
+        static const GLenum F[4] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
+        if (b) { if (!(lb > 0)) glEnable(GL_BLEND); glBlendFunc(F[st->bsrc], F[st->bdst]); } else glDisable(GL_BLEND);
+        lb = b; gPortCount[COUNT_STATE_BLEND]++;
+    }
+    if (st->color_off != lcm) { GLboolean c = st->color_off ? GL_FALSE : GL_TRUE; glColorMask(c, c, c, c); lcm = st->color_off; }
     d = (st->depth_test << 2) | (st->depth_write << 1) | st->decal;
     if (d != ld) {
         if (st->depth_test) { glEnable(GL_DEPTH_TEST); glDepthFunc(st->decal ? GL_LEQUAL : GL_LESS); } else if (st->depth_write) { glEnable(GL_DEPTH_TEST); glDepthFunc(GL_ALWAYS); } else glDisable(GL_DEPTH_TEST);

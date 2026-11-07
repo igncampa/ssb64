@@ -33,7 +33,7 @@ static struct {
     uint32_t geom, omh, oml;
     uint32_t seg[16];
     uint32_t combhi, comblo;
-    float prim[4], env[4], fogc[3], blenda, primlod; uint32_t fillc;
+    float prim[4], env[4], fogc[4], blendc[3], blenda, primlod; uint32_t fillc;
     float primz;
     int texon; float texs, texT; int texlevel, textile;
     Tile tile[8]; Loaded tm[512];
@@ -108,9 +108,9 @@ static void trace_draw(const char *kind, const RbState *st, const RbVertex *v, i
     for (i = 0; i < n; i++) { if (v[i].u < u0) u0 = v[i].u; if (v[i].u > u1) u1 = v[i].u; if (v[i].v < t0) t0 = v[i].v; if (v[i].v > t1) t1 = v[i].v; }
     { const Tile *T = &S.tile[S.textile]; printf("GTT texs=%.4f,%.4f tile=%d tmem=%d line=%d cms=%d cmt=%d masks=%d maskt=%d shifts=%d shiftt=%d uls=%d ult=%d lrs=%d lrt=%d clamp=%d,%d uv=%.1f..%.1f,%.1f..%.1f\n", S.texs, S.texT, S.textile, T->tmem, T->line, T->cms, T->cmt, T->masks, T->maskt, T->shifts, T->shiftt, T->uls, T->ult, T->lrs, T->lrt, st->tex[0].clamp_s, st->tex[0].clamp_t, u0, u1, t0, t1); }
     for (i = 0; i < n; i++) { float w = v[i].w > 0 ? v[i].w : 1, x = v[i].x / w, y = v[i].y / w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-    printf("GT %s cc=%06x:%08x oml=%08x omh=%08x geom=%06x t0=%d/%d %dx%d t1=%dx%d prim=%.2f,%.2f,%.2f,%.2f env=%.2f,%.2f,%.2f,%.2f ab=%d ac=%d fog=%d 2c=%d dt=%d dw=%d vca=%.2f box=%.2f,%.2f,%.2f,%.2f\n",
+    printf("GT %s cc=%06x:%08x oml=%08x omh=%08x geom=%06x t0=%d/%d %dx%d t1=%dx%d prim=%.2f,%.2f,%.2f,%.2f env=%.2f,%.2f,%.2f,%.2f bl=%05x/%d%d%d%d ac=%d edge=%d 2c=%d dt=%d dw=%d vca=%.2f box=%.2f,%.2f,%.2f,%.2f\n",
         kind, st->combine_hi & 0xFFFFFF, st->combine_lo, S.oml, S.omh, S.geom, S.tile[S.textile].fmt, S.tile[S.textile].siz, st->tex[0].w, st->tex[0].h, st->tex[1].w, st->tex[1].h,
-        st->prim[0], st->prim[1], st->prim[2], st->prim[3], st->env[0], st->env[1], st->env[2], st->env[3], st->alpha_blend, st->alpha_compare, st->fog, st->two_cycle, st->depth_test, st->depth_write, v[0].a, x0, y0, x1, y1);
+        st->prim[0], st->prim[1], st->prim[2], st->prim[3], st->env[0], st->env[1], st->env[2], st->env[3], st->blender, st->blend, st->bsrc, st->bdst, st->color_off, st->alpha_compare, st->tex_edge, st->two_cycle, st->depth_test, st->depth_write, v[0].a, x0, y0, x1, y1);
 }
 EMSCRIPTEN_KEEPALIVE uint32_t port_gfx_tris(void) { return sTris; }
 uint32_t port_gfx_rects(void) { return sRects; }
@@ -373,6 +373,34 @@ static RbState sSt; static uint32_t sStSerial, sSerialGen; static int sStDirty =
 static RbState sSent; static uint32_t sSentSerial; // the last state a rectangle sent, to share its serial
 #define DIRTY() (sStDirty = 1)
 #define TEXDIRTY() (sTexDirty = 1)
+// The RDP blender: out = P*A + M*B per cycle (othermode L bits 16-31, cycle 1 in 30/26/22/18 and cycle 2 in
+// 28/24/20/16; 1-cycle mode runs cycle 1's fields). In 2-cycle mode the first cycle always blends and feeds
+// the second as IN; the shader evaluates it (MEM there is taken as IN: the game never reads memory in it).
+// The final cycle blends only with FORCE_BL; without it a pixel inside the triangle (full coverage) is
+// written as P (the AA edge blend on partial coverage is not emulated). Of the final cycle the shader
+// produces the colour and alpha, and GL blending does what involves memory:
+//   P*a + MEM*b -> src SRC_ALPHA, dst f(B)      MEM*a + M*b -> src f(B), dst SRC_ALPHA
+//   no MEM      -> blended in the shader          MEM only    -> colour writes off (depth only)
+// with f(1-A) = ONE_MINUS_SRC_ALPHA, f(A_MEM) = ONE (memory coverage is full), f(1) = ONE, f(0) = ZERO.
+// This replaces "FORCE_BL and 1-A -> SRC_ALPHA/ONE_MINUS_SRC_ALPHA" and the G_FOG-gated fog mix: the game's
+// colour animations (hit flashes, invincibility, damage tints: ftdisplaymain.c) are G_RM_FOG_PRIM_A in cycle 1.
+// The mapping of every state the game uses is in proof/renderer/README.md.
+static void decode_blender(RbState *st, uint32_t L, int two)
+{
+    uint32_t c1 = ((L >> 30 & 3) << 6) | ((L >> 26 & 3) << 4) | ((L >> 22 & 3) << 2) | (L >> 18 & 3);
+    uint32_t c2 = ((L >> 28 & 3) << 6) | ((L >> 24 & 3) << 4) | ((L >> 20 & 3) << 2) | (L >> 16 & 3);
+    uint32_t fin = two ? c2 : c1;
+    int P = fin >> 6, B = fin & 3, M = (fin >> 2) & 3, force = (L & (1 << 14)) != 0;
+    static const int f[4] = { BLF_ONE_MINUS_SRC_ALPHA, BLF_ONE, BLF_ONE, BLF_ZERO };
+    st->blender = BL_FIN(fin) | (force ? BL_FORCE : 0) | (two ? BL_C1(c1) : 0);
+    if ((L & (1 << 13)) && !(L & (1 << 12))) st->blender |= BL_AIN1;
+    st->blend = 0; st->bsrc = BLF_ONE; st->bdst = BLF_ZERO; st->color_off = 0;
+    if (!force) { if (P == 1) st->color_off = 1; return; }
+    if (P != 1 && M == 1) { st->blend = 1; st->bsrc = BLF_SRC_ALPHA; st->bdst = f[B]; }
+    else if (P == 1 && M != 1) { st->blend = 1; st->bsrc = f[B]; st->bdst = BLF_SRC_ALPHA; }
+    else if (P == 1 && M == 1) st->color_off = 1;
+}
+
 static void fill_state(RbState *st)
 {
     uint32_t L = S.oml, H = S.omh;
@@ -381,13 +409,13 @@ static void fill_state(RbState *st)
     memset(st, 0, sizeof *st);
     st->combine_hi = S.combhi; st->combine_lo = S.comblo;
     st->two_cycle = cyc == 1;
-    st->alpha_blend = ((L & (1 << 14)) != 0 /* FORCE_BL */) && ((L >> 18 & 3) == 0 || (L >> 16 & 3) == 0) ;
-    st->fog = (L >> 30) == 3 /* blender P = fog */ && (S.geom & G_FOG_);
-    st->alpha_compare = (L & 3) == 1 ? 1 : (L & (1 << 13)) ? 2 : 0;
+    decode_blender(st, L, cyc == 1);
+    st->alpha_compare = (L & 3) == 1 ? 1 : (L & 3) == 3 ? 2 : 0;
+    st->tex_edge = (L & (1 << 12)) != 0; // CVG_X_ALPHA
     st->depth_test = (S.geom & G_ZBUFFER_) && (L & 0x10);
     st->depth_write = (S.geom & G_ZBUFFER_) && (L & 0x20);
     st->decal = ((L >> 10) & 3) == 3;
-    memcpy(st->prim, S.prim, sizeof S.prim); memcpy(st->env, S.env, sizeof S.env); memcpy(st->fogcolor, S.fogc, sizeof S.fogc);
+    memcpy(st->prim, S.prim, sizeof S.prim); memcpy(st->env, S.env, sizeof S.env); memcpy(st->fogcolor, S.fogc, sizeof S.fogc); memcpy(st->blendcolor, S.blendc, sizeof S.blendc);
     st->blend_a = S.blenda; st->prim_lod = S.primlod;
     memcpy(st->scissor, S.sc, sizeof S.sc); memcpy(st->viewport, S.vp, sizeof S.vp);
     st->wide_vp = S.vp[2] >= WIDE_SPAN; st->wide_sc = S.sc[2] - S.sc[0] >= WIDE_SPAN;
@@ -458,7 +486,9 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     fill_state(&st);
     st.rect = 1;
     st.viewport[0] = 0; st.viewport[1] = 0; st.viewport[2] = 320; st.viewport[3] = 240; st.wide_vp = 1;
-    if (cyc >= 2) { x1 += 1; y1 += 1; st.alpha_blend = (cyc == 2) ? (S.oml & (1<<13)) != 0 : st.alpha_blend; }
+    // Copy and fill modes bypass the blender; copy mode blends with alpha when ALPHA_CVG_SEL is set (as before).
+    if (cyc >= 2) { int bl = cyc == 2 && (S.oml & (1 << 13)) != 0; x1 += 1; y1 += 1;
+        st.blender = BL_FIN(0x04) /* IN*A_IN + MEM*(1-A) */ | (bl ? BL_FORCE : 0); st.blend = bl; st.bsrc = BLF_SRC_ALPHA; st.bdst = BLF_ONE_MINUS_SRC_ALPHA; st.color_off = 0; st.tex_edge = 0; }
     // Copy mode's alpha compare only rejects alpha 0, whatever the blend alpha says.
     if (cyc == 2) { ds /= 4; st.alpha_compare = (S.oml & 3) == 1 ? 1 : 0; st.blend_a = 0; }
     if (textured) use_textures(&st, tile);
@@ -472,7 +502,7 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     z = ((S.oml >> 2) & 1) ? S.primz : -1.0f;
     st.depth_write = st.depth_write && ((S.oml >> 2) & 1);
     {
-      if (cyc == 3) { uint32_t f = S.fillc; c[0] = x5((f >> 11) & 31) / 255.0f; c[1] = x5((f >> 6) & 31) / 255.0f; c[2] = x5((f >> 1) & 31) / 255.0f; c[3] = (f & 1) ? 1 : 0; st.combine_hi = 0xFFFFFFFF; st.combine_lo = 0xFFFFFFFF; st.prim[0] = c[0]; st.prim[1] = c[1]; st.prim[2] = c[2]; st.prim[3] = c[3]; st.alpha_blend = 0; st.alpha_compare = 0; st.depth_test = 0; st.depth_write = 0; }
+      if (cyc == 3) { uint32_t f = S.fillc; c[0] = x5((f >> 11) & 31) / 255.0f; c[1] = x5((f >> 6) & 31) / 255.0f; c[2] = x5((f >> 1) & 31) / 255.0f; c[3] = (f & 1) ? 1 : 0; st.combine_hi = 0xFFFFFFFF; st.combine_lo = 0xFFFFFFFF; st.prim[0] = c[0]; st.prim[1] = c[1]; st.prim[2] = c[2]; st.prim[3] = c[3]; st.blend = 0; st.alpha_compare = 0; st.depth_test = 0; st.depth_write = 0; }
       else if (cyc == 2) { st.combine_hi = 0xFFFFFFFE; st.combine_lo = 0xFFFFFFFE; }
       c[0] = c[1] = c[2] = c[3] = 1;
       for (i = 0; i < 6; i++) { rv[i].z = z; rv[i].w = 1; rv[i].r = c[0]; rv[i].g = c[1]; rv[i].b = c[2]; rv[i].a = c[3]; } }
@@ -627,8 +657,8 @@ static void run(const Cmd *c, int depth)
             T->uls = (w0 >> 12) & 0xFFF; T->ult = w0 & 0xFFF; T->lrs = (w1 >> 12) & 0xFFF; T->lrt = w1 & 0xFFF;
             break; }
         case OP_FILLCOLOR: S.fillc = w1; break;
-        case OP_FOGCOLOR: DIRTY(); S.fogc[0] = (w1 >> 24) / 255.0f; S.fogc[1] = ((w1 >> 16) & 255) / 255.0f; S.fogc[2] = ((w1 >> 8) & 255) / 255.0f; break;
-        case OP_BLENDCOLOR: DIRTY(); S.blenda = (w1 & 255) / 255.0f; break;
+        case OP_FOGCOLOR: DIRTY(); S.fogc[0] = (w1 >> 24) / 255.0f; S.fogc[1] = ((w1 >> 16) & 255) / 255.0f; S.fogc[2] = ((w1 >> 8) & 255) / 255.0f; S.fogc[3] = (w1 & 255) / 255.0f; break;
+        case OP_BLENDCOLOR: DIRTY(); S.blendc[0] = (w1 >> 24) / 255.0f; S.blendc[1] = ((w1 >> 16) & 255) / 255.0f; S.blendc[2] = ((w1 >> 8) & 255) / 255.0f; S.blenda = (w1 & 255) / 255.0f; break;
         case OP_PRIMCOLOR: DIRTY(); S.prim[0] = (w1 >> 24) / 255.0f; S.prim[1] = ((w1 >> 16) & 255) / 255.0f; S.prim[2] = ((w1 >> 8) & 255) / 255.0f; S.prim[3] = (w1 & 255) / 255.0f; S.primlod = (w0 & 255) / 255.0f; break;
         case OP_ENVCOLOR: DIRTY(); S.env[0] = (w1 >> 24) / 255.0f; S.env[1] = ((w1 >> 16) & 255) / 255.0f; S.env[2] = ((w1 >> 8) & 255) / 255.0f; S.env[3] = (w1 & 255) / 255.0f; break;
         case OP_COMBINE: DIRTY(); S.combhi = w0 & 0xFFFFFF; S.comblo = w1; break;
