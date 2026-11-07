@@ -74,7 +74,7 @@ label.it input{width:16px;height:16px;margin:0;accent-color:var(--acc2)}
 .go{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 #start{font-size:20px;padding:14px 34px;border-radius:12px;background:linear-gradient(#ff5a4a,#c42c22);box-shadow:0 4px 0 #7d1a14;letter-spacing:.04em}
 #start:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #7d1a14}
-#sound.on,#wide.on{border-color:var(--acc2);color:var(--acc2)}
+#sound.on,#wide.on,#picture.on{border-color:var(--acc2);color:var(--acc2)}
 .hidden-src{display:none}
 body.n64 #copy,body.n64 #leave,body.n64 h1,body.n64 #roomPanel{display:none!important}
 /* Smash is played sideways only. A tall window shows this instead of a squeezed game. */
@@ -138,7 +138,7 @@ body.n64 #copy,body.n64 #leave,body.n64 h1,body.n64 #roomPanel{display:none!impo
       <div id="itemList"></div>
       <p class="dim" style="margin:8px 0 0;font-size:12px">As in the game: while any item is on, crates, barrels, capsules and eggs appear too. How often they appear is the Items setting above. Final Destination has no items, as in the game.</p>
     </div>
-    <div class="go"><button id="start">START</button><button class="ghost" id="sound" title="Lobby music and sounds">Sound on</button><button class="ghost" id="wide" title="Fill a wide screen, or keep the N64's 4:3 picture. Only on this screen.">Wide screen</button><button class="ghost" id="leave">Leave</button><span class="dim" id="startNote"></span></div>
+    <div class="go"><button id="start">START</button><button class="ghost" id="sound" title="Lobby music and sounds">Sound on</button><button class="ghost" id="wide" title="Fill a wide screen, or keep the N64's 4:3 picture. Only on this screen.">Wide screen</button><button class="ghost" id="picture" title="Smooth: anti-aliased edges. Sharp: no anti-aliasing. N64 pixels: the console's 240 lines, scaled up. Only on this screen.">Smooth picture</button><button class="ghost" id="leave">Leave</button><span class="dim" id="startNote"></span></div>
     <div class="panel"><h2>Controls</h2><p class="dim" style="margin:0">Stick: arrow keys or WASD. Hold Shift for a walk. A: Z. B: X. Z: C. Start: Enter. L: Q. R: E. C buttons: IJKL. A gamepad works too.</p></div>
   </section>
 </div></div>

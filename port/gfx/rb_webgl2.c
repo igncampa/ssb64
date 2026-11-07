@@ -1,6 +1,7 @@
 // WebGL2 backend. Combiner modes become fragment shaders, cached by mode.
 #include <GLES3/gl3.h>
 #include <emscripten/html5.h>
+#include <emscripten.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -41,7 +42,14 @@ static GLuint compile(GLenum ty, const char *src)
     return s;
 }
 
-enum { F_DITHER = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32 };
+enum { F_DITHER = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32, F_3PT0 = 64, F_3PT1 = 128 };
+
+// Picture settings (PortSetPicture, from the page): render only, every client simulates the same game.
+//   aa:     4x MSAA through a multisampled framebuffer resolved into the canvas (off if unsupported)
+//   filter: the RDP's 3-point texture filter for G_TF_BILERP tiles instead of GL's 4-point bilinear
+//   n64:    draw at 240 lines (the N64's 320x240, wider with the widescreen view) and scale up unfiltered
+static int sAA = 1, sFilter3 = 1, sN64 = 0;
+EMSCRIPTEN_KEEPALIVE void PortSetPicture(int aa, int filter, int n64) { sAA = aa != 0; sFilter3 = filter != 0; sN64 = n64 != 0; }
 
 // Blender inputs in the shader (gfx.h codes). MEM is never read here: GL blending supplies it.
 static const char *bl_col(int i) { static const char *n[] = { "cin", "cin", "uBlendC", "uFog.rgb" }; return n[i & 3]; }
@@ -82,8 +90,14 @@ static Prog *program(uint32_t hi, uint32_t lo, uint32_t bl, int flags)
     n = sprintf(fs, "#version 300 es\nprecision highp float; in vec2 vt; in vec4 vc; out vec4 o;\n"
         "uniform vec4 uPrim,uEnv,uFog; uniform vec3 uBlendC; uniform float uBlendA,uLod; uniform sampler2D uS0,uS1; uniform vec2 uScale0,uScale1;\n"
         "float noise(){ return fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); }\n"
+        // The RDP's bilinear is three texels: the triangle of the 2x2 quad the sample falls in. Texel
+        // centres are fetched through a nearest sampler, so wrap, mirror and clamp stay the sampler's.
+        "vec4 tex3(sampler2D s,vec2 st,vec2 k){ vec2 q=st-0.5; vec2 f=fract(q); vec2 b=floor(q)+0.5;\n"
+        " if(f.x+f.y<1.0){ vec4 c0=texture(s,b*k); return c0+f.x*(texture(s,(b+vec2(1.0,0.0))*k)-c0)+f.y*(texture(s,(b+vec2(0.0,1.0))*k)-c0); }\n"
+        " vec4 c3=texture(s,(b+1.0)*k); return c3+(1.0-f.x)*(texture(s,(b+vec2(0.0,1.0))*k)-c3)+(1.0-f.y)*(texture(s,(b+vec2(1.0,0.0))*k)-c3); }\n"
         "void main(){ vec4 t0=%s; vec4 t1=%s; vec4 cmb=vec4(0.0);\n",
-        (flags & F_TEX0) ? "texture(uS0,vt*uScale0)" : "vec4(1.0)", (flags & F_TEX1) ? "texture(uS1,vt*uScale1)" : "t0");
+        !(flags & F_TEX0) ? "vec4(1.0)" : (flags & F_3PT0) ? "tex3(uS0,vt,uScale0)" : "texture(uS0,vt*uScale0)",
+        !(flags & F_TEX1) ? "t0" : (flags & F_3PT1) ? "tex3(uS1,vt,uScale1)" : "texture(uS1,vt*uScale1)");
     // the interpreter marks copy mode 0xFFFFFFFE and fill mode 0xFFFFFFFF, neither a real combine word
     if (hi >= 0xFFFFFFFE) n += sprintf(fs + n, "cmb=%s;\n", hi == 0xFFFFFFFE ? "t0" : "uPrim");
     else {
@@ -118,7 +132,7 @@ static GLuint sBound[2] = { ~0u, ~0u };
 static void bind_tex(int unit, const RbTexture *t)
 {
     Tx *e;
-    int params;
+    int params, lin;
     if (!t->key) { if (sBound[unit] != sWhite) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, sWhite); sBound[unit] = sWhite; } return; }
     for (e = sTx[t->key >> 20]; e; e = e->next) if (e->key == t->key && e->w == t->w && e->h == t->h) break;
     if (!e) {
@@ -130,12 +144,13 @@ static void bind_tex(int unit, const RbTexture *t)
         e->next = sTx[t->key >> 20]; sTx[t->key >> 20] = e;
     } else if (sBound[unit] != e->id) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, e->id); sBound[unit] = e->id; gPortCount[COUNT_TEXBIND]++; }
     e->used = sFrame;
-    params = (t->linear != 0) | (t->clamp_s != 0) << 1 | (t->mirror_s != 0) << 2 | (t->clamp_t != 0) << 3 | (t->mirror_t != 0) << 4;
+    lin = t->linear && !sFilter3; // 3-point filtering samples texel centres itself
+    params = lin | (t->clamp_s != 0) << 1 | (t->mirror_s != 0) << 2 | (t->clamp_t != 0) << 3 | (t->mirror_t != 0) << 4;
     if (e->params != params) {
         e->params = params;
         glActiveTexture(GL_TEXTURE0 + unit);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, lin ? GL_LINEAR : GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, lin ? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, t->clamp_s ? GL_CLAMP_TO_EDGE : t->mirror_s ? GL_MIRRORED_REPEAT : GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t->clamp_t ? GL_CLAMP_TO_EDGE : t->mirror_t ? GL_MIRRORED_REPEAT : GL_REPEAT);
     }
@@ -181,11 +196,76 @@ static void init(void)
 static void flush(void);
 static void state_forget_depth(void);
 static int lcm = -1; // colour mask GL holds: 1 off, 0 on
+
+// ---- render target: the canvas, or a framebuffer (multisampled and/or 240 lines) blitted to it ----
+static int sTW = 960, sTH = 720;          // the size the frame is drawn at
+static GLuint sFbo, sFboColor, sFboDepth;  // the target when not drawing to the canvas directly
+static GLuint sRes, sResColor;             // single-sample resolve target, for multisampled at 240 lines
+static int sFboW, sFboH, sFboSamples, sFboN64, sFboBroken;
+static void target_free(void)
+{
+    if (sFbo) { glDeleteFramebuffers(1, &sFbo); glDeleteRenderbuffers(1, &sFboColor); glDeleteRenderbuffers(1, &sFboDepth); }
+    if (sRes) { glDeleteFramebuffers(1, &sRes); glDeleteRenderbuffers(1, &sResColor); }
+    sFbo = sFboColor = sFboDepth = sRes = sResColor = 0;
+}
+static GLuint rbuf(int samples, GLenum fmt, int w, int h)
+{
+    GLuint r; glGenRenderbuffers(1, &r); glBindRenderbuffer(GL_RENDERBUFFER, r);
+    if (samples) glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, fmt, w, h); else glRenderbufferStorage(GL_RENDERBUFFER, fmt, w, h);
+    return r;
+}
+// Picks the target for this frame. Anything unsupported (no multisampling, an incomplete framebuffer)
+// falls back to drawing into the canvas as before, once, for good.
+static void target_begin(void)
+{
+    int samples = 0, w = sCanvasW, h = sCanvasH;
+    static GLint mx = -1;
+    if (mx < 0) glGetIntegerv(GL_MAX_SAMPLES, &mx);
+    if (sAA && !sFboBroken) samples = mx >= 4 ? 4 : mx >= 2 ? mx : 0;
+    if (sN64 && !sFboBroken) { h = 240; w = (int)(240.0f * sCanvasW / (sCanvasH ? sCanvasH : 1) + 0.5f); if (w > sCanvasW) w = sCanvasW; if (h > sCanvasH) h = sCanvasH; }
+    if (!samples && !(sN64 && !sFboBroken)) { if (sFbo) target_free(); sFboW = 0; glBindFramebuffer(GL_FRAMEBUFFER, 0); sTW = sCanvasW; sTH = sCanvasH; return; }
+    if (!sFbo || sFboW != w || sFboH != h || sFboSamples != samples || sFboN64 != sN64) {
+        target_free();
+        glGenFramebuffers(1, &sFbo); glBindFramebuffer(GL_FRAMEBUFFER, sFbo);
+        sFboColor = rbuf(samples, GL_RGBA8, w, h); glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, sFboColor);
+        sFboDepth = rbuf(samples, GL_DEPTH_COMPONENT24, w, h); glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, sFboDepth);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) goto broken;
+        if (samples) { // a multisampled blit cannot scale or convert formats (the canvas is RGB): resolve first
+            glGenFramebuffers(1, &sRes); glBindFramebuffer(GL_FRAMEBUFFER, sRes);
+            sResColor = rbuf(0, GL_RGBA8, w, h); glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, sResColor);
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) goto broken;
+        }
+        sFboW = w; sFboH = h; sFboSamples = samples; sFboN64 = sN64;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, sFbo); sTW = w; sTH = h;
+    return;
+broken:
+    fprintf(stderr, "renderer: framebuffer target unavailable, drawing to the canvas\n");
+    target_free(); sFboBroken = 1; sFboW = 0; glBindFramebuffer(GL_FRAMEBUFFER, 0); sTW = sCanvasW; sTH = sCanvasH;
+}
+// The frame goes to the canvas: resolve (and scale, unfiltered) what the framebuffer holds.
+static void target_end(void)
+{
+    if (!sFbo) return;
+    glDisable(GL_SCISSOR_TEST); glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); lcm = 0;
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, sFbo);
+    if (sRes) {
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sRes);
+        glBlitFramebuffer(0, 0, sFboW, sFboH, 0, 0, sFboW, sFboH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, sRes);
+    }
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, sFboW, sFboH, 0, 0, sCanvasW, sCanvasH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, sFbo);
+    glEnable(GL_SCISSOR_TEST);
+}
+
 void rb_begin_frame(void)
 {
     if (!sCtx) init();
     flush();
     if (++sFrame % 60 == 0) tx_evict();
+    target_begin();
     glDepthMask(GL_TRUE); state_forget_depth();
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); lcm = 0;
     glDisable(GL_SCISSOR_TEST);
@@ -220,9 +300,9 @@ static void apply(const RbState *st)
     int flags = 0;
     // N64 pixels to canvas pixels: a span of the whole picture stretches to the canvas, anything else sits in
     // the centred 4:3 band. At 4:3 both are the same mapping.
-    float sy = sCanvasH / 240.0f, band = sCanvasH * 4.0f / 3.0f, off = (sCanvasW - band) * 0.5f;
-    float vsx = st->wide_vp ? sCanvasW / 320.0f : sy, vox = st->wide_vp ? 0 : off;
-    float ssx = st->wide_sc ? sCanvasW / 320.0f : sy, sox = st->wide_sc ? 0 : off;
+    float sy = sTH / 240.0f, band = sTH * 4.0f / 3.0f, off = (sTW - band) * 0.5f;
+    float vsx = st->wide_vp ? sTW / 320.0f : sy, vox = st->wide_vp ? 0 : off;
+    float ssx = st->wide_sc ? sTW / 320.0f : sy, sox = st->wide_sc ? 0 : off;
     GLint vp[4], sc[4];
     Prog *p;
     int b, d;
@@ -230,8 +310,8 @@ static void apply(const RbState *st)
     if (st->alpha_compare == 2) flags |= F_DITHER;
     if (st->tex_edge) flags |= F_EDGE;
     if (st->two_cycle) flags |= F_2CYC;
-    if (st->tex[0].key) flags |= F_TEX0;
-    if (st->tex[1].key) flags |= F_TEX1;
+    if (st->tex[0].key) flags |= F_TEX0 | (sFilter3 && st->tex[0].linear ? F_3PT0 : 0);
+    if (st->tex[1].key) flags |= F_TEX1 | (sFilter3 && st->tex[1].linear ? F_3PT1 : 0);
     p = program(st->combine_hi, st->combine_lo, st->blender, flags);
     if (p != lp) {
         glUseProgram(p->prog); glUniform1i(p->uS0, 0); glUniform1i(p->uS1, 1);
@@ -291,6 +371,6 @@ void rb_draw(const RbState *st, uint32_t serial, const RbVertex *v, int n)
     sN += n;
 }
 
-void rb_end_frame(void) { flush(); }
+void rb_end_frame(void) { flush(); target_end(); }
 
 void port_set_canvas_size(int w, int h) { sCanvasW = w; sCanvasH = h; }

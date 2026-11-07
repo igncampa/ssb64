@@ -373,3 +373,7 @@ syncSound();
 const syncWide = () => { $('wide').classList.toggle('on', Engine.wide); $('wide').textContent = Engine.wide ? 'Wide screen' : '4:3 screen'; };
 $('wide').onclick = () => { Engine.wide = !Engine.wide; store.set('ssb64.wide', Engine.wide ? '1' : '0'); syncWide(); eng?.fitCanvas(); cue('select'); };
 syncWide();
+const PIC = { smooth: 'Smooth picture', sharp: 'Sharp picture', n64: 'N64 pixels' };
+const syncPic = () => { $('picture').textContent = PIC[Engine.picture]; $('picture').classList.toggle('on', Engine.picture !== 'sharp'); };
+$('picture').onclick = () => { const L = Engine.PICTURES; Engine.picture = L[(L.indexOf(Engine.picture) + 1) % L.length]; store.set('ssb64.picture', Engine.picture); syncPic(); eng?.setPicture(); cue('select'); };
+syncPic();

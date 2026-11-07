@@ -4,6 +4,11 @@ import { readPad } from './input.js';
 const FRAME_MS = 1000 / 60;
 export class Engine {
   static wide = (() => { try { return localStorage.getItem('ssb64.wide') !== '0'; } catch { return true; } })();
+  // Picture (render only, proof/renderer/README.md): smooth = 4x anti-aliasing, sharp = none, n64 = drawn
+  // at 240 lines and scaled up unfiltered. The N64's 3-point texture filter is on in all three. The page
+  // remembers the choice; ?picture=, ?aa=0|1, ?filter=0|1 and ?n64=0|1 override it (tests, comparisons).
+  static picture = (() => { let p = null; try { p = localStorage.getItem('ssb64.picture'); } catch {} p = new URLSearchParams(location.search).get('picture') || p; return Engine.PICTURES.includes(p) ? p : 'smooth'; })();
+  static get PICTURES() { return ['smooth', 'sharp', 'n64']; }
   // idle, loading, ready or failed, for the page: Engine.load sets it.
   static state = 'idle';
   static load(onStatus = () => {}) {
@@ -27,7 +32,12 @@ export class Engine {
     onStatus('ready');
     return new Engine(m);
   }
-  constructor(m) { this.m = m; this.pads = [0, 0, 0, 0]; this.running = false; this.tail = 0; this.fitCanvas(); }
+  constructor(m) { this.m = m; this.pads = [0, 0, 0, 0]; this.running = false; this.tail = 0; this.setPicture(); this.fitCanvas(); }
+  setPicture(p = Engine.picture) {
+    Engine.picture = p;
+    const q = new URLSearchParams(location.search), o = (k, d) => (q.has(k) ? q.get(k) !== '0' : d) ? 1 : 0;
+    this.m._PortSetPicture?.(o('aa', p !== 'sharp'), o('filter', true), o('n64', p === 'n64'));
+  }
   // The picture fills the window from 4:3 to 21:9 (proof/widescreen-spec.md 2.7). Render only: every
   // client simulates the same 4:3 game whatever its shape. A wider or taller window is letterboxed.
   // wide = false keeps the N64's 4:3 picture.
