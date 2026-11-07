@@ -23,6 +23,8 @@
 extern void port_sched_drain(void);
 extern sb32 port_net_can_end(void);
 extern void ftManagerPortDrawBegin(void), ftManagerPortDrawEnd(void);
+#include "port_prof.h"
+extern int gPortResim;
 extern void *port_gfx_malloc(size_t size, u32 align);
 #endif
 extern void syTaskmanCheckBufferLengths();
@@ -1103,9 +1105,13 @@ void func_800062EC(SYTaskFunction *tfunc)
 sb32 syTaskmanPortStep(sb32 draw)
 {
 	SYTaskFunction *tfunc = &sSYTaskmanDefaultFunction;
+	double t0 = port_now(), t1;
 
 	tfunc->task_update(tfunc);
 	dSYTaskmanUpdateCount++;
+	t1 = port_now();
+	gPortProf[gPortResim ? PROF_RESIM : PROF_UPDATE] += t1 - t0;
+	gPortCount[gPortResim ? COUNT_RESIM_FRAMES : COUNT_SIM_FRAMES]++;
 
 	if (syTaskmanCheckBreakLoop() != FALSE)
 	{
@@ -1117,7 +1123,11 @@ sb32 syTaskmanPortStep(sb32 draw)
 		tfunc->task_draw(tfunc);
 		ftManagerPortDrawEnd();
 		dSYTaskmanFrameCount++;
+		t0 = port_now();
+		gPortProf[PROF_DLBUILD] += t0 - t1;
 		port_sched_drain();
+		gPortProf[PROF_GFXRUN] += port_now() - t0;
+		gPortCount[COUNT_FRAMES_DRAWN]++;
 
 		if (syTaskmanCheckBreakLoop() != FALSE)
 		{

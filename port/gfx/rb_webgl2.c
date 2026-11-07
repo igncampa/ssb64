@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "gfx.h"
+#include "port_prof.h"
 
 typedef struct { uint32_t hi, lo; int flags; GLuint prog; GLint uPrim, uEnv, uFog, uBlendA, uLod, uS0, uS1, uScale0, uScale1; } Prog;
 #define MAXP 512
@@ -12,7 +13,7 @@ static Prog sP[MAXP]; static int sNP;
 static GLuint sVbo, sVao; static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE sCtx;
 static int sCanvasW = 960, sCanvasH = 720;
 
-typedef struct Tx { uint32_t key; int w, h; GLuint id; struct Tx *next; } Tx;
+typedef struct Tx { uint32_t key; int w, h; GLuint id; int params; struct Tx *next; } Tx;
 static Tx *sTx[4096];
 static GLuint sWhite;
 
@@ -77,22 +78,31 @@ static Prog *program(uint32_t hi, uint32_t lo, int flags)
     return pr;
 }
 
+// One GL texture per decoded N64 texture; its sampler state is set when it changes, not per draw.
+static GLuint sBound[2] = { ~0u, ~0u };
 static void bind_tex(int unit, const RbTexture *t)
 {
     Tx *e;
-    glActiveTexture(GL_TEXTURE0 + unit);
-    if (!t->key) { glBindTexture(GL_TEXTURE_2D, sWhite); return; }
+    int params;
+    if (!t->key) { if (sBound[unit] != sWhite) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, sWhite); sBound[unit] = sWhite; } return; }
     for (e = sTx[t->key >> 20]; e; e = e->next) if (e->key == t->key && e->w == t->w && e->h == t->h) break;
     if (!e) {
-        e = malloc(sizeof *e); e->key = t->key; e->w = t->w; e->h = t->h;
-        glGenTextures(1, &e->id); glBindTexture(GL_TEXTURE_2D, e->id);
+        e = malloc(sizeof *e); e->key = t->key; e->w = t->w; e->h = t->h; e->params = -1;
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glGenTextures(1, &e->id); glBindTexture(GL_TEXTURE_2D, e->id); sBound[unit] = e->id;
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, t->w, t->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t->rgba);
+        gPortCount[COUNT_GLUPLOAD]++;
         e->next = sTx[t->key >> 20]; sTx[t->key >> 20] = e;
-    } else glBindTexture(GL_TEXTURE_2D, e->id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, t->clamp_s ? GL_CLAMP_TO_EDGE : t->mirror_s ? GL_MIRRORED_REPEAT : GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t->clamp_t ? GL_CLAMP_TO_EDGE : t->mirror_t ? GL_MIRRORED_REPEAT : GL_REPEAT);
+    } else if (sBound[unit] != e->id) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, e->id); sBound[unit] = e->id; gPortCount[COUNT_TEXBIND]++; }
+    params = (t->linear != 0) | (t->clamp_s != 0) << 1 | (t->mirror_s != 0) << 2 | (t->clamp_t != 0) << 3 | (t->mirror_t != 0) << 4;
+    if (e->params != params) {
+        e->params = params;
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, t->clamp_s ? GL_CLAMP_TO_EDGE : t->mirror_s ? GL_MIRRORED_REPEAT : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t->clamp_t ? GL_CLAMP_TO_EDGE : t->mirror_t ? GL_MIRRORED_REPEAT : GL_REPEAT);
+    }
 }
 
 static void init(void)
@@ -115,9 +125,11 @@ static void init(void)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 
+static void flush(void);
 void rb_begin_frame(void)
 {
     if (!sCtx) init();
+    flush();
     glDepthMask(GL_TRUE);
     glDisable(GL_SCISSOR_TEST);
     glClearColor(0, 0, 0, 1);
@@ -125,12 +137,28 @@ void rb_begin_frame(void)
     glEnable(GL_SCISSOR_TEST);
 }
 
+// A depth clear in mid-frame: draw what came before it first. The depth mask it sets is re-applied by the next batch.
+static void state_forget_depth(void);
 void rb_clear_depth(void)
 {
+    flush();
     glDisable(GL_SCISSOR_TEST); glDepthMask(GL_TRUE); glClearDepthf(1.0f); glClear(GL_DEPTH_BUFFER_BIT); glEnable(GL_SCISSOR_TEST);
+    state_forget_depth();
 }
 
-void rb_draw(const RbState *st, const RbVertex *v, int n)
+// ---- batching: triangles and rectangles with the same state go out in one draw, in order ----
+#define MAXV 16384
+static RbVertex sBuf[MAXV]; static int sN;
+static RbState sCur; static int sHave;
+static Prog *sProg;
+
+// What GL holds now, so a batch only sets what differs from the batch before it.
+static int lb = -1, ld = -1, ldecal = -1; static GLint lvp[4] = {-1,-1,-1,-1}, lsc[4] = {-1,-1,-1,-1};
+static float lprim[4], lenv[4], lfog[3], lblend, llod, lscale[2][2]; static Prog *lp;
+static void state_forget_depth(void) { ld = -1; }
+
+// Apply a draw state to GL. Called once per batch, and skips what the previous batch already set.
+static void apply(const RbState *st)
 {
     int flags = 0;
     // N64 pixels to canvas pixels: a span of the whole picture stretches to the canvas, anything else sits in
@@ -138,7 +166,9 @@ void rb_draw(const RbState *st, const RbVertex *v, int n)
     float sy = sCanvasH / 240.0f, band = sCanvasH * 4.0f / 3.0f, off = (sCanvasW - band) * 0.5f;
     float vsx = st->wide_vp ? sCanvasW / 320.0f : sy, vox = st->wide_vp ? 0 : off;
     float ssx = st->wide_sc ? sCanvasW / 320.0f : sy, sox = st->wide_sc ? 0 : off;
+    GLint vp[4], sc[4];
     Prog *p;
+    int b, d;
     if (st->fog) flags |= F_FOG;
     if (st->alpha_compare == 1) flags |= F_ATEST;
     if (st->alpha_compare == 2) flags |= F_EDGE;
@@ -146,21 +176,54 @@ void rb_draw(const RbState *st, const RbVertex *v, int n)
     if (st->tex[0].key) flags |= F_TEX0;
     if (st->tex[1].key) flags |= F_TEX1;
     p = program(st->combine_hi, st->combine_lo, flags);
-    glUseProgram(p->prog);
-    glUniform4fv(p->uPrim, 1, st->prim); glUniform4fv(p->uEnv, 1, st->env); glUniform3fv(p->uFog, 1, st->fogcolor);
-    glUniform1f(p->uBlendA, st->blend_a); glUniform1f(p->uLod, st->prim_lod);
-    glUniform1i(p->uS0, 0); glUniform1i(p->uS1, 1);
+    if (p != lp) {
+        glUseProgram(p->prog); glUniform1i(p->uS0, 0); glUniform1i(p->uS1, 1);
+        gPortCount[COUNT_PROGSWITCH]++; lp = p;
+        // uniforms live per program: forget what was set
+        memset(lprim, 0x7f, sizeof lprim); memset(lenv, 0x7f, sizeof lenv); memset(lfog, 0x7f, sizeof lfog); memset(lscale, 0x7f, sizeof lscale); lblend = llod = -1;
+    }
+    if (memcmp(lprim, st->prim, sizeof lprim)) { glUniform4fv(p->uPrim, 1, st->prim); memcpy(lprim, st->prim, sizeof lprim); }
+    if (memcmp(lenv, st->env, sizeof lenv)) { glUniform4fv(p->uEnv, 1, st->env); memcpy(lenv, st->env, sizeof lenv); }
+    if (memcmp(lfog, st->fogcolor, sizeof lfog)) { glUniform3fv(p->uFog, 1, st->fogcolor); memcpy(lfog, st->fogcolor, sizeof lfog); }
+    if (lblend != st->blend_a) { glUniform1f(p->uBlendA, st->blend_a); lblend = st->blend_a; }
+    if (llod != st->prim_lod) { glUniform1f(p->uLod, st->prim_lod); llod = st->prim_lod; }
     bind_tex(0, &st->tex[0]); bind_tex(1, &st->tex[1]);
-    glUniform2f(p->uScale0, st->tex[0].w ? 1.0f / st->tex[0].w : 1, st->tex[0].h ? 1.0f / st->tex[0].h : 1);
-    glUniform2f(p->uScale1, st->tex[1].w ? 1.0f / st->tex[1].w : 1, st->tex[1].h ? 1.0f / st->tex[1].h : 1);
-    if (st->alpha_blend) { glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); } else glDisable(GL_BLEND);
-    if (st->depth_test) { glEnable(GL_DEPTH_TEST); glDepthFunc(st->decal ? GL_LEQUAL : GL_LESS); } else if (st->depth_write) { glEnable(GL_DEPTH_TEST); glDepthFunc(GL_ALWAYS); } else glDisable(GL_DEPTH_TEST);
-    glDepthMask(st->depth_write ? GL_TRUE : GL_FALSE);
-    if (st->decal) { glEnable(GL_POLYGON_OFFSET_FILL); glPolygonOffset(-2, -2); } else glDisable(GL_POLYGON_OFFSET_FILL);
-    glViewport((GLint)(vox + st->viewport[0] * vsx), (GLint)((240 - st->viewport[1] - st->viewport[3]) * sy), (GLsizei)(st->viewport[2] * vsx), (GLsizei)(st->viewport[3] * sy));
-    glScissor((GLint)(sox + st->scissor[0] * ssx), (GLint)((240 - st->scissor[3]) * sy), (GLsizei)((st->scissor[2] - st->scissor[0]) * ssx), (GLsizei)((st->scissor[3] - st->scissor[1]) * sy));
-    glBufferData(GL_ARRAY_BUFFER, n * sizeof(RbVertex), v, GL_STREAM_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, n);
+    { float s0[2] = { st->tex[0].w ? 1.0f / st->tex[0].w : 1, st->tex[0].h ? 1.0f / st->tex[0].h : 1 }, s1[2] = { st->tex[1].w ? 1.0f / st->tex[1].w : 1, st->tex[1].h ? 1.0f / st->tex[1].h : 1 };
+      if (memcmp(lscale[0], s0, sizeof s0)) { glUniform2f(p->uScale0, s0[0], s0[1]); memcpy(lscale[0], s0, sizeof s0); }
+      if (memcmp(lscale[1], s1, sizeof s1)) { glUniform2f(p->uScale1, s1[0], s1[1]); memcpy(lscale[1], s1, sizeof s1); } }
+    b = st->alpha_blend != 0;
+    if (b != lb) { if (b) { glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); } else glDisable(GL_BLEND); lb = b; gPortCount[COUNT_STATE_BLEND]++; }
+    d = (st->depth_test << 2) | (st->depth_write << 1) | st->decal;
+    if (d != ld) {
+        if (st->depth_test) { glEnable(GL_DEPTH_TEST); glDepthFunc(st->decal ? GL_LEQUAL : GL_LESS); } else if (st->depth_write) { glEnable(GL_DEPTH_TEST); glDepthFunc(GL_ALWAYS); } else glDisable(GL_DEPTH_TEST);
+        glDepthMask(st->depth_write ? GL_TRUE : GL_FALSE);
+        ld = d; gPortCount[COUNT_STATE_DEPTH]++;
+    }
+    if (st->decal != ldecal) { if (st->decal) { glEnable(GL_POLYGON_OFFSET_FILL); glPolygonOffset(-2, -2); } else glDisable(GL_POLYGON_OFFSET_FILL); ldecal = st->decal; }
+    vp[0] = (GLint)(vox + st->viewport[0] * vsx); vp[1] = (GLint)((240 - st->viewport[1] - st->viewport[3]) * sy); vp[2] = (GLsizei)(st->viewport[2] * vsx); vp[3] = (GLsizei)(st->viewport[3] * sy);
+    sc[0] = (GLint)(sox + st->scissor[0] * ssx); sc[1] = (GLint)((240 - st->scissor[3]) * sy); sc[2] = (GLsizei)((st->scissor[2] - st->scissor[0]) * ssx); sc[3] = (GLsizei)((st->scissor[3] - st->scissor[1]) * sy);
+    if (memcmp(vp, lvp, sizeof vp)) { glViewport(vp[0], vp[1], vp[2], vp[3]); memcpy(lvp, vp, sizeof vp); }
+    if (memcmp(sc, lsc, sizeof sc)) { glScissor(sc[0], sc[1], sc[2], sc[3]); memcpy(lsc, sc, sizeof sc); }
 }
+
+static void flush(void)
+{
+    if (!sN) return;
+    apply(&sCur);
+    glBufferData(GL_ARRAY_BUFFER, sN * sizeof(RbVertex), sBuf, GL_STREAM_DRAW);
+    glDrawArrays(GL_TRIANGLES, 0, sN);
+    gPortCount[COUNT_DRAWS]++; gPortCount[COUNT_BUFBYTES] += sN * sizeof(RbVertex);
+    sN = 0;
+}
+
+void rb_draw(const RbState *st, const RbVertex *v, int n)
+{
+    if (!sHave || memcmp(st, &sCur, sizeof *st) != 0) { flush(); sCur = *st; sHave = 1; }
+    if (sN + n > MAXV) flush();
+    memcpy(&sBuf[sN], v, n * sizeof *v);
+    sN += n;
+}
+
+void rb_end_frame(void) { flush(); }
 
 void port_set_canvas_size(int w, int h) { sCanvasW = w; sCanvasH = h; }

@@ -1,0 +1,24 @@
+// Frame profile counters (prof.c). Milliseconds by phase, then counts of what the renderer did.
+#ifndef PORT_PROF_H
+#define PORT_PROF_H
+#include <stdint.h>
+enum {
+    PROF_UPDATE,     // the game's own frame update (simulation), ms
+    PROF_DLBUILD,    // the game's draw pass: building display lists, ms
+    PROF_GFXRUN,     // port_gfx_run: interpreting the lists and submitting GL, ms
+    PROF_RBDRAW,     // of which inside rb_draw (GL calls), ms
+    PROF_TEXDECODE,  // of which decoding texels for textures first seen, ms
+    PROF_RESIM,      // frames re-simulated by a rollback (no draw), ms
+    PROF_STEP,       // all of port_step, ms
+    PROF_AUDIO,      // the audio tick after a step, ms
+    PROF_N
+};
+enum {
+    COUNT_FRAMES_DRAWN, COUNT_OPS, COUNT_TRIS, COUNT_RECTS, COUNT_DRAWS, COUNT_VTX, COUNT_TEXDECODE,
+    COUNT_TEXLOOKUP, COUNT_GLUPLOAD, COUNT_PROGSWITCH, COUNT_TEXBIND, COUNT_BUFBYTES, COUNT_RESIM_FRAMES,
+    COUNT_SIM_FRAMES, COUNT_STATE_BLEND, COUNT_STATE_DEPTH, COUNT_TEXHASH, COUNT_N
+};
+extern double gPortProf[PROF_N];
+extern uint32_t gPortCount[COUNT_N];
+double port_now(void);
+#endif

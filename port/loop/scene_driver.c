@@ -1,5 +1,6 @@
 // Replaces scManagerRunLoop. Boot, parked, VS match with sudden death, parked.
 #include "port.h"
+#include "port_prof.h"
 #include <PR/ultratypes.h>
 #include <sc/scmanager.h>
 #include <sys/audio.h>
@@ -99,9 +100,11 @@ void port_match_park(void)
 static int sAudioOff;
 void port_set_audio_off(int off) { sAudioOff = off; }
 // Runs once per browser tick after the last sim step. Audio never feeds the sim.
-void port_audio_tick(void) { if (!sAudioOff) syAudioPortFrame(); }
+void port_audio_tick(void) { double t0 = port_now(); if (!sAudioOff) syAudioPortFrame(); gPortProf[PROF_AUDIO] += port_now() - t0; }
 
-int port_step(int draw)
+static int port_step_inner(int draw);
+int port_step(int draw) { double t0 = port_now(); int r = port_step_inner(draw); gPortProf[PROF_STEP] += port_now() - t0; return r; }
+static int port_step_inner(int draw)
 {
     switch (sState)
     {

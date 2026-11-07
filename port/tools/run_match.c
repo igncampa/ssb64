@@ -66,9 +66,14 @@ int main(int argc, char **argv)
             if (fr % 15 == 0) { printf("%u %08x\n", fr, Hash()); fflush(stdout); }
             if (getenv("SPAWNS") && (int)fr == atoi(getenv("SPAWNS"))) { extern void port_dump_fighters(void); port_dump_fighters(); }
             if (getenv("RNGDUMP") && (int)fr == atoi(getenv("RNGDUMP"))) { extern uint32_t RngTraceCount(void); extern void *RngTrace(void); struct T { const char *f; int32_t l, s, fr; } *t = RngTrace(); uint32_t n = RngTraceCount(); for (uint32_t i = n > 4096 ? n - 4096 : 0; i < n; i++) { struct T *e = &t[i % 4096]; if (e->fr == (int32_t)fr - 1) printf("rng frame %d %s:%d seed %08x\n", e->fr, e->f, e->l, e->s); } }
+            if (getenv("GFXTRACE") && (int)fr == atoi(getenv("GFXTRACE"))) { extern void GfxTrace(int); GfxTrace(1); }
             if (getenv("CAMLOG") && fr % 60 == 0) { extern void port_dump_camera(void); printf("f %u ", fr); port_dump_camera(); }
             if ((int)fr >= fmax) break;
         }
+        if (getenv("PROF")) { extern double PortProf(int); double n = PortProf(8 + 13), d = PortProf(8 + 0);
+            printf("prof step %.3f ms/frame audio %.3f ms/frame frames %.0f drawn %.0f update %.3f ms/frame dlbuild %.3f ms/drawn gfxrun %.3f ms/drawn texdecode %.3f ms total resim %.0f frames %.3f ms/frame | per drawn frame: ops %.0f tris %.0f rects %.0f draws %.0f vtx %.0f texlookups %.0f texdecodes %.0f\n",
+                PortProf(6) / n, PortProf(7) / n, n, d, PortProf(0) / n, d ? PortProf(1) / d : 0, d ? PortProf(2) / d : 0, PortProf(4), PortProf(8 + 12), PortProf(8 + 12) ? PortProf(5) / PortProf(8 + 12) : 0,
+                d ? PortProf(9) / d : 0, d ? PortProf(10) / d : 0, d ? PortProf(11) / d : 0, d ? PortProf(12) / d : 0, d ? PortProf(13) / d : 0, d ? PortProf(15) / d : 0, PortProf(14)); }
         { extern uint32_t port_gfx_tris(void), port_gfx_rects(void); extern uint32_t dSYTaskmanFrameCount; if (getenv("DRAWSTATS")) printf("drawn frames %u tris %u rects %u\n", dSYTaskmanFrameCount, port_gfx_tris(), port_gfx_rects()); } { extern uint32_t port_sfx_started(void); if (getenv("SOUNDS")) printf("sounds %u\n", port_sfx_started()); } printf("end frame %u status %d static %lu arena %lu\n", SimFrame(), GameStatus(), port_snapshot_static_size(), port_snapshot_arena_used());
     }
     if (getenv("PCMOUT")) {

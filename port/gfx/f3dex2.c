@@ -2,6 +2,7 @@
 // through a small backend. Render only: nothing here writes game state.
 #include "port.h"
 #include "gfx.h"
+#include "port_prof.h"
 void *memset(void *, int, unsigned long);
 void *memcpy(void *, const void *, unsigned long);
 float sqrtf(float);
@@ -217,6 +218,8 @@ static void do_vtx(const N64Vtx *in, int n, int dst)
                 float dy = n3[0]*la[1][0] + n3[1]*la[1][1] + n3[2]*la[1][2];
                 U = (dx * 512.0f + 512.0f) * 32.0f * S.texs;
                 V = (dy * 512.0f + 512.0f) * 32.0f * S.texT;
+                if (sTrace && i == 0) printf("GTG lookat=%d,%d,%d/%d,%d,%d la=%.2f,%.2f,%.2f/%.2f,%.2f,%.2f n=%.2f,%.2f,%.2f dx=%.3f dy=%.3f texs=%.4f,%.4f U=%.1f V=%.1f geom=%06x\n",
+                    S.lookat[0][0], S.lookat[0][1], S.lookat[0][2], S.lookat[1][0], S.lookat[1][1], S.lookat[1][2], la[0][0], la[0][1], la[0][2], la[1][0], la[1][1], la[1][2], n3[0], n3[1], n3[2], dx, dy, S.texs, S.texT, U / 32, V / 32, S.geom); if (sTrace && i == 0) printf("GTN numlights=%d col0=%d,%d,%d dir0=%d,%d,%d amb=%d,%d,%d shade=%d,%d,%d\n", S.numlights, S.lightcol[0][0], S.lightcol[0][1], S.lightcol[0][2], S.lightdir[0][0], S.lightdir[0][1], S.lightdir[0][2], S.lightcol[S.numlights][0], S.lightcol[S.numlights][1], S.lightcol[S.numlights][2], d->r, d->g, d->b);
             }
         } else { d->r = v->cn[0]; d->g = v->cn[1]; d->b = v->cn[2]; }
         d->a = v->cn[3];
@@ -234,6 +237,10 @@ static void do_vtx(const N64Vtx *in, int n, int dst)
 #define TEXCACHE_BITS 12
 typedef struct TexEntry { uint32_t key; int w, h; uint8_t *rgba; struct TexEntry *next; } TexEntry;
 static TexEntry *sTexCache[1 << TEXCACHE_BITS];
+typedef struct { const uint8_t *img; int n, fmt, siz, w, h, pal; uint32_t tlut, frame, key; } Memo;
+#define MEMO_N 1024
+static Memo sMemo[MEMO_N];
+static uint32_t sFrameGen, sTlutGen; // the frame being drawn; bumps with every palette load
 
 static uint32_t fnv(uint32_t h, const uint8_t *p, int n) { int i; for (i = 0; i < n; i++) { h ^= p[i]; h *= 16777619u; } return h; }
 static uint8_t x5(int v) { return (v << 3) | (v >> 2); }
@@ -292,16 +299,28 @@ static void import_tile(RbTexture *out, int t)
     if (T->line && adj.stride == 0) adj.stride = T->line * (T->siz == 3 ? 16 : 8);
     if (adj.stride == 0) adj.stride = T->siz == 0 ? (w + 1) / 2 : w << (T->siz - 1);
     n = adj.stride * h;
-    key = fnv(2166136261u, adj.img, n);
-    key = (key ^ (T->fmt * 7 + T->siz * 131 + w * 1031 + h * 65599)) * 16777619u;
-    if (T->fmt == 2) key = fnv(key, S.tlut + (T->siz == 0 ? T->pal * 32 : 0), T->siz == 0 ? 32 : 512);
-    if (key == 0) key = 1;
+    // Within one frame nothing writes texel memory, so a tile seen before this frame (same bytes, same
+    // size, same palette load) has the key it had. Hashing every triangle's texels was the interpreter's
+    // biggest cost: Metal Mario's 2 KB chrome map hashed once per triangle, 14 joints, every frame.
+    { Memo *m = &sMemo[(((uintptr_t)adj.img >> 3) ^ (uintptr_t)n * 2654435761u ^ (uintptr_t)T->pal * 97) & (MEMO_N - 1)];
+      if (m->frame == sFrameGen && m->img == adj.img && m->n == n && m->fmt == T->fmt && m->siz == T->siz && m->w == w && m->h == h && m->pal == T->pal && m->tlut == sTlutGen) key = m->key;
+      else {
+        key = fnv(2166136261u, adj.img, n);
+        key = (key ^ (T->fmt * 7 + T->siz * 131 + w * 1031 + h * 65599)) * 16777619u;
+        if (T->fmt == 2) key = fnv(key, S.tlut + (T->siz == 0 ? T->pal * 32 : 0), T->siz == 0 ? 32 : 512);
+        if (key == 0) key = 1;
+        m->frame = sFrameGen; m->img = adj.img; m->n = n; m->fmt = T->fmt; m->siz = T->siz; m->w = w; m->h = h; m->pal = T->pal; m->tlut = sTlutGen; m->key = key;
+        gPortCount[COUNT_TEXHASH]++;
+      } }
     for (e = sTexCache[key >> (32 - TEXCACHE_BITS)]; e; e = e->next) if (e->key == key && e->w == w && e->h == h) break;
+    gPortCount[COUNT_TEXLOOKUP]++;
     if (!e) {
+        double t0 = port_now();
         e = malloc(sizeof *e);
         e->key = key; e->w = w; e->h = h;
         e->rgba = malloc((unsigned long)w * h * 4);
         decode(e->rgba, &adj, T, w, h);
+        gPortCount[COUNT_TEXDECODE]++; gPortProf[PROF_TEXDECODE] += port_now() - t0;
         e->next = sTexCache[key >> (32 - TEXCACHE_BITS)]; sTexCache[key >> (32 - TEXCACHE_BITS)] = e;
     }
     out->key = key; out->w = w; out->h = h; out->rgba = e->rgba;
@@ -318,6 +337,7 @@ static void fill_state(RbState *st)
     uint32_t L = S.oml, H = S.omh;
     int cyc = (H >> 20) & 3;
     int t;
+    memset(st, 0, sizeof *st);
     st->combine_hi = S.combhi; st->combine_lo = S.comblo;
     st->two_cycle = cyc == 1;
     st->alpha_blend = ((L & (1 << 14)) != 0 /* FORCE_BL */) && ((L >> 18 & 3) == 0 || (L >> 16 & 3) == 0) ;
@@ -376,7 +396,7 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
     if (sTrace) printf("GTV %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f\n",
         a->ob[0], a->ob[1], a->ob[2], a->tc[0], a->tc[1], a->ls, a->lt, b->ob[0], b->ob[1], b->ob[2], b->tc[0], b->tc[1], b->ls, b->lt, c->ob[0], c->ob[1], c->ob[2], c->tc[0], c->tc[1], c->ls, c->lt);
     trace_draw("tri", &st, rv, 3);
-    rb_draw(&st, rv, 3);
+    { double t0 = port_now(); rb_draw(&st, rv, 3); gPortProf[PROF_RBDRAW] += port_now() - t0; }
 }
 
 static void do_rect(float x0, float y0, float x1, float y1, float s, float t, float ds, float dt, int textured, int flip, int tile)
@@ -414,7 +434,7 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     rv[3] = rv[0]; rv[4] = rv[2];
     rv[5].x = fx0; rv[5].y = fy1; rv[5].u = flip ? u1 : u0; rv[5].v = flip ? v0 : v1; rv[5].z = z; rv[5].w = 1; rv[5].r = c[0]; rv[5].g = c[1]; rv[5].b = c[2]; rv[5].a = c[3];
     trace_draw("rect", &st, rv, 6);
-    rb_draw(&st, rv, 6);
+    { double t0 = port_now(); rb_draw(&st, rv, 6); gPortProf[PROF_RBDRAW] += port_now() - t0; }
 }
 
 static void run(const Cmd *c, int depth)
@@ -430,7 +450,7 @@ static void run(const Cmd *c, int depth)
             int n = (w0 >> 12) & 0xFF; int end = (w0 >> 1) & 0x7F, dst = end - n;
             // The RSP has 64 vertex slots. A load past them would write over this interpreter's own state.
             if (dst < 0 || n <= 0 || end > 64) { sBad[0]++; if (dst < 0) dst = 0; if (dst + n > 64) n = 64 - dst; if (n <= 0) break; }
-            do_vtx(seg(w1), n, dst); break; }
+            gPortCount[COUNT_VTX] += n; do_vtx(seg(w1), n, dst); break; }
         case OP_TRI1: emit_tri(&S.vtx[((w0 >> 16) & 0xFF) / 2], &S.vtx[((w0 >> 8) & 0xFF) / 2], &S.vtx[(w0 & 0xFF) / 2]); break;
         case OP_TRI2: case OP_QUAD:
             emit_tri(&S.vtx[((w0 >> 16) & 0xFF) / 2], &S.vtx[((w0 >> 8) & 0xFF) / 2], &S.vtx[(w0 & 0xFF) / 2]);
@@ -488,7 +508,7 @@ static void run(const Cmd *c, int depth)
                 S.vp[0] = tx - sx; S.vp[1] = ty - sy; S.vp[2] = sx * 2; S.vp[3] = sy * 2;
             } else if (idx == 10) {
                 int l = off / 24;
-                if (l < 2) { S.lookat[l][0] = p[8]; S.lookat[l][1] = p[9]; S.lookat[l][2] = p[10]; }
+                if (l < 2) { S.lookat[l][0] = p[8]; S.lookat[l][1] = p[9]; S.lookat[l][2] = p[10]; if (sTrace) printf("GTL lookat%d=%d,%d,%d\n", l, S.lookat[l][0], S.lookat[l][1], S.lookat[l][2]); }
                 else if (l - 2 < 8) { l -= 2; S.lightcol[l][0] = p[0]; S.lightcol[l][1] = p[1]; S.lightcol[l][2] = p[2]; S.lightdir[l][0] = p[8]; S.lightdir[l][1] = p[9]; S.lightdir[l][2] = p[10]; }
             }
             break; }
@@ -526,7 +546,8 @@ static void run(const Cmd *c, int depth)
             int start = S.tile[t].tmem - 256;
             if (start < 0) start = 0;
             if (start * 2 + count * 2 > 512) count = 256 - start;
-            memcpy(S.tlut + start * 2, S.timg, count * 2);
+            memcpy(S.tlut + start * 2, S.timg, count * 2); sTlutGen++;
+            if (sTrace) { const uint8_t *q = S.timg; printf("GTP tlut count=%d start=%d bytes=%02x%02x %02x%02x %02x%02x %02x%02x\n", count, start, q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]); }
             break; }
         case OP_LOADBLOCK: {
             int t = (w1 >> 24) & 7;
@@ -534,6 +555,7 @@ static void run(const Cmd *c, int depth)
             int dxt = w1 & 0xFFF;
             L->img = S.timg; L->fmt = S.timgfmt; L->siz = S.timgsiz; L->uls = 0; L->ult = 0;
             L->stride = 0; L->shuffled = dxt == 0;
+            if (sTrace) { const uint8_t *q = S.timg; printf("GTB tile=%d fmt=%d siz=%d dxt=%03x img=%p bytes=%02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x\n", t, S.timgfmt, S.timgsiz, dxt, (void *)q, q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7],q[8],q[9],q[10],q[11],q[12],q[13],q[14],q[15]); }
             break; }
         case OP_LOADTILE: {
             int t = (w1 >> 24) & 7;
@@ -589,8 +611,12 @@ void port_gfx_run(void *dl)
         S.vp[2] = 320; S.vp[3] = 240; S.sc[2] = 320; S.sc[3] = 240;
     }
     S.mvtop = 0; S.cimg_main = 1; S.cimg_depth = 0;
+    sFrameGen++;
     rb_begin_frame();
     if (sTrace) printf("GT frame\n");
-    run((const Cmd *)dl, 0);
+    { uint32_t o = sOps, t = sTris, r = sRects;
+      run((const Cmd *)dl, 0);
+      gPortCount[COUNT_OPS] += sOps - o; gPortCount[COUNT_TRIS] += sTris - t; gPortCount[COUNT_RECTS] += sRects - r; }
+    rb_end_frame();
     if (sTrace > 0) sTrace--;
 }
