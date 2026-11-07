@@ -274,20 +274,33 @@ void rb_begin_frame(void)
     glEnable(GL_SCISSOR_TEST);
 }
 
-// A depth clear in mid-frame: draw what came before it first. The depth mask it sets is re-applied by the next batch.
 static void state_forget_depth(void);
-void rb_clear_depth(void)
+static void close_batch(void);
+static void replay(void);
+static void depth_clear_now(void)
 {
-    flush();
     glDisable(GL_SCISSOR_TEST); glDepthMask(GL_TRUE); glClearDepthf(1.0f); glClear(GL_DEPTH_BUFFER_BIT); glEnable(GL_SCISSOR_TEST);
     state_forget_depth();
 }
 
-// ---- batching: triangles and rectangles with the same state go out in one draw, in order ----
-#define MAXV 16384
-static RbVertex sBuf[MAXV]; static int sN;
+// ---- batching: triangles and rectangles with the same state form one batch, in order. A frame's
+// vertices go to GL in one buffer upload at the end, then the batches replay as draws at offsets into
+// it (was: one upload per batch). A depth clear in mid-frame is a command between batches. ----
+#define MAXV 65536
+#define MAXCMD 2048
+typedef struct { RbState st; int first, n, clear; } Cmd;
+static RbVertex sBuf[MAXV]; static int sN, sFirst; // vertices this frame; where the open batch starts
+static Cmd sCmd[MAXCMD]; static int sNC;
 static RbState sCur; static int sHave; static uint32_t sCurSerial;
 static Prog *sProg;
+
+// A depth clear in mid-frame: the batches before it draw first. The depth mask it sets is re-applied by the next batch.
+void rb_clear_depth(void)
+{
+    close_batch();
+    sCmd[sNC].clear = 1; sCmd[sNC].n = 0; sNC++;
+    if (sNC == MAXCMD) replay();
+}
 
 // What GL holds now, so a batch only sets what differs from the batch before it.
 static int lb = -1, ld = -1, ldecal = -1; static GLint lvp[4] = {-1,-1,-1,-1}, lsc[4] = {-1,-1,-1,-1};
@@ -349,24 +362,38 @@ static void apply(const RbState *st)
     if (memcmp(sc, lsc, sizeof sc)) { glScissor(sc[0], sc[1], sc[2], sc[3]); memcpy(lsc, sc, sizeof sc); }
 }
 
-static void flush(void)
+static void replay(void);
+static void close_batch(void)
 {
-    double t0;
-    if (!sN) return;
-    t0 = port_now();
-    apply(&sCur);
-    glBufferData(GL_ARRAY_BUFFER, sN * sizeof(RbVertex), sBuf, GL_STREAM_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, sN);
-    gPortCount[COUNT_DRAWS]++; gPortCount[COUNT_BUFBYTES] += sN * sizeof(RbVertex);
-    sN = 0;
+    if (sN == sFirst) return;
+    sCmd[sNC].st = sCur; sCmd[sNC].first = sFirst; sCmd[sNC].n = sN - sFirst; sCmd[sNC].clear = 0; sNC++;
+    sFirst = sN;
+    if (sNC == MAXCMD) replay();
+}
+
+// Everything recorded so far goes to GL: one upload, then the draws and depth clears in order.
+static void replay(void)
+{
+    double t0 = port_now();
+    int i;
+    if (sN) { glBufferData(GL_ARRAY_BUFFER, sN * sizeof(RbVertex), sBuf, GL_STREAM_DRAW); gPortCount[COUNT_BUFBYTES] += sN * sizeof(RbVertex); }
+    for (i = 0; i < sNC; i++) {
+        if (sCmd[i].clear) { depth_clear_now(); continue; }
+        apply(&sCmd[i].st);
+        glDrawArrays(GL_TRIANGLES, sCmd[i].first, sCmd[i].n);
+        gPortCount[COUNT_DRAWS]++;
+    }
+    sNC = 0; sN = sFirst = 0;
     gPortProf[PROF_RBDRAW] += port_now() - t0;
 }
+
+static void flush(void) { close_batch(); if (sNC) replay(); else sN = sFirst = 0; }
 
 void rb_draw(const RbState *st, uint32_t serial, const RbVertex *v, int n)
 {
     // The state behind a serial never changes, so a new serial is the only reason to start a batch.
-    if (!sHave || serial != sCurSerial) { flush(); sCur = *st; sCurSerial = serial; sHave = 1; }
     if (sN + n > MAXV) flush();
+    if (!sHave || serial != sCurSerial) { close_batch(); sCur = *st; sCurSerial = serial; sHave = 1; }
     memcpy(&sBuf[sN], v, n * sizeof *v);
     sN += n;
 }
