@@ -436,12 +436,30 @@ static void fill_state(RbState *st)
     for (t = 0; t < 2; t++) st->tex[t].key = 0;
 }
 
+// Which texels the combiner reads (bit 0 TEXEL0, bit 1 TEXEL1), from the G_SETCOMBINE fields of the cycles
+// that run. Only those tiles are imported and bound (fast3d-lessons 2.4): two thirds of the game's draws
+// are 2-cycle and none reads TEXEL1; one crossfade state reads both. (The RDP's cycle-2 texel swap is not
+// modelled: no cycle-2 combiner in the game reads a texel.)
+static int cc_texels(uint32_t hi, uint32_t lo, int two)
+{
+    int u = 0, k;
+    for (k = 0; k < (two ? 2 : 1); k++) {
+        int a = k ? (hi >> 5) & 15 : (hi >> 20) & 15, c = k ? hi & 31 : (hi >> 15) & 31;
+        int b = k ? (lo >> 24) & 15 : (lo >> 28) & 15, d = k ? (lo >> 6) & 7 : (lo >> 15) & 7;
+        int Aa = k ? (lo >> 21) & 7 : (hi >> 12) & 7, Ac = k ? (lo >> 18) & 7 : (hi >> 9) & 7;
+        int Ab = k ? (lo >> 3) & 7 : (lo >> 12) & 7, Ad = k ? lo & 7 : (lo >> 9) & 7;
+        if (a == 1 || b == 1 || c == 1 || c == 8 || d == 1 || Aa == 1 || Ab == 1 || Ac == 1 || Ad == 1) u |= 1;
+        if (a == 2 || b == 2 || c == 2 || c == 9 || d == 2 || Aa == 2 || Ab == 2 || Ac == 2 || Ad == 2) u |= 2;
+    }
+    return u;
+}
+
 static void use_textures(RbState *st, int tile)
 {
     int filter = (S.omh >> 12) & 3;
-    import_tile(&st->tex[0], tile);
-    st->tex[0].linear = filter != 0;
-    if (st->two_cycle) { import_tile(&st->tex[1], (tile + 1) & 7); st->tex[1].linear = filter != 0; }
+    int u = ((S.omh >> 20) & 3) == 2 ? 1 : cc_texels(st->combine_hi, st->combine_lo, st->two_cycle); // copy mode: the texel
+    if (u & 1) { import_tile(&st->tex[0], tile); st->tex[0].linear = filter != 0; }
+    if (u & 2) { import_tile(&st->tex[1], (tile + 1) & 7); st->tex[1].linear = filter != 0; }
 }
 
 #define RBMAX 256
@@ -494,7 +512,7 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
         RbState t;
         if (sStDirty) { RbTexture keep[2]; memcpy(keep, sSt.tex, sizeof keep); fill_state(&t); memcpy(t.tex, keep, sizeof keep); }
         else t = sSt;
-        if (sTexDirty || t.two_cycle != sSt.two_cycle) { memset(t.tex, 0, sizeof t.tex); use_textures(&t, S.textile); }
+        if (sTexDirty || t.two_cycle != sSt.two_cycle || t.combine_hi != sSt.combine_hi || t.combine_lo != sSt.combine_lo) { memset(t.tex, 0, sizeof t.tex); use_textures(&t, S.textile); }
         if (memcmp(&t, &sSt, sizeof t)) { sSt = t; sStSerial = ++sSerialGen; }
         sStDirty = sTexDirty = 0; gPortCount[COUNT_STATEBUILD]++;
     }
@@ -554,6 +572,8 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     // Copy mode's alpha compare only rejects alpha 0, whatever the blend alpha says.
     if (cyc == 2) { ds /= 4; st.alpha_compare = (S.oml & 3) == 1 ? 1 : 0; st.blend_a = 0; }
     if (textured) use_textures(&st, tile);
+    // Copy mode copies texels: no filtering whatever the othermode filter says (Fast3D does the same).
+    if (cyc == 2) st.tex[0].linear = st.tex[1].linear = 0;
     fx0 = x0 / 160.0f - 1; fx1 = x1 / 160.0f - 1; fy0 = 1 - y0 / 120.0f; fy1 = 1 - y1 / 120.0f;
     // A rectangle as wide as the picture (backdrop strips, fills, flashes) covers the canvas; the HUD stays in the band.
     if (x1 - x0 < WIDE_SPAN) { fx0 *= sK; fx1 *= sK; }
