@@ -7,13 +7,16 @@
 #include "gfx.h"
 #include "port_prof.h"
 
-typedef struct { uint32_t hi, lo; int flags; GLuint prog; GLint uPrim, uEnv, uFog, uBlendA, uLod, uS0, uS1, uScale0, uScale1; } Prog;
+typedef struct { uint32_t hi, lo; int flags; GLuint prog; GLint uPrim, uEnv, uFog, uBlendA, uLod, uS0, uS1, uScale0, uScale1; uint32_t used; int next; } Prog;
+// Programs: a hash on (combine words, flags) and, when the table is full, the least recently used one goes.
 #define MAXP 512
-static Prog sP[MAXP]; static int sNP;
+#define PHASH 1024
+static Prog sP[MAXP]; static int sNP, sPHead[PHASH];
+static uint32_t sFrame; // frames drawn, for the LRU stamps
 static GLuint sVbo, sVao; static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE sCtx;
 static int sCanvasW = 960, sCanvasH = 720;
 
-typedef struct Tx { uint32_t key; int w, h; GLuint id; int params; struct Tx *next; } Tx;
+typedef struct Tx { uint32_t key; int w, h; GLuint id; int params; uint32_t used; struct Tx *next; } Tx;
 static Tx *sTx[4096];
 static GLuint sWhite;
 
@@ -40,14 +43,24 @@ static GLuint compile(GLenum ty, const char *src)
 
 enum { F_FOG = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32 };
 
+static Prog *lp; // the program GL has bound
 static Prog *program(uint32_t hi, uint32_t lo, int flags)
 {
     static char fs[8192];
     int i, n;
     GLuint p;
     Prog *pr;
-    for (i = 0; i < sNP; i++) if (sP[i].hi == hi && sP[i].lo == lo && sP[i].flags == flags) return &sP[i];
-    if (sNP >= MAXP) sNP = 0;
+    uint32_t hb = ((hi * 2654435761u) ^ (lo * 40503u) ^ ((uint32_t)flags * 97u)) & (PHASH - 1);
+    for (i = sPHead[hb] - 1; i >= 0; i = sP[i].next - 1) if (sP[i].hi == hi && sP[i].lo == lo && sP[i].flags == flags) { sP[i].used = sFrame; return &sP[i]; }
+    if (sNP < MAXP) i = sNP++;
+    else { // full: drop the least recently used program
+        int j, *pp; uint32_t ob;
+        for (i = 0, j = 1; j < MAXP; j++) if (sFrame - sP[j].used > sFrame - sP[i].used) i = j;
+        ob = ((sP[i].hi * 2654435761u) ^ (sP[i].lo * 40503u) ^ ((uint32_t)sP[i].flags * 97u)) & (PHASH - 1);
+        for (pp = &sPHead[ob]; *pp; pp = &sP[*pp - 1].next) if (*pp - 1 == i) { *pp = sP[i].next; break; }
+        if (lp == &sP[i]) lp = NULL;
+        glDeleteProgram(sP[i].prog); gPortCount[COUNT_PROGLIVE]--;
+    }
     n = sprintf(fs, "#version 300 es\nprecision highp float; in vec2 vt; in vec4 vc; out vec4 o;\n"
         "uniform vec4 uPrim,uEnv; uniform vec3 uFog; uniform float uBlendA,uLod; uniform sampler2D uS0,uS1; uniform vec2 uScale0,uScale1;\n"
         "float noise(){ return fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); }\n"
@@ -67,10 +80,12 @@ static Prog *program(uint32_t hi, uint32_t lo, int flags)
     if (flags & F_EDGE) n += sprintf(fs + n, "if(cmb.a<0.125) discard;\n");
     sprintf(fs + n, "o=clamp(cmb,0.0,1.0); }\n");
     p = glCreateProgram();
-    glAttachShader(p, compile(GL_VERTEX_SHADER, VS)); glAttachShader(p, compile(GL_FRAGMENT_SHADER, fs));
-    glLinkProgram(p);
-    pr = &sP[sNP++];
-    pr->hi = hi; pr->lo = lo; pr->flags = flags; pr->prog = p;
+    { static GLuint vs; GLuint f = compile(GL_FRAGMENT_SHADER, fs);
+      if (!vs) vs = compile(GL_VERTEX_SHADER, VS);
+      glAttachShader(p, vs); glAttachShader(p, f); glLinkProgram(p); glDetachShader(p, f); glDeleteShader(f); }
+    pr = &sP[i];
+    pr->hi = hi; pr->lo = lo; pr->flags = flags; pr->prog = p; pr->used = sFrame;
+    pr->next = sPHead[hb]; sPHead[hb] = i + 1; gPortCount[COUNT_PROGLIVE]++;
     pr->uPrim = glGetUniformLocation(p, "uPrim"); pr->uEnv = glGetUniformLocation(p, "uEnv"); pr->uFog = glGetUniformLocation(p, "uFog");
     pr->uBlendA = glGetUniformLocation(p, "uBlendA"); pr->uLod = glGetUniformLocation(p, "uLod");
     pr->uS0 = glGetUniformLocation(p, "uS0"); pr->uS1 = glGetUniformLocation(p, "uS1");
@@ -87,13 +102,14 @@ static void bind_tex(int unit, const RbTexture *t)
     if (!t->key) { if (sBound[unit] != sWhite) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, sWhite); sBound[unit] = sWhite; } return; }
     for (e = sTx[t->key >> 20]; e; e = e->next) if (e->key == t->key && e->w == t->w && e->h == t->h) break;
     if (!e) {
-        e = malloc(sizeof *e); e->key = t->key; e->w = t->w; e->h = t->h; e->params = -1;
+        e = malloc(sizeof *e); e->key = t->key; e->w = t->w; e->h = t->h; e->params = -1; gPortCount[COUNT_GLTEXLIVE]++;
         glActiveTexture(GL_TEXTURE0 + unit);
         glGenTextures(1, &e->id); glBindTexture(GL_TEXTURE_2D, e->id); sBound[unit] = e->id;
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, t->w, t->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, t->rgba);
         gPortCount[COUNT_GLUPLOAD]++;
         e->next = sTx[t->key >> 20]; sTx[t->key >> 20] = e;
     } else if (sBound[unit] != e->id) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, e->id); sBound[unit] = e->id; gPortCount[COUNT_TEXBIND]++; }
+    e->used = sFrame;
     params = (t->linear != 0) | (t->clamp_s != 0) << 1 | (t->mirror_s != 0) << 2 | (t->clamp_t != 0) << 3 | (t->mirror_t != 0) << 4;
     if (e->params != params) {
         e->params = params;
@@ -102,6 +118,23 @@ static void bind_tex(int unit, const RbTexture *t)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, t->linear ? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, t->clamp_s ? GL_CLAMP_TO_EDGE : t->mirror_s ? GL_MIRRORED_REPEAT : GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t->clamp_t ? GL_CLAMP_TO_EDGE : t->mirror_t ? GL_MIRRORED_REPEAT : GL_REPEAT);
+    }
+}
+
+// GL textures unused for TX_KEEP frames are deleted (the interpreter's decoded copy has its own LRU).
+#define TX_KEEP 600
+static void tx_evict(void)
+{
+    int b;
+    for (b = 0; b < 4096; b++) {
+        Tx **pp = &sTx[b], *e;
+        while ((e = *pp) != NULL) {
+            if (sFrame - e->used > TX_KEEP) {
+                int u; for (u = 0; u < 2; u++) if (sBound[u] == e->id) sBound[u] = ~0u;
+                glDeleteTextures(1, &e->id); *pp = e->next; free(e);
+                gPortCount[COUNT_GLTEXLIVE]--; gPortCount[COUNT_TEXEVICT]++;
+            } else pp = &e->next;
+        }
     }
 }
 
@@ -130,6 +163,7 @@ void rb_begin_frame(void)
 {
     if (!sCtx) init();
     flush();
+    if (++sFrame % 60 == 0) tx_evict();
     glDepthMask(GL_TRUE);
     glDisable(GL_SCISSOR_TEST);
     glClearColor(0, 0, 0, 1);
@@ -149,12 +183,12 @@ void rb_clear_depth(void)
 // ---- batching: triangles and rectangles with the same state go out in one draw, in order ----
 #define MAXV 16384
 static RbVertex sBuf[MAXV]; static int sN;
-static RbState sCur; static int sHave;
+static RbState sCur; static int sHave; static uint32_t sCurSerial;
 static Prog *sProg;
 
 // What GL holds now, so a batch only sets what differs from the batch before it.
 static int lb = -1, ld = -1, ldecal = -1; static GLint lvp[4] = {-1,-1,-1,-1}, lsc[4] = {-1,-1,-1,-1};
-static float lprim[4], lenv[4], lfog[3], lblend, llod, lscale[2][2]; static Prog *lp;
+static float lprim[4], lenv[4], lfog[3], lblend, llod, lscale[2][2];
 static void state_forget_depth(void) { ld = -1; }
 
 // Apply a draw state to GL. Called once per batch, and skips what the previous batch already set.
@@ -208,17 +242,21 @@ static void apply(const RbState *st)
 
 static void flush(void)
 {
+    double t0;
     if (!sN) return;
+    t0 = port_now();
     apply(&sCur);
     glBufferData(GL_ARRAY_BUFFER, sN * sizeof(RbVertex), sBuf, GL_STREAM_DRAW);
     glDrawArrays(GL_TRIANGLES, 0, sN);
     gPortCount[COUNT_DRAWS]++; gPortCount[COUNT_BUFBYTES] += sN * sizeof(RbVertex);
     sN = 0;
+    gPortProf[PROF_RBDRAW] += port_now() - t0;
 }
 
-void rb_draw(const RbState *st, const RbVertex *v, int n)
+void rb_draw(const RbState *st, uint32_t serial, const RbVertex *v, int n)
 {
-    if (!sHave || memcmp(st, &sCur, sizeof *st) != 0) { flush(); sCur = *st; sHave = 1; }
+    // The state behind a serial never changes, so a new serial is the only reason to start a batch.
+    if (!sHave || serial != sCurSerial) { flush(); sCur = *st; sCurSerial = serial; sHave = 1; }
     if (sN + n > MAXV) flush();
     memcpy(&sBuf[sN], v, n * sizeof *v);
     sN += n;

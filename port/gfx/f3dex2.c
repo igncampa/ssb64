@@ -7,6 +7,7 @@ void *memset(void *, int, unsigned long);
 void *memcpy(void *, const void *, unsigned long);
 float sqrtf(float);
 void *malloc(unsigned long);
+void free(void *);
 
 typedef struct { uint32_t w0, w1; } Cmd;
 typedef struct { float x, y, z, w, u, v; uint8_t r, g, b, a; int16_t ob[3], tc[2]; float ls, lt; } Vert; // ob/tc/ls/lt: raw source, for the trace only
@@ -235,14 +236,31 @@ static void do_vtx(const N64Vtx *in, int n, int dst)
 
 // ---- textures ----
 #define TEXCACHE_BITS 12
-typedef struct TexEntry { uint32_t key; int w, h; uint8_t *rgba; struct TexEntry *next; } TexEntry;
+typedef struct TexEntry { uint32_t key; int w, h; uint8_t *rgba; uint32_t used; struct TexEntry *next; } TexEntry;
 static TexEntry *sTexCache[1 << TEXCACHE_BITS];
 typedef struct { const uint8_t *img; int n, fmt, siz, w, h, pal; uint32_t tlut, frame, key; } Memo;
 #define MEMO_N 1024
 static Memo sMemo[MEMO_N];
 static uint32_t sFrameGen, sTlutGen; // the frame being drawn; bumps with every palette load
 
-static uint32_t fnv(uint32_t h, const uint8_t *p, int n) { int i; for (i = 0; i < n; i++) { h ^= p[i]; h *= 16777619u; } return h; }
+// Texel content hash, once per texture per frame. Four 32-bit lanes over 16-byte steps (the xxHash32
+// round): the byte-at-a-time FNV it replaces was most of the interpreter's time (CPU profile, node runner).
+static uint32_t rotl(uint32_t x, int r) { return (x << r) | (x >> (32 - r)); }
+static uint32_t fnv(uint32_t h, const uint8_t *p, int n)
+{
+    const uint32_t P1 = 2654435761u, P2 = 2246822519u, P3 = 3266489917u;
+    uint32_t a = h + P1 + P2, b = h + P2, c = h, d = h - P1, w[4];
+    int i = 0;
+    for (; i + 16 <= n; i += 16) {
+        __builtin_memcpy(w, p + i, 16);
+        a = rotl(a + w[0] * P2, 13) * P1; b = rotl(b + w[1] * P2, 13) * P1;
+        c = rotl(c + w[2] * P2, 13) * P1; d = rotl(d + w[3] * P2, 13) * P1;
+    }
+    h = rotl(a, 1) + rotl(b, 7) + rotl(c, 12) + rotl(d, 18) + (uint32_t)n;
+    for (; i < n; i++) h = rotl(h + p[i] * 374761393u, 11) * P1;
+    h ^= h >> 15; h *= P2; h ^= h >> 13; h *= P3; h ^= h >> 16;
+    return h;
+}
 static uint8_t x5(int v) { return (v << 3) | (v >> 2); }
 
 static void decode(uint8_t *o, const Loaded *L, const Tile *T, int w, int h)
@@ -322,7 +340,9 @@ static void import_tile(RbTexture *out, int t)
         decode(e->rgba, &adj, T, w, h);
         gPortCount[COUNT_TEXDECODE]++; gPortProf[PROF_TEXDECODE] += port_now() - t0;
         e->next = sTexCache[key >> (32 - TEXCACHE_BITS)]; sTexCache[key >> (32 - TEXCACHE_BITS)] = e;
+        gPortCount[COUNT_TEXLIVE]++;
     }
+    e->used = sFrameGen;
     out->key = key; out->w = w; out->h = h; out->rgba = e->rgba;
     // A tile area larger than the mask wraps at the mask and clamps only at the far edge.
     out->clamp_s = (T->cms & 2) != 0 && (((T->lrs - T->uls) >> 2) + 1) <= w;
@@ -331,7 +351,28 @@ static void import_tile(RbTexture *out, int t)
     out->uls = T->uls / 4.0f; out->ult = T->ult / 4.0f;
 }
 
+// LRU: a decoded texture nobody drew for TEX_KEEP frames goes (palette-animated textures make a new
+// key every few frames, so without this a long session only grows). The backend keeps its own copy.
+#define TEX_KEEP 600
+static void tex_evict(void)
+{
+    int b;
+    for (b = 0; b < (1 << TEXCACHE_BITS); b++) {
+        TexEntry **pp = &sTexCache[b], *e;
+        while ((e = *pp) != NULL) {
+            if (sFrameGen - e->used > TEX_KEEP) { *pp = e->next; free(e->rgba); free(e); gPortCount[COUNT_TEXLIVE]--; gPortCount[COUNT_TEXEVICT]++; }
+            else pp = &e->next;
+        }
+    }
+}
+
 // ---- draw state ----
+// The triangle state is built when an op that feeds it runs, not per triangle: sStDirty for the
+// blender/combiner/colours/depth/viewport/scissor, sTexDirty for tiles, loads and palettes.
+static RbState sSt; static uint32_t sStSerial, sSerialGen; static int sStDirty = 1, sTexDirty = 1;
+static RbState sSent; static uint32_t sSentSerial; // the last state a rectangle sent, to share its serial
+#define DIRTY() (sStDirty = 1)
+#define TEXDIRTY() (sTexDirty = 1)
 static void fill_state(RbState *st)
 {
     uint32_t L = S.oml, H = S.omh;
@@ -368,7 +409,6 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
     static RbVertex rv[3];
     const Vert *p[3] = { a, b, c };
     int i, cull = S.geom & (G_CULL_FRONT_ | G_CULL_BACK_);
-    RbState st;
     sTris++;
     if (cull) {
         float ax = a->x / a->w, ay = a->y / a->w, bx = b->x / b->w, by = b->y / b->w, cx = c->x / c->w, cy = c->y / c->w;
@@ -378,8 +418,15 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
             if ((cull & G_CULL_FRONT_) && cr > 0) return;
         }
     }
-    fill_state(&st);
-    use_textures(&st, S.textile);
+    if (sStDirty || sTexDirty) {
+        RbState t;
+        if (sStDirty) { RbTexture keep[2]; memcpy(keep, sSt.tex, sizeof keep); fill_state(&t); memcpy(t.tex, keep, sizeof keep); }
+        else t = sSt;
+        if (sTexDirty || t.two_cycle != sSt.two_cycle) { memset(t.tex, 0, sizeof t.tex); use_textures(&t, S.textile); }
+        if (memcmp(&t, &sSt, sizeof t)) { sSt = t; sStSerial = ++sSerialGen; }
+        sStDirty = sTexDirty = 0; gPortCount[COUNT_STATEBUILD]++;
+    }
+    #define st sSt
     for (i = 0; i < 3; i++) {
         const Vert *v = p[(S.geom & G_SMOOTH_) ? i : i];
         const Vert *cv = (S.geom & G_SMOOTH_) ? v : p[0];
@@ -396,7 +443,8 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
     if (sTrace) printf("GTV %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f\n",
         a->ob[0], a->ob[1], a->ob[2], a->tc[0], a->tc[1], a->ls, a->lt, b->ob[0], b->ob[1], b->ob[2], b->tc[0], b->tc[1], b->ls, b->lt, c->ob[0], c->ob[1], c->ob[2], c->tc[0], c->tc[1], c->ls, c->lt);
     trace_draw("tri", &st, rv, 3);
-    { double t0 = port_now(); rb_draw(&st, rv, 3); gPortProf[PROF_RBDRAW] += port_now() - t0; }
+    rb_draw(&st, sStSerial, rv, 3);
+    #undef st
 }
 
 static void do_rect(float x0, float y0, float x1, float y1, float s, float t, float ds, float dt, int textured, int flip, int tile)
@@ -434,7 +482,8 @@ static void do_rect(float x0, float y0, float x1, float y1, float s, float t, fl
     rv[3] = rv[0]; rv[4] = rv[2];
     rv[5].x = fx0; rv[5].y = fy1; rv[5].u = flip ? u1 : u0; rv[5].v = flip ? v0 : v1; rv[5].z = z; rv[5].w = 1; rv[5].r = c[0]; rv[5].g = c[1]; rv[5].b = c[2]; rv[5].a = c[3];
     trace_draw("rect", &st, rv, 6);
-    { double t0 = port_now(); rb_draw(&st, rv, 6); gPortProf[PROF_RBDRAW] += port_now() - t0; }
+    if (memcmp(&st, &sSent, sizeof st)) { sSent = st; sSentSerial = ++sSerialGen; }
+    rb_draw(&sSent, sSentSerial, rv, 6);
 }
 
 static void run(const Cmd *c, int depth)
@@ -469,14 +518,14 @@ static void run(const Cmd *c, int depth)
             break; }
         case OP_SPECIAL_1: if ((w0 & 0xFF) == 1) recompute_mvp(); break; // gSPMvpRecalc
         case OP_BRANCH_Z: break;
-        case OP_TEXTURE:
+        case OP_TEXTURE: TEXDIRTY();
             S.texon = w0 & 2 ? 1 : 0; S.textile = (w0 >> 8) & 7; S.texlevel = (w0 >> 11) & 7;
             S.texs = (w1 >> 16) / 65536.0f; S.texT = (w1 & 0xFFFF) / 65536.0f;
             if ((w1 >> 16) == 0xFFFF) S.texs = 1.0f;
             if ((w1 & 0xFFFF) == 0xFFFF) S.texT = 1.0f;
             break;
         case OP_POPMTX: { int n = w1 / 64; S.mvtop -= n; if (S.mvtop < 0) S.mvtop = 0; recompute_mvp(); break; }
-        case OP_GEOMETRYMODE: S.geom = (S.geom & (w0 & 0xFFFFFF)) | w1; break;
+        case OP_GEOMETRYMODE: DIRTY(); S.geom = (S.geom & (w0 & 0xFFFFFF)) | w1; break;
         case OP_MTX: {
             int p = (w0 & 0xFF) ^ 1; // G_MTX_PUSH is inverted in the encoding
             float m[4][4];
@@ -503,7 +552,7 @@ static void run(const Cmd *c, int depth)
         case OP_MOVEMEM: {
             int idx = w0 & 0xFF, off = ((w0 >> 8) & 0xFF) * 8;
             const uint8_t *p = seg(w1);
-            if (idx == 8) { const int16_t *v = (const int16_t *)p;
+            if (idx == 8) { const int16_t *v = (const int16_t *)p; DIRTY();
                 int sx = v[0] / 4, sy = v[1] / 4, tx = v[4] / 4, ty = v[5] / 4;
                 S.vp[0] = tx - sx; S.vp[1] = ty - sy; S.vp[2] = sx * 2; S.vp[3] = sy * 2;
             } else if (idx == 10) {
@@ -523,6 +572,7 @@ static void run(const Cmd *c, int depth)
             int len = (w0 & 0xFF) + 1, shift = 32 - ((w0 >> 8) & 0xFF) - len;
             uint32_t mask = (len >= 32 ? 0xFFFFFFFFu : ((1u << len) - 1)) << shift;
             uint32_t *r = op == OP_OTHERMODE_L ? &S.oml : &S.omh;
+            DIRTY(); if (op == OP_OTHERMODE_H) TEXDIRTY(); // cycle type and texture filter
             *r = (*r & ~mask) | (w1 & mask);
             break; }
         case OP_TEXRECT: case OP_TEXRECTFLIP: {
@@ -546,7 +596,7 @@ static void run(const Cmd *c, int depth)
             int start = S.tile[t].tmem - 256;
             if (start < 0) start = 0;
             if (start * 2 + count * 2 > 512) count = 256 - start;
-            memcpy(S.tlut + start * 2, S.timg, count * 2); sTlutGen++;
+            memcpy(S.tlut + start * 2, S.timg, count * 2); sTlutGen++; TEXDIRTY();
             if (sTrace) { const uint8_t *q = S.timg; printf("GTP tlut count=%d start=%d bytes=%02x%02x %02x%02x %02x%02x %02x%02x\n", count, start, q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]); }
             break; }
         case OP_LOADBLOCK: {
@@ -554,7 +604,7 @@ static void run(const Cmd *c, int depth)
             Loaded *L = &S.tm[S.tile[t].tmem & 511];
             int dxt = w1 & 0xFFF;
             L->img = S.timg; L->fmt = S.timgfmt; L->siz = S.timgsiz; L->uls = 0; L->ult = 0;
-            L->stride = 0; L->shuffled = dxt == 0;
+            L->stride = 0; L->shuffled = dxt == 0; TEXDIRTY();
             if (sTrace) { const uint8_t *q = S.timg; printf("GTB tile=%d fmt=%d siz=%d dxt=%03x img=%p bytes=%02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x\n", t, S.timgfmt, S.timgsiz, dxt, (void *)q, q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7],q[8],q[9],q[10],q[11],q[12],q[13],q[14],q[15]); }
             break; }
         case OP_LOADTILE: {
@@ -564,24 +614,24 @@ static void run(const Cmd *c, int depth)
             int bpp = S.timgsiz == 0 ? 0 : 1 << (S.timgsiz - 1);
             L->stride = S.timgw * (bpp ? bpp : 1); if (!bpp) L->stride = (S.timgw + 1) / 2;
             L->img = S.timg + (ult >> 2) * L->stride + (bpp ? (uls >> 2) * bpp : (uls >> 2) / 2);
-            L->fmt = S.timgfmt; L->siz = S.timgsiz; L->shuffled = 0;
+            L->fmt = S.timgfmt; L->siz = S.timgsiz; L->shuffled = 0; TEXDIRTY();
             break; }
         case OP_SETTILE: {
-            Tile *T = &S.tile[(w1 >> 24) & 7];
+            Tile *T = &S.tile[(w1 >> 24) & 7]; TEXDIRTY();
             T->fmt = (w0 >> 21) & 7; T->siz = (w0 >> 19) & 3; T->line = (w0 >> 9) & 0x1FF; T->tmem = w0 & 0x1FF;
             T->pal = (w1 >> 20) & 15; T->cmt = (w1 >> 18) & 3; T->maskt = (w1 >> 14) & 15; T->shiftt = (w1 >> 10) & 15;
             T->cms = (w1 >> 8) & 3; T->masks = (w1 >> 4) & 15; T->shifts = w1 & 15;
             break; }
         case OP_SETTILESIZE: {
-            Tile *T = &S.tile[(w1 >> 24) & 7];
+            Tile *T = &S.tile[(w1 >> 24) & 7]; TEXDIRTY();
             T->uls = (w0 >> 12) & 0xFFF; T->ult = w0 & 0xFFF; T->lrs = (w1 >> 12) & 0xFFF; T->lrt = w1 & 0xFFF;
             break; }
         case OP_FILLCOLOR: S.fillc = w1; break;
-        case OP_FOGCOLOR: S.fogc[0] = (w1 >> 24) / 255.0f; S.fogc[1] = ((w1 >> 16) & 255) / 255.0f; S.fogc[2] = ((w1 >> 8) & 255) / 255.0f; break;
-        case OP_BLENDCOLOR: S.blenda = (w1 & 255) / 255.0f; break;
-        case OP_PRIMCOLOR: S.prim[0] = (w1 >> 24) / 255.0f; S.prim[1] = ((w1 >> 16) & 255) / 255.0f; S.prim[2] = ((w1 >> 8) & 255) / 255.0f; S.prim[3] = (w1 & 255) / 255.0f; S.primlod = (w0 & 255) / 255.0f; break;
-        case OP_ENVCOLOR: S.env[0] = (w1 >> 24) / 255.0f; S.env[1] = ((w1 >> 16) & 255) / 255.0f; S.env[2] = ((w1 >> 8) & 255) / 255.0f; S.env[3] = (w1 & 255) / 255.0f; break;
-        case OP_COMBINE: S.combhi = w0 & 0xFFFFFF; S.comblo = w1; break;
+        case OP_FOGCOLOR: DIRTY(); S.fogc[0] = (w1 >> 24) / 255.0f; S.fogc[1] = ((w1 >> 16) & 255) / 255.0f; S.fogc[2] = ((w1 >> 8) & 255) / 255.0f; break;
+        case OP_BLENDCOLOR: DIRTY(); S.blenda = (w1 & 255) / 255.0f; break;
+        case OP_PRIMCOLOR: DIRTY(); S.prim[0] = (w1 >> 24) / 255.0f; S.prim[1] = ((w1 >> 16) & 255) / 255.0f; S.prim[2] = ((w1 >> 8) & 255) / 255.0f; S.prim[3] = (w1 & 255) / 255.0f; S.primlod = (w0 & 255) / 255.0f; break;
+        case OP_ENVCOLOR: DIRTY(); S.env[0] = (w1 >> 24) / 255.0f; S.env[1] = ((w1 >> 16) & 255) / 255.0f; S.env[2] = ((w1 >> 8) & 255) / 255.0f; S.env[3] = (w1 & 255) / 255.0f; break;
+        case OP_COMBINE: DIRTY(); S.combhi = w0 & 0xFFFFFF; S.comblo = w1; break;
         case OP_SETTIMG: S.timg = seg(w1); S.timgfmt = (w0 >> 21) & 7; S.timgsiz = (w0 >> 19) & 3; S.timgw = (w0 & 0xFFF) + 1; break;
         case OP_SETZIMG: S.zimg = seg(w1); break;
         case OP_SETCIMG: {
@@ -589,8 +639,8 @@ static void run(const Cmd *c, int depth)
             S.cimg_main = isseg;
             S.cimg_depth = !isseg && (const void *)seg(w1) == S.zimg;
             break; }
-        case OP_PRIMDEPTH: S.primz = (int16_t)(w1 >> 16) / 16384.0f - 1.0f; if (S.primz > 1) S.primz = 1; break;
-        case OP_SCISSOR:
+        case OP_PRIMDEPTH: DIRTY(); S.primz = (int16_t)(w1 >> 16) / 16384.0f - 1.0f; if (S.primz > 1) S.primz = 1; break;
+        case OP_SCISSOR: DIRTY();
             S.sc[0] = ((w0 >> 12) & 0xFFF) / 4; S.sc[1] = (w0 & 0xFFF) / 4; S.sc[2] = ((w1 >> 12) & 0xFFF) / 4; S.sc[3] = (w1 & 0xFFF) / 4;
             break;
         default: if (sCovOn) sDefault[op]++;
@@ -612,6 +662,8 @@ void port_gfx_run(void *dl)
     }
     S.mvtop = 0; S.cimg_main = 1; S.cimg_depth = 0;
     sFrameGen++;
+    sStDirty = sTexDirty = 1; // texel memory may have changed since the last frame: keys are per frame
+    if (sFrameGen % 60 == 0) tex_evict();
     rb_begin_frame();
     if (sTrace) printf("GT frame\n");
     { uint32_t o = sOps, t = sTris, r = sRects;

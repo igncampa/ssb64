@@ -16,7 +16,12 @@ enum {
 enum {
     COUNT_FRAMES_DRAWN, COUNT_OPS, COUNT_TRIS, COUNT_RECTS, COUNT_DRAWS, COUNT_VTX, COUNT_TEXDECODE,
     COUNT_TEXLOOKUP, COUNT_GLUPLOAD, COUNT_PROGSWITCH, COUNT_TEXBIND, COUNT_BUFBYTES, COUNT_RESIM_FRAMES,
-    COUNT_SIM_FRAMES, COUNT_STATE_BLEND, COUNT_STATE_DEPTH, COUNT_TEXHASH, COUNT_N
+    COUNT_SIM_FRAMES, COUNT_STATE_BLEND, COUNT_STATE_DEPTH, COUNT_TEXHASH,
+    // gauges, not running totals: what the caches hold now
+    COUNT_TEXLIVE, COUNT_GLTEXLIVE, COUNT_PROGLIVE,
+    COUNT_TEXEVICT, // running total: textures (decoded or GL) dropped by the LRU
+    COUNT_STATEBUILD, // running total: times the interpreter rebuilt the draw state
+    COUNT_N
 };
 extern double gPortProf[PROF_N];
 extern uint32_t gPortCount[COUNT_N];

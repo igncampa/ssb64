@@ -33,6 +33,8 @@ typedef struct RbState {
 void rb_begin_frame(void);
 void rb_end_frame(void);   // the last batch of the frame goes out
 void rb_clear_depth(void);
-void rb_draw(const RbState *st, const RbVertex *v, int n);
+// serial names the state's contents: the interpreter gives a new one only when the state changed, so the
+// backend batches on an integer compare instead of comparing the whole struct per triangle.
+void rb_draw(const RbState *st, uint32_t serial, const RbVertex *v, int n);
 void port_set_canvas_size(int w, int h);
 #endif
