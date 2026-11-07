@@ -1,0 +1,4 @@
+RB stage 13 fighters 13,0,2,3: budget save 0.036 ms restore 0.031 ms rollback12 0.148 ms rb frames 1500 checks 1188 mismatches 0 snapshot_max 1935748 
+RB stage 13 fighters 0,1,2,3: budget save 0.038 ms restore 0.034 ms rollback12 0.143 ms rb frames 1500 checks 1188 mismatches 0 snapshot_max 2139432 
+RB stage 6 fighters 13,0,2,3: budget save 0.039 ms restore 0.033 ms rollback12 0.124 ms rb frames 1500 checks 1188 mismatches 0 snapshot_max 2077012 
+RB stage 6 fighters 0,1,2,3: budget save 0.042 ms restore 0.037 ms rollback12 0.156 ms rb frames 1500 checks 1188 mismatches 0 snapshot_max 2273316 
