@@ -361,6 +361,11 @@ static void import_tile(RbTexture *out, int t)
     out->clamp_s = (T->cms & 2) != 0 && (((T->lrs - T->uls) >> 2) + 1) <= w;
     out->clamp_t = (T->cmt & 2) != 0 && (((T->lrt - T->ult) >> 2) + 1) <= h;
     out->mirror_s = (T->cms & 1) != 0; out->mirror_t = (T->cmt & 1) != 0;
+    // G_TX_CLAMP on a tile larger than the mask: the texture is the mask's (it wraps or mirrors there) and
+    // the coordinate clamps at the tile's far edge, which GL's wrap modes cannot say together (fast3d-lessons
+    // 2.5; coverage: 641 k clamp+mirror draws sample outside their tile).
+    if ((T->cms & 2) && !out->clamp_s) out->tile_w = ((T->lrs - T->uls) >> 2) + 1;
+    if ((T->cmt & 2) && !out->clamp_t) out->tile_h = ((T->lrt - T->ult) >> 2) + 1;
     out->uls = T->uls / 4.0f; out->ult = T->ult / 4.0f;
 }
 

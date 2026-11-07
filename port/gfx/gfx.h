@@ -12,6 +12,7 @@ typedef struct RbTexture {
     int clamp_s, clamp_t, mirror_s, mirror_t;
     int linear;
     float uls, ult;
+    int tile_w, tile_h;  // > 0: clamp to this many texels in the shader (G_TX_CLAMP on a tile larger than its mask)
 } RbTexture;
 
 // Blender field codes: P/M colour 0 IN, 1 MEM, 2 BL, 3 FOG; A 0 A_IN, 1 A_FOG, 2 SHADE, 3 zero;

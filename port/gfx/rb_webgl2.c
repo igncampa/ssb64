@@ -8,7 +8,7 @@
 #include "gfx.h"
 #include "port_prof.h"
 
-typedef struct { uint32_t hi, lo, bl; int flags; GLuint prog; GLint uPrim, uEnv, uFog, uBlendC, uBlendA, uLod, uS0, uS1, uScale0, uScale1; uint32_t used; int next; } Prog;
+typedef struct { uint32_t hi, lo, bl; int flags; GLuint prog; GLint uClamp0, uClamp1, uPrim, uEnv, uFog, uBlendC, uBlendA, uLod, uS0, uS1, uScale0, uScale1; uint32_t used; int next; } Prog;
 // Programs: a hash on (combine words, flags) and, when the table is full, the least recently used one goes.
 #define MAXP 512
 #define PHASH 1024
@@ -42,7 +42,7 @@ static GLuint compile(GLenum ty, const char *src)
     return s;
 }
 
-enum { F_DITHER = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32, F_3PT0 = 64, F_3PT1 = 128 };
+enum { F_DITHER = 1, F_ATEST = 2, F_EDGE = 4, F_2CYC = 8, F_TEX0 = 16, F_TEX1 = 32, F_3PT0 = 64, F_3PT1 = 128, F_CLAMP0 = 256, F_CLAMP1 = 512 };
 
 // Picture settings (PortSetPicture, from the page): render only, every client simulates the same game.
 //   aa:     4x MSAA through a multisampled framebuffer resolved into the canvas (off if unsupported)
@@ -88,16 +88,18 @@ static Prog *program(uint32_t hi, uint32_t lo, uint32_t bl, int flags)
         glDeleteProgram(sP[i].prog); gPortCount[COUNT_PROGLIVE]--;
     }
     n = sprintf(fs, "#version 300 es\nprecision highp float; in vec2 vt; in vec4 vc; out vec4 o;\n"
-        "uniform vec4 uPrim,uEnv,uFog; uniform vec3 uBlendC; uniform float uBlendA,uLod; uniform sampler2D uS0,uS1; uniform vec2 uScale0,uScale1;\n"
+        "uniform vec4 uPrim,uEnv,uFog; uniform vec3 uBlendC; uniform float uBlendA,uLod; uniform sampler2D uS0,uS1; uniform vec2 uScale0,uScale1; uniform vec4 uClamp0,uClamp1;\n"
         "float noise(){ return fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453); }\n"
         // The RDP's bilinear is three texels: the triangle of the 2x2 quad the sample falls in. Texel
         // centres are fetched through a nearest sampler, so wrap, mirror and clamp stay the sampler's.
         "vec4 tex3(sampler2D s,vec2 st,vec2 k){ vec2 q=st-0.5; vec2 f=fract(q); vec2 b=floor(q)+0.5;\n"
         " if(f.x+f.y<1.0){ vec4 c0=texture(s,b*k); return c0+f.x*(texture(s,(b+vec2(1.0,0.0))*k)-c0)+f.y*(texture(s,(b+vec2(0.0,1.0))*k)-c0); }\n"
         " vec4 c3=texture(s,(b+1.0)*k); return c3+(1.0-f.x)*(texture(s,(b+vec2(0.0,1.0))*k)-c3)+(1.0-f.y)*(texture(s,(b+vec2(1.0,0.0))*k)-c3); }\n"
-        "void main(){ vec4 t0=%s; vec4 t1=%s; vec4 cmb=vec4(0.0);\n",
-        !(flags & F_TEX0) ? "vec4(1.0)" : (flags & F_3PT0) ? "tex3(uS0,vt,uScale0)" : "texture(uS0,vt*uScale0)",
-        !(flags & F_TEX1) ? "t0" : (flags & F_3PT1) ? "tex3(uS1,vt,uScale1)" : "texture(uS1,vt*uScale1)");
+        // A clamped tile larger than its mask: the sampler wraps or mirrors the mask, the shader clamps to the tile.
+        "void main(){ vec2 v0=%s, v1=%s; vec4 t0=%s; vec4 t1=%s; vec4 cmb=vec4(0.0);\n",
+        (flags & F_CLAMP0) ? "clamp(vt,uClamp0.xy,uClamp0.zw)" : "vt", (flags & F_CLAMP1) ? "clamp(vt,uClamp1.xy,uClamp1.zw)" : "vt",
+        !(flags & F_TEX0) ? "vec4(1.0)" : (flags & F_3PT0) ? "tex3(uS0,v0,uScale0)" : "texture(uS0,v0*uScale0)",
+        !(flags & F_TEX1) ? "t0" : (flags & F_3PT1) ? "tex3(uS1,v1,uScale1)" : "texture(uS1,v1*uScale1)");
     // the interpreter marks copy mode 0xFFFFFFFE and fill mode 0xFFFFFFFF, neither a real combine word
     if (hi >= 0xFFFFFFFE) n += sprintf(fs + n, "cmb=%s;\n", hi == 0xFFFFFFFE ? "t0" : "uPrim");
     else {
@@ -123,6 +125,7 @@ static Prog *program(uint32_t hi, uint32_t lo, uint32_t bl, int flags)
     pr->uPrim = glGetUniformLocation(p, "uPrim"); pr->uEnv = glGetUniformLocation(p, "uEnv"); pr->uFog = glGetUniformLocation(p, "uFog"); pr->uBlendC = glGetUniformLocation(p, "uBlendC");
     pr->uBlendA = glGetUniformLocation(p, "uBlendA"); pr->uLod = glGetUniformLocation(p, "uLod");
     pr->uS0 = glGetUniformLocation(p, "uS0"); pr->uS1 = glGetUniformLocation(p, "uS1");
+    pr->uClamp0 = glGetUniformLocation(p, "uClamp0"); pr->uClamp1 = glGetUniformLocation(p, "uClamp1");
     pr->uScale0 = glGetUniformLocation(p, "uScale0"); pr->uScale1 = glGetUniformLocation(p, "uScale1");
     return pr;
 }
@@ -304,7 +307,7 @@ void rb_clear_depth(void)
 
 // What GL holds now, so a batch only sets what differs from the batch before it.
 static int lb = -1, ld = -1, ldecal = -1; static GLint lvp[4] = {-1,-1,-1,-1}, lsc[4] = {-1,-1,-1,-1};
-static float lprim[4], lenv[4], lfog[4], lblc[3], lblend, llod, lscale[2][2];
+static float lprim[4], lenv[4], lfog[4], lblc[3], lblend, llod, lscale[2][2], lclamp[2][4];
 static void state_forget_depth(void) { ld = -1; }
 
 // Apply a draw state to GL. Called once per batch, and skips what the previous batch already set.
@@ -323,14 +326,14 @@ static void apply(const RbState *st)
     if (st->alpha_compare == 2) flags |= F_DITHER;
     if (st->tex_edge) flags |= F_EDGE;
     if (st->two_cycle) flags |= F_2CYC;
-    if (st->tex[0].key) flags |= F_TEX0 | (sFilter3 && st->tex[0].linear ? F_3PT0 : 0);
-    if (st->tex[1].key) flags |= F_TEX1 | (sFilter3 && st->tex[1].linear ? F_3PT1 : 0);
+    if (st->tex[0].key) flags |= F_TEX0 | (sFilter3 && st->tex[0].linear ? F_3PT0 : 0) | (st->tex[0].tile_w > 0 || st->tex[0].tile_h > 0 ? F_CLAMP0 : 0);
+    if (st->tex[1].key) flags |= F_TEX1 | (sFilter3 && st->tex[1].linear ? F_3PT1 : 0) | (st->tex[1].tile_w > 0 || st->tex[1].tile_h > 0 ? F_CLAMP1 : 0);
     p = program(st->combine_hi, st->combine_lo, st->blender, flags);
     if (p != lp) {
         glUseProgram(p->prog); glUniform1i(p->uS0, 0); glUniform1i(p->uS1, 1);
         gPortCount[COUNT_PROGSWITCH]++; lp = p;
         // uniforms live per program: forget what was set
-        memset(lprim, 0x7f, sizeof lprim); memset(lenv, 0x7f, sizeof lenv); memset(lfog, 0x7f, sizeof lfog); memset(lblc, 0x7f, sizeof lblc); memset(lscale, 0x7f, sizeof lscale); lblend = llod = -1;
+        memset(lprim, 0x7f, sizeof lprim); memset(lenv, 0x7f, sizeof lenv); memset(lfog, 0x7f, sizeof lfog); memset(lblc, 0x7f, sizeof lblc); memset(lscale, 0x7f, sizeof lscale); memset(lclamp, 0x7f, sizeof lclamp); lblend = llod = -1;
     }
     if (memcmp(lprim, st->prim, sizeof lprim)) { glUniform4fv(p->uPrim, 1, st->prim); memcpy(lprim, st->prim, sizeof lprim); }
     if (memcmp(lenv, st->env, sizeof lenv)) { glUniform4fv(p->uEnv, 1, st->env); memcpy(lenv, st->env, sizeof lenv); }
@@ -342,6 +345,10 @@ static void apply(const RbState *st)
     { float s0[2] = { st->tex[0].w ? 1.0f / st->tex[0].w : 1, st->tex[0].h ? 1.0f / st->tex[0].h : 1 }, s1[2] = { st->tex[1].w ? 1.0f / st->tex[1].w : 1, st->tex[1].h ? 1.0f / st->tex[1].h : 1 };
       if (memcmp(lscale[0], s0, sizeof s0)) { glUniform2f(p->uScale0, s0[0], s0[1]); memcpy(lscale[0], s0, sizeof s0); }
       if (memcmp(lscale[1], s1, sizeof s1)) { glUniform2f(p->uScale1, s1[0], s1[1]); memcpy(lscale[1], s1, sizeof s1); } }
+    { int t; for (t = 0; t < 2; t++) if (flags & (F_CLAMP0 << t)) { // texel centres of the tile's first and last texel
+        const RbTexture *x = &st->tex[t];
+        float c[4] = { x->tile_w > 0 ? 0.5f : -1e9f, x->tile_h > 0 ? 0.5f : -1e9f, x->tile_w > 0 ? x->tile_w - 0.5f : 1e9f, x->tile_h > 0 ? x->tile_h - 0.5f : 1e9f };
+        if (memcmp(lclamp[t], c, sizeof c)) { glUniform4fv(t ? p->uClamp1 : p->uClamp0, 1, c); memcpy(lclamp[t], c, sizeof c); } } }
     b = st->blend ? 1 | st->bsrc << 1 | st->bdst << 3 : 0;
     if (b != lb) {
         static const GLenum F[4] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
