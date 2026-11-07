@@ -22,6 +22,10 @@ enum {
     COUNT_TEXEVICT, // running total: textures (decoded or GL) dropped by the LRU
     COUNT_STATEBUILD, // running total: times the interpreter rebuilt the draw state
     COUNT_CLIPPED,    // running total: triangles cut by the near plane
+    COUNT_REJECTED,   // running total: triangles wholly outside one side of the view volume, dropped
+    COUNT_FARCUT,     // running total: triangles partly beyond the far plane (WebGL2 has no depth clamp: GL cuts them)
+    // why a new state serial began (the batch boundaries the interpreter causes), running totals
+    COUNT_SPLIT_COMBINE, COUNT_SPLIT_BLEND, COUNT_SPLIT_COLOUR, COUNT_SPLIT_TEXTURE, COUNT_SPLIT_DEPTH, COUNT_SPLIT_VIEW, COUNT_SPLIT_OTHER,
     COUNT_N
 };
 extern double gPortProf[PROF_N];

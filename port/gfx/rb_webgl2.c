@@ -199,6 +199,7 @@ static void init(void)
 static void flush(void);
 static void state_forget_depth(void);
 static int lcm = -1; // colour mask GL holds: 1 off, 0 on
+static int sDrewThisFrame; // a triangle or rectangle came since the frame began
 
 // ---- render target: the canvas, or a framebuffer (multisampled and/or 240 lines) blitted to it ----
 static int sTW = 960, sTH = 720;          // the size the frame is drawn at
@@ -268,7 +269,7 @@ void rb_begin_frame(void)
     if (!sCtx) init();
     flush();
     if (++sFrame % 60 == 0) tx_evict();
-    target_begin();
+    target_begin(); sDrewThisFrame = 0;
     glDepthMask(GL_TRUE); state_forget_depth();
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); lcm = 0;
     glDisable(GL_SCISSOR_TEST);
@@ -300,6 +301,10 @@ static Prog *sProg;
 // A depth clear in mid-frame: the batches before it draw first. The depth mask it sets is re-applied by the next batch.
 void rb_clear_depth(void)
 {
+    // The game clears depth (a fill of its picture area to the Z image) before it draws anything; the frame
+    // start already cleared it, so that one is skipped (fast3d-lessons 2.9). A later one clears all of the
+    // depth buffer: a scissored clear of the N64 rectangle would leave the widescreen bands uncleared.
+    if (!sDrewThisFrame) return;
     close_batch();
     sCmd[sNC].clear = 1; sCmd[sNC].n = 0; sNC++;
     if (sNC == MAXCMD) replay();
@@ -362,7 +367,9 @@ static void apply(const RbState *st)
         glDepthMask(st->depth_write ? GL_TRUE : GL_FALSE);
         ld = d; gPortCount[COUNT_STATE_DEPTH]++;
     }
-    if (st->decal != ldecal) { if (st->decal) { glEnable(GL_POLYGON_OFFSET_FILL); glPolygonOffset(-2, -2); } else glDisable(GL_POLYGON_OFFSET_FILL); ldecal = st->decal; }
+    // Decals: the offset's slope factor is in window units, so it scales with the drawn height (-2 at 240
+    // lines, fast3d-lessons 2.8). The game draws no ZMODE_DEC state in matches; kept for menus.
+    if ((st->decal ? sTH : 0) != ldecal) { if (st->decal) { glEnable(GL_POLYGON_OFFSET_FILL); glPolygonOffset(-2.0f * sTH / 240.0f, -2); } else glDisable(GL_POLYGON_OFFSET_FILL); ldecal = st->decal ? sTH : 0; }
     vp[0] = (GLint)(vox + st->viewport[0] * vsx); vp[1] = (GLint)((240 - st->viewport[1] - st->viewport[3]) * sy); vp[2] = (GLsizei)(st->viewport[2] * vsx); vp[3] = (GLsizei)(st->viewport[3] * sy);
     sc[0] = (GLint)(sox + st->scissor[0] * ssx); sc[1] = (GLint)((240 - st->scissor[3]) * sy); sc[2] = (GLsizei)((st->scissor[2] - st->scissor[0]) * ssx); sc[3] = (GLsizei)((st->scissor[3] - st->scissor[1]) * sy);
     if (memcmp(vp, lvp, sizeof vp)) { glViewport(vp[0], vp[1], vp[2], vp[3]); memcpy(lvp, vp, sizeof vp); }
@@ -401,6 +408,7 @@ void rb_draw(const RbState *st, uint32_t serial, const RbVertex *v, int n)
     // The state behind a serial never changes, so a new serial is the only reason to start a batch.
     if (sN + n > MAXV) flush();
     if (!sHave || serial != sCurSerial) { close_batch(); sCur = *st; sCurSerial = serial; sHave = 1; }
+    sDrewThisFrame = 1;
     memcpy(&sBuf[sN], v, n * sizeof *v);
     sN += n;
 }

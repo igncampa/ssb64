@@ -497,6 +497,19 @@ static float poly_area(const RbVertex *v, int n)
     return s;
 }
 
+// What differs between two consecutive triangle states, for the batch-split histogram (fast3d-lessons 2.11).
+static void split_reason(const RbState *a, const RbState *b)
+{
+    int k = COUNT_SPLIT_OTHER;
+    if (a->combine_hi != b->combine_hi || a->combine_lo != b->combine_lo || a->two_cycle != b->two_cycle) k = COUNT_SPLIT_COMBINE;
+    else if (memcmp(a->tex, b->tex, sizeof a->tex)) k = COUNT_SPLIT_TEXTURE;
+    else if (a->blender != b->blender || a->blend != b->blend || a->bsrc != b->bsrc || a->bdst != b->bdst || a->color_off != b->color_off || a->alpha_compare != b->alpha_compare || a->tex_edge != b->tex_edge) k = COUNT_SPLIT_BLEND;
+    else if (a->depth_test != b->depth_test || a->depth_write != b->depth_write || a->decal != b->decal) k = COUNT_SPLIT_DEPTH;
+    else if (memcmp(a->scissor, b->scissor, sizeof a->scissor) || memcmp(a->viewport, b->viewport, sizeof a->viewport) || a->wide_vp != b->wide_vp || a->wide_sc != b->wide_sc) k = COUNT_SPLIT_VIEW;
+    else if (memcmp(a->prim, b->prim, sizeof a->prim) || memcmp(a->env, b->env, sizeof a->env) || memcmp(a->fogcolor, b->fogcolor, sizeof a->fogcolor) || memcmp(a->blendcolor, b->blendcolor, sizeof a->blendcolor) || a->blend_a != b->blend_a || a->prim_lod != b->prim_lod) k = COUNT_SPLIT_COLOUR;
+    gPortCount[k]++;
+}
+
 static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
 {
     static RbVertex rv[3], poly[2][9], fan[21];
@@ -506,6 +519,13 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
     sTris++;
     // Fully behind the near plane: nothing to draw (and nothing to cull).
     if (a->z + a->w < 0 && b->z + b->w < 0 && c->z + c->w < 0) return;
+    // Wholly outside one side of the view volume (fast3d-lessons 2.10): GL would clip it all away. x is
+    // tested as drawn (scaled by k under a widescreen viewport); the far plane counts too.
+    {   float k = S.vp[2] >= WIDE_SPAN ? sK : 1.0f;
+        if ((a->x * k > a->w && b->x * k > b->w && c->x * k > c->w) || (a->x * k < -a->w && b->x * k < -b->w && c->x * k < -c->w) ||
+            (a->y > a->w && b->y > b->w && c->y > c->w) || (a->y < -a->w && b->y < -b->w && c->y < -c->w) ||
+            (a->z > a->w && b->z > b->w && c->z > c->w)) { gPortCount[COUNT_REJECTED]++; return; } }
+    if (a->z > a->w || b->z > b->w || c->z > c->w) gPortCount[COUNT_FARCUT]++;
     if (cull && a->w >= W_MIN && b->w >= W_MIN && c->w >= W_MIN && a->z + a->w >= 0 && b->z + b->w >= 0 && c->z + c->w >= 0) {
         float ax = a->x / a->w, ay = a->y / a->w, bx = b->x / b->w, by = b->y / b->w, cx = c->x / c->w, cy = c->y / c->w;
         float cr = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
@@ -518,7 +538,7 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
         if (sStDirty) { RbTexture keep[2]; memcpy(keep, sSt.tex, sizeof keep); fill_state(&t); memcpy(t.tex, keep, sizeof keep); }
         else t = sSt;
         if (sTexDirty || t.two_cycle != sSt.two_cycle || t.combine_hi != sSt.combine_hi || t.combine_lo != sSt.combine_lo) { memset(t.tex, 0, sizeof t.tex); use_textures(&t, S.textile); }
-        if (memcmp(&t, &sSt, sizeof t)) { sSt = t; sStSerial = ++sSerialGen; }
+        if (memcmp(&t, &sSt, sizeof t)) { split_reason(&t, &sSt); sSt = t; sStSerial = ++sSerialGen; }
         sStDirty = sTexDirty = 0; gPortCount[COUNT_STATEBUILD]++;
     }
     #define st sSt
@@ -704,7 +724,7 @@ static void run(const Cmd *c, int depth)
             break; }
         case OP_FILLRECT: {
             float lrx = ((w0 >> 12) & 0xFFF) / 4.0f, lry = (w0 & 0xFFF) / 4.0f, ulx = ((w1 >> 12) & 0xFFF) / 4.0f, uly = (w1 & 0xFFF) / 4.0f;
-            if (S.cimg_depth) { rb_clear_depth(); break; }
+            if (S.cimg_depth) { if (sTrace) printf("GTZ depth fill %.0f,%.0f-%.0f,%.0f\n", ulx, uly, lrx, lry); rb_clear_depth(); break; }
             if (!S.cimg_main) break;
             do_rect(ulx, uly, lrx, lry, 0, 0, 0, 0, 0, 0, 0);
             break; }
