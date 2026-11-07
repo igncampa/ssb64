@@ -21,6 +21,7 @@ enum {
     COUNT_TEXLIVE, COUNT_GLTEXLIVE, COUNT_PROGLIVE,
     COUNT_TEXEVICT, // running total: textures (decoded or GL) dropped by the LRU
     COUNT_STATEBUILD, // running total: times the interpreter rebuilt the draw state
+    COUNT_CLIPPED,    // running total: triangles cut by the near plane
     COUNT_N
 };
 extern double gPortProf[PROF_N];

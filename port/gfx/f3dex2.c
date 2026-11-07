@@ -432,19 +432,50 @@ static void use_textures(RbState *st, int tile)
 }
 
 #define RBMAX 256
+// Near-plane clipping (F3DEX2 clips before it culls and rasterises). A triangle crossing z = -w is cut
+// (Sutherland-Hodgman, all attributes linear in clip space, which is what GL interpolates) and its winding
+// is tested on what is left; before this, a triangle with a vertex behind the eye skipped the cull test,
+// so back faces of effects and geometry right at the camera were drawn (the streaks at GO). w >= W_MIN
+// is the second plane so the cull test always has a finite NDC.
+#define W_MIN 1e-5f
+static int clip_plane(RbVertex *out, const RbVertex *in, int n, int plane)
+{
+    int i, m = 0;
+    for (i = 0; i < n; i++) {
+        const RbVertex *A = &in[i], *B = &in[(i + 1) % n];
+        float da = plane ? A->w - W_MIN : A->z + A->w, db = plane ? B->w - W_MIN : B->z + B->w;
+        if (da >= 0) out[m++] = *A;
+        if ((da >= 0) != (db >= 0)) {
+            float t = da / (da - db); const float *pa = &A->x, *pb = &B->x; float *po = &out[m].x; int k;
+            for (k = 0; k < 10; k++) po[k] = pa[k] + (pb[k] - pa[k]) * t;
+            m++;
+        }
+    }
+    return m;
+}
+// Signed area of a polygon in NDC (all w > 0): > 0 counter-clockwise.
+static float poly_area(const RbVertex *v, int n)
+{
+    float s = 0; int i;
+    for (i = 0; i < n; i++) { const RbVertex *A = &v[i], *B = &v[(i + 1) % n]; s += (A->x / A->w) * (B->y / B->w) - (B->x / B->w) * (A->y / A->w); }
+    return s;
+}
+
 static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
 {
-    static RbVertex rv[3];
+    static RbVertex rv[3], poly[2][9], fan[21];
     const Vert *p[3] = { a, b, c };
-    int i, cull = S.geom & (G_CULL_FRONT_ | G_CULL_BACK_);
+    int i, n = 3, cull = S.geom & (G_CULL_FRONT_ | G_CULL_BACK_);
+    const RbVertex *out = rv;
     sTris++;
-    if (cull) {
+    // Fully behind the near plane: nothing to draw (and nothing to cull).
+    if (a->z + a->w < 0 && b->z + b->w < 0 && c->z + c->w < 0) return;
+    if (cull && a->w >= W_MIN && b->w >= W_MIN && c->w >= W_MIN && a->z + a->w >= 0 && b->z + b->w >= 0 && c->z + c->w >= 0) {
         float ax = a->x / a->w, ay = a->y / a->w, bx = b->x / b->w, by = b->y / b->w, cx = c->x / c->w, cy = c->y / c->w;
         float cr = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
-        if (a->w > 0 && b->w > 0 && c->w > 0) {
-            if ((cull & G_CULL_BACK_) && cr < 0) return;
-            if ((cull & G_CULL_FRONT_) && cr > 0) return;
-        }
+        if ((cull & G_CULL_BACK_) && cr < 0) return;
+        if ((cull & G_CULL_FRONT_) && cr > 0) return;
+        cull = 0; // tested
     }
     if (sStDirty || sTexDirty) {
         RbState t;
@@ -455,23 +486,37 @@ static void emit_tri(const Vert *a, const Vert *b, const Vert *c)
         sStDirty = sTexDirty = 0; gPortCount[COUNT_STATEBUILD]++;
     }
     #define st sSt
-    for (i = 0; i < 3; i++) {
-        const Vert *v = p[(S.geom & G_SMOOTH_) ? i : i];
-        const Vert *cv = (S.geom & G_SMOOTH_) ? v : p[0];
-        RbVertex *o = &rv[i];
-        const Tile *T = &S.tile[S.textile];
-        float u = v->u, w = v->v, sx = 1, sy = 1;
-        o->x = st.wide_vp ? v->x * sK : v->x; o->y = v->y; o->z = v->z; o->w = v->w;
-        u /= 32.0f; w /= 32.0f;
+    {   const Tile *T = &S.tile[S.textile];
+        float sx = 1, sy = 1, ou = T->uls / 4.0f, ov = T->ult / 4.0f;
         if (T->shifts) sx = T->shifts <= 10 ? 1.0f / (1 << T->shifts) : (float)(1 << (16 - T->shifts));
         if (T->shiftt) sy = T->shiftt <= 10 ? 1.0f / (1 << T->shiftt) : (float)(1 << (16 - T->shiftt));
-        o->u = u * sx - T->uls / 4.0f; o->v = w * sy - T->ult / 4.0f;
-        o->r = cv->r / 255.0f; o->g = cv->g / 255.0f; o->b = cv->b / 255.0f; o->a = v->a / 255.0f;
+        sx /= 32.0f; sy /= 32.0f;
+        for (i = 0; i < 3; i++) {
+            const Vert *v = p[i];
+            const Vert *cv = (S.geom & G_SMOOTH_) ? v : p[0];
+            RbVertex *o = &rv[i];
+            o->x = st.wide_vp ? v->x * sK : v->x; o->y = v->y; o->z = v->z; o->w = v->w;
+            o->u = v->u * sx - ou; o->v = v->v * sy - ov;
+            o->r = cv->r / 255.0f; o->g = cv->g / 255.0f; o->b = cv->b / 255.0f; o->a = v->a / 255.0f;
+        }
     }
-    if (sTrace) printf("GTV %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f\n",
-        a->ob[0], a->ob[1], a->ob[2], a->tc[0], a->tc[1], a->ls, a->lt, b->ob[0], b->ob[1], b->ob[2], b->tc[0], b->tc[1], b->ls, b->lt, c->ob[0], c->ob[1], c->ob[2], c->tc[0], c->tc[1], c->ls, c->lt);
-    trace_draw("tri", &st, rv, 3);
-    rb_draw(&st, sStSerial, rv, 3);
+    if (rv[0].z + rv[0].w < 0 || rv[1].z + rv[1].w < 0 || rv[2].z + rv[2].w < 0 || rv[0].w < W_MIN || rv[1].w < W_MIN || rv[2].w < W_MIN) {
+        n = clip_plane(poly[0], rv, 3, 0);
+        n = n >= 3 ? clip_plane(poly[1], poly[0], n, 1) : 0;
+        if (n < 3) return;
+        gPortCount[COUNT_CLIPPED]++;
+        if (cull) {
+            float ar = poly_area(poly[1], n);
+            if ((cull & G_CULL_BACK_) && ar < 0) return;
+            if ((cull & G_CULL_FRONT_) && ar > 0) return;
+        }
+        for (i = 0; i + 2 < n; i++) { fan[i * 3] = poly[1][0]; fan[i * 3 + 1] = poly[1][i + 1]; fan[i * 3 + 2] = poly[1][i + 2]; }
+        out = fan; n = (n - 2) * 3;
+    }
+    if (sTrace) printf("GTV %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f %d,%d,%d/%d,%d@%.3f,%.3f%s\n",
+        a->ob[0], a->ob[1], a->ob[2], a->tc[0], a->tc[1], a->ls, a->lt, b->ob[0], b->ob[1], b->ob[2], b->tc[0], b->tc[1], b->ls, b->lt, c->ob[0], c->ob[1], c->ob[2], c->tc[0], c->tc[1], c->ls, c->lt, out == fan ? " clipped" : "");
+    trace_draw("tri", &st, out, n);
+    rb_draw(&st, sStSerial, out, n);
     #undef st
 }
 
