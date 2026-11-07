@@ -5,6 +5,7 @@ Super Smash Bros. 64 in the browser: online rollback matches for up to 8 human p
 - What it is and how it was built: `PLAN.md`, `CHANGES.md`.
 - What is still open: `PENDING.md`.
 - The state machines of page, client, relay room and rollback core: `spec/state-machines.md`, `relay/src/room.rs`, `proof/state-machines/`.
+- Every spec and analysis, and what was implemented or not from each: `SPECS.md`.
 - Build: `source scripts/env.sh`, then `tools/port/target/release/packdata .`, then `make -f Makefile.port -j16 all`.
 - Run: `PORT=8080 SITE=web BUILD_ID=<id from web/build.js> relay/target/release/ssb64-relay`.
 - Prove: `scripts/proof_all.sh`. Package for a server: `scripts/stage.sh <empty-folder>`.

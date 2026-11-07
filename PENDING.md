@@ -2,6 +2,8 @@
 
 State when work stopped, 4 Nov 2026. The game is live at https://ssb64.guanavibes.com. Every automated proof passes. No group of people has played it yet.
 
+What each spec implemented, skipped or left open: `SPECS.md`.
+
 ## Decisions for the owner
 
 1. **Host secret.** The relay runs with none, so anyone with the address can make lobbies. Recommended: set `RELAY_SECRET`. Needs a relay restart, which drops matches in progress.
